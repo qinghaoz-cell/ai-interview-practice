@@ -1,0 +1,12 @@
+{
+  "name": "ai-interview-practice",
+  "version": "1.0.0",
+  "description": "AI面试陪练助手",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

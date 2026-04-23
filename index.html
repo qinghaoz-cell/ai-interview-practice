@@ -1,0 +1,3304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI面试陪练</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #161b27;
+  --surface2: #1e2538;
+  --surface3: #252d42;
+  --border: #2a3350;
+  --border2: #374060;
+  --primary: #7c6ef0;
+  --primary-hover: #6a5ce8;
+  --primary-dim: rgba(124,110,240,0.15);
+  --accent: #00c9a7;
+  --accent-dim: rgba(0,201,167,0.12);
+  --danger: #ff6b6b;
+  --danger-dim: rgba(255,107,107,0.12);
+  --warning: #ffd93d;
+  --warning-dim: rgba(255,217,61,0.12);
+  --success: #6bcb77;
+  --success-dim: rgba(107,203,119,0.12);
+  --text: #e2e8f0;
+  --text-muted: #8892b0;
+  --text-dim: #4a5568;
+  --sidebar-w: 220px;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:13px}
+textarea,input,select{font-family:inherit;font-size:13px;color:var(--text)}
+
+/* ── Layout ── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:16px 0;
+  overflow-y:auto;
+}
+.sidebar-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 18px 20px;
+  font-size:16px;font-weight:700;letter-spacing:.4px;
+  color:var(--text);
+}
+.sidebar-logo .logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.nav-section{margin-bottom:8px}
+.nav-label{
+  padding:4px 18px;font-size:11px;font-weight:600;
+  color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;margin:1px 8px;
+  border-radius:var(--radius-sm);
+  color:var(--text-muted);font-size:13px;
+  cursor:pointer;transition:all .15s;user-select:none;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--primary-dim);color:var(--primary);font-weight:600}
+.nav-item .nav-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;background:var(--primary);color:#fff;
+  font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;
+  min-width:18px;text-align:center;
+}
+.sidebar-footer{
+  margin-top:auto;padding:12px 18px 4px;
+  border-top:1px solid var(--border);
+}
+.sidebar-footer .version{color:var(--text-dim);font-size:11px}
+
+/* ── Main Content ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;flex-direction:column;overflow-y:auto;padding:24px}
+.page.active{display:flex}
+.page-header{margin-bottom:20px}
+.page-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.page-sub{color:var(--text-muted);font-size:13px}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card+.card{margin-top:14px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title .badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge-blue{background:var(--primary-dim);color:var(--primary)}
+.badge-green{background:var(--accent-dim);color:var(--accent)}
+.badge-red{background:var(--danger-dim);color:var(--danger)}
+.badge-yellow{background:var(--warning-dim);color:var(--warning)}
+
+/* ── KB file list ── */
+.kb-file-list{display:flex;flex-wrap:wrap;gap:8px;min-height:0}
+.kb-file-list:empty::before{content:'暂无文件，点击下方「上传文件」添加';font-size:12px;color:var(--text-dim);padding:6px 0}
+.kb-file-chip{display:flex;align-items:center;gap:6px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px;max-width:260px}
+.kb-file-chip .kb-chip-icon{font-size:15px;flex-shrink:0}
+.kb-file-chip .kb-chip-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)}
+.kb-file-chip .kb-chip-del{cursor:pointer;color:var(--text-dim);font-size:14px;flex-shrink:0;line-height:1;padding:0 2px;border-radius:4px}
+.kb-file-chip .kb-chip-del:hover{color:var(--danger);background:var(--danger-dim)}
+
+/* ── Inputs ── */
+.input-group{margin-bottom:14px}
+.input-label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.input-field{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);
+  transition:border-color .15s;outline:none;
+}
+.input-field:focus{border-color:var(--primary)}
+.input-field::placeholder{color:var(--text-dim)}
+textarea.input-field{resize:vertical;min-height:100px;line-height:1.6}
+select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238892b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 16px;border-radius:var(--radius-sm);border:none;
+  font-weight:600;font-size:13px;transition:all .15s;
+  cursor:pointer;user-select:none;white-space:nowrap;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--surface3);border-color:var(--border2)}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid transparent}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-icon{padding:6px;width:30px;height:30px;border-radius:var(--radius-sm)}
+
+/* ── Grid ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+/* ── Stats ── */
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 20px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.stat-val{font-size:26px;font-weight:700;line-height:1}
+.stat-label{font-size:12px;color:var(--text-muted)}
+
+/* ── Question Bank ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.filter-tab{
+  padding:5px 14px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.filter-tab:hover{border-color:var(--border2);color:var(--text)}
+.filter-tab.active{background:var(--primary-dim);color:var(--primary);border-color:var(--primary)}
+.search-box{
+  flex:1;min-width:180px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);outline:none;
+}
+.search-box:focus{border-color:var(--primary)}
+.search-box::placeholder{color:var(--text-dim)}
+.q-list{display:flex;flex-direction:column;gap:10px}
+.q-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;
+  display:flex;align-items:flex-start;gap:12px;
+  transition:border-color .15s;
+}
+.q-card:hover{border-color:var(--border2)}
+.q-content{flex:1;min-width:0}
+.q-text{font-size:13.5px;line-height:1.55;margin-bottom:8px;color:var(--text)}
+.q-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.q-cat{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.cat-design{background:var(--primary-dim);color:var(--primary)}
+.cat-ai{background:var(--accent-dim);color:var(--accent)}
+.cat-bq{background:var(--warning-dim);color:var(--warning)}
+.cat-case{background:var(--danger-dim);color:var(--danger)}
+.cat-custom{background:var(--surface3);color:var(--text-muted)}
+.q-actions{display:flex;gap:6px;flex-shrink:0}
+.fav-btn{
+  background:none;border:none;padding:4px;cursor:pointer;
+  font-size:16px;color:var(--text-dim);transition:color .15s;line-height:1;
+}
+.fav-btn:hover{color:var(--warning)}
+.fav-btn.active{color:var(--warning)}
+.empty-state{
+  text-align:center;padding:48px 20px;color:var(--text-muted);
+}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+.empty-state p{font-size:14px}
+
+/* ── Interview ── */
+.interview-config{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;margin-bottom:16px;
+}
+.active-q-bar{
+  background:var(--surface2);border:1px solid var(--border);
+  border-left:3px solid var(--primary);
+  border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;
+  display:none;
+}
+.active-q-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.active-q-text{font-size:13.5px;line-height:1.55;color:var(--text)}
+.config-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.config-row .input-group{margin-bottom:0;flex:1;min-width:150px}
+.chat-area{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);display:flex;flex-direction:column;
+  min-height:400px;overflow:hidden;
+}
+.chat-messages{
+  flex:1;overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:16px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.chat-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;color:var(--text-dim);gap:8px;
+  font-size:13px;
+}
+.chat-empty .empty-icon{font-size:36px;opacity:.4}
+.msg{display:flex;gap:10px;max-width:90%}
+.msg.ai{align-self:flex-start}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-avatar{
+  width:32px;height:32px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,var(--primary),#a78bfa)}
+.msg.user .msg-avatar{background:linear-gradient(135deg,var(--accent),#22d3ee)}
+.msg-bubble{
+  padding:10px 14px;border-radius:10px;line-height:1.65;font-size:13.5px;
+  max-width:100%;word-break:break-word;
+}
+.msg.ai .msg-bubble{background:var(--surface2);border:1px solid var(--border);border-top-left-radius:3px}
+.msg.user .msg-bubble{background:var(--primary-dim);border:1px solid var(--primary);border-top-right-radius:3px;color:var(--text)}
+.msg-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.msg.user .msg-meta{text-align:right}
+.typing-dots{display:inline-flex;gap:4px;align-items:center;padding:4px 0}
+.typing-dots span{
+  width:6px;height:6px;background:var(--text-muted);border-radius:50%;
+  animation:bounce 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.2);opacity:1}}
+.chat-input-area{
+  border-top:1px solid var(--border);padding:14px 16px;
+  display:flex;gap:10px;align-items:flex-end;background:var(--surface);
+}
+.chat-input{
+  flex:1;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);
+  resize:none;outline:none;line-height:1.5;max-height:120px;
+  overflow-y:auto;transition:border-color .15s;
+}
+.chat-input:focus{border-color:var(--primary)}
+.chat-input::placeholder{color:var(--text-dim)}
+.voice-btn{
+  width:38px;height:38px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface2);color:var(--text-muted);font-size:16px;
+  flex-shrink:0;transition:all .15s;display:flex;align-items:center;justify-content:center;
+}
+.voice-btn:hover{border-color:var(--border2);color:var(--text)}
+.voice-btn.recording{background:var(--danger-dim);border-color:var(--danger);color:var(--danger);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.turn-indicator{
+  display:flex;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--surface2);border-top:1px solid var(--border);
+  font-size:12px;color:var(--text-muted);
+}
+.turn-dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.turn-dot.inactive{background:var(--border2)}
+.rewrite-modal .modal{max-width:680px;max-height:80vh;overflow-y:auto}
+.rewrite-section{margin-bottom:20px}
+.rewrite-section-title{
+  font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.rewrite-box{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  font-size:13.5px;line-height:1.7;color:var(--text);white-space:pre-wrap;
+  min-height:60px;
+}
+.rewrite-box.loading{color:var(--text-muted);font-style:italic}
+.rewrite-use-btn{margin-top:8px}
+
+/* ── Score Card ── */
+.score-panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin-top:16px;
+}
+.score-header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.score-big{
+  width:72px;height:72px;border-radius:50%;
+  background:conic-gradient(var(--primary) var(--pct,0%),var(--surface2) 0%);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  position:relative;
+}
+.score-big::before{
+  content:'';position:absolute;inset:5px;background:var(--surface);border-radius:50%;
+}
+.score-big-num{position:relative;font-size:20px;font-weight:800;color:var(--primary)}
+.score-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.score-summary{font-size:13px;color:var(--text-muted);line-height:1.5}
+.score-dims{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.dim-item{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px}
+.dim-name{font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600}
+.dim-bar-wrap{background:var(--border);border-radius:3px;height:5px;overflow:hidden}
+.dim-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .5s ease}
+.dim-val{font-size:13px;font-weight:700;margin-top:4px}
+.score-section{margin-bottom:14px}
+.score-section-title{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.score-list{display:flex;flex-direction:column;gap:6px}
+.score-list-item{
+  display:flex;align-items:flex-start;gap:8px;
+  background:var(--surface2);border-radius:var(--radius-sm);
+  padding:8px 12px;font-size:13px;
+}
+.score-list-item .icon{flex-shrink:0;font-size:14px;margin-top:1px}
+
+/* ── Category pills ── */
+.cat-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cat-pill{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.cat-pill:hover{border-color:var(--border2);color:var(--text)}
+.cat-pill.active{background:var(--primary-dim);color:var(--primary);border-color:var(--primary)}
+
+/* ── History ── */
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-filter-btn.active{background:var(--primary-dim);color:var(--primary);border-color:var(--primary)}
+.history-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;cursor:pointer;
+  transition:border-color .15s;
+}
+.history-card:hover{border-color:var(--border2)}
+.history-head{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;
+}
+.history-score-circle{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;
+}
+.history-meta{flex:1;min-width:0}
+.history-title{font-size:13.5px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-info{display:flex;gap:10px;font-size:11px;color:var(--text-muted)}
+.history-expand{color:var(--text-dim);font-size:12px;transition:transform .2s}
+.history-expand.open{transform:rotate(180deg)}
+.history-detail{display:none;border-top:1px solid var(--border);padding:16px;background:var(--surface2)}
+.history-detail.open{display:block}
+.history-dialog{display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto}
+
+/* ── Settings ── */
+.settings-section{margin-bottom:24px}
+.settings-section-title{font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-info{flex:1;margin-right:16px}
+.setting-name{font-size:13.5px;font-weight:600;margin-bottom:2px}
+.setting-desc{font-size:12px;color:var(--text-muted)}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--surface3);border-radius:22px;
+  cursor:pointer;transition:.25s;
+}
+.toggle-slider::before{
+  content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.25s;
+}
+.toggle input:checked+.toggle-slider{background:var(--primary)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+
+/* ── Modals ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);
+  z-index:1000;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--radius);padding:24px;width:90%;max-width:500px;
+  transform:translateY(16px);transition:transform .2s;
+  max-height:85vh;overflow-y:auto;
+}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;line-height:1;padding:2px 6px;border-radius:4px;cursor:pointer}
+.modal-close:hover{color:var(--text);background:var(--surface2)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* ── Toast ── */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;
+  display:flex;align-items:center;gap:8px;min-width:220px;max-width:340px;
+  animation:slideIn .25s ease;box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--danger)}
+.toast.info{border-left:3px solid var(--primary)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── Progress ── */
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;transition:width .3s}
+
+/* ── Misc ── */
+.divider{height:1px;background:var(--border);margin:16px 0}
+.text-muted{color:var(--text-muted)}
+.text-accent{color:var(--accent)}
+.text-primary{color:var(--primary)}
+.text-danger{color:var(--danger)}
+.flex{display:flex}.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}
+.items-center{align-items:center}.justify-between{justify-content:space-between}
+.flex-1{flex:1}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.font-bold{font-weight:700}.text-sm{font-size:12px}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--text-muted)}
+
+/* ── PDF Upload ── */
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:var(--radius);
+  padding:32px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;background:var(--surface2);
+  position:relative;overflow:hidden;
+}
+.upload-zone:hover,.upload-zone.drag-over{
+  border-color:var(--primary);background:var(--primary-dim);
+}
+.upload-zone input[type=file]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+}
+.upload-icon{font-size:36px;margin-bottom:10px;opacity:.7}
+.upload-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--text-muted)}
+.upload-progress{
+  margin-top:14px;display:none;
+}
+.pdf-info{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--accent-dim);border:1px solid var(--accent);
+  border-radius:var(--radius-sm);margin-bottom:12px;
+}
+.pdf-icon{font-size:24px;flex-shrink:0}
+.pdf-name{font-size:13px;font-weight:600;color:var(--accent)}
+.pdf-pages{font-size:12px;color:var(--text-muted);margin-top:2px}
+.tab-switch{display:flex;gap:0;margin-bottom:14px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px}
+.tab-btn{
+  flex:1;padding:6px;border-radius:6px;border:none;
+  background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.tab-btn.active{background:var(--surface3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-220px;z-index:100;height:100%;transition:left .25s}
+  .sidebar.open{left:0}
+  .page{padding:16px}
+  .grid2,.grid3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🎯</div>
+      <span>面试陪练</span>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">准备</div>
+      <div class="nav-item active" data-page="resume" onclick="navigate('resume')">
+        <span class="nav-icon">📄</span>简历管理
+      </div>
+      <div class="nav-item" data-page="jd" onclick="navigate('jd')">
+        <span class="nav-icon">💼</span>目标职位
+      </div>
+      <div class="nav-item" data-page="questions" onclick="navigate('questions')">
+        <span class="nav-icon">📚</span>题库
+        <span class="nav-badge" id="q-count-badge">0</span>
+      </div>
+      <div class="nav-item" data-page="kb" onclick="navigate('kb')">
+        <span class="nav-icon">🧠</span>知识库
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">练习</div>
+      <div class="nav-item" data-page="interview" onclick="navigate('interview')">
+        <span class="nav-icon">🎙️</span>开始面试
+      </div>
+      <div class="nav-item" data-page="history" onclick="navigate('history')">
+        <span class="nav-icon">📊</span>历史记录
+        <span class="nav-badge" id="history-badge">0</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">配置</div>
+      <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+        <span class="nav-icon">⚙️</span>设置
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="version">AI面试陪练 v1.0</div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    <!-- ── Page: 简历 ── -->
+    <section class="page active" id="page-resume">
+      <div class="page-header">
+        <div class="page-title">📄 简历管理</div>
+        <div class="page-sub">粘贴你的简历，AI将根据内容生成针对性面试题</div>
+      </div>
+      <div class="card">
+        <div class="card-title">简历内容 <span class="badge badge-blue" id="resume-status">未填写</span></div>
+        <div class="tab-switch">
+          <button class="tab-btn active" id="tab-upload" onclick="switchResumeTab('upload')">📎 上传 PDF</button>
+          <button class="tab-btn" id="tab-paste" onclick="switchResumeTab('paste')">📝 粘贴文本</button>
+        </div>
+
+        <!-- PDF Upload Tab -->
+        <div id="resume-upload-panel">
+          <div id="pdf-info-bar" style="display:none"></div>
+          <div class="upload-zone" id="upload-zone"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <input type="file" accept=".pdf" onchange="onFileSelect(event)" id="pdf-file-input">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">点击选择 PDF，或拖拽到此处</div>
+            <div class="upload-sub">支持标准 PDF 简历，最大 20MB</div>
+          </div>
+          <div class="upload-progress" id="upload-progress">
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:6px" id="progress-label">解析中…</div>
+          </div>
+        </div>
+
+        <!-- Paste Tab -->
+        <div id="resume-paste-panel" style="display:none">
+          <div class="input-group" style="margin-bottom:0">
+            <textarea class="input-field" id="resume-text" rows="12"
+              placeholder="将你的简历内容粘贴到这里…&#10;&#10;例如：&#10;姓名：张三&#10;工作经历：XX公司 产品经理 2021-2023&#10;- 负责AI推荐系统产品规划…&#10;&#10;教育背景：XX大学 计算机系&#10;技能：产品设计、数据分析、AI基础…"></textarea>
+          </div>
+        </div>
+
+        <div class="flex gap-8 mt-12">
+          <button class="btn btn-primary" onclick="saveResume()">💾 保存简历</button>
+          <button class="btn btn-ghost" onclick="clearResume()">清空</button>
+        </div>
+      </div>
+      <div class="card mt-12" id="resume-preview-card" style="display:none">
+        <div class="card-title">📋 已保存的简历预览</div>
+        <div id="resume-preview" style="color:var(--text-muted);font-size:13px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto"></div>
+        <div class="mt-12 flex gap-8">
+          <button class="btn btn-secondary btn-sm" onclick="generateResumeQuestions()">🤖 从简历生成面试题</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Page: JD ── -->
+    <section class="page" id="page-jd">
+      <div class="page-header">
+        <div class="page-title">💼 目标职位</div>
+        <div class="page-sub">填写目标公司和职位描述，生成针对性面试题</div>
+      </div>
+      <div class="card">
+        <div class="card-title">职位信息</div>
+        <div class="grid2">
+          <div class="input-group">
+            <label class="input-label">目标公司</label>
+            <input type="text" class="input-field" id="jd-company" placeholder="如：字节跳动、百度、阿里巴巴…">
+          </div>
+          <div class="input-group">
+            <label class="input-label">职位名称</label>
+            <input type="text" class="input-field" id="jd-title" placeholder="如：AI产品经理、高级产品经理…">
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">职位描述 (JD)</label>
+          <textarea class="input-field" id="jd-text" rows="10" placeholder="粘贴完整的职位描述…&#10;&#10;例如：&#10;岗位职责：&#10;1. 负责公司AI产品的规划、设计和迭代&#10;2. 深入理解LLM等AI技术，将技术能力转化为产品功能…&#10;&#10;任职要求：&#10;1. 3年以上产品经理经验…"></textarea>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-primary" onclick="saveJD()">💾 保存JD</button>
+          <button class="btn btn-ghost" onclick="clearJD()">清空</button>
+          <button class="btn btn-secondary" onclick="generateJDQuestions()">🤖 从JD生成面试题</button>
+        </div>
+      </div>
+      <div class="card mt-12" id="jd-status-card" style="display:none">
+        <div class="card-title">✅ 已保存 <span id="jd-saved-info" class="text-muted text-sm"></span></div>
+        <div class="flex gap-8 mt-8">
+          <button class="btn btn-secondary btn-sm" onclick="generateCombinedQuestions()">🎯 简历+JD联合生成题目</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Page: 题库 ── -->
+    <section class="page" id="page-questions">
+      <div class="page-header flex justify-between items-center">
+        <div>
+          <div class="page-title">📚 题库</div>
+          <div class="page-sub">AI产品经理常见面试题，支持筛选、搜索和收藏</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddQuestionModal()">+ 添加自定义题目</button>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-tab active" data-cat="all" onclick="setFilter('all')">全部</button>
+        <button class="filter-tab" data-cat="design" onclick="setFilter('design')">产品设计</button>
+        <button class="filter-tab" data-cat="ai" onclick="setFilter('ai')">AI基础</button>
+        <button class="filter-tab" data-cat="bq" onclick="setFilter('bq')">行为问题BQ</button>
+        <button class="filter-tab" data-cat="case" onclick="setFilter('case')">案例分析</button>
+        <button class="filter-tab" data-cat="fav" onclick="setFilter('fav')">⭐ 收藏</button>
+        <input type="text" class="search-box" id="q-search" placeholder="🔍 搜索题目…" oninput="renderQuestions()">
+      </div>
+      <div id="q-list" class="q-list"></div>
+    </section>
+
+    <!-- ── Page: 面试 ── -->
+    <section class="page" id="page-interview">
+      <div class="page-header">
+        <div class="page-title">🎙️ 模拟面试</div>
+        <div class="page-sub">AI扮演严格面试官，进行多轮追问练习</div>
+      </div>
+      <div class="active-q-bar" id="active-q-bar">
+        <div class="active-q-label">当前题目</div>
+        <div class="active-q-text" id="active-q-text"></div>
+      </div>
+      <div class="interview-config" id="interview-config">
+        <div class="config-row">
+          <div class="input-group">
+            <label class="input-label">题目来源</label>
+            <select class="input-field" id="q-source" onchange="onSourceChange()">
+              <option value="bank">从题库随机选题</option>
+              <option value="random">AI随机生成题目</option>
+              <option value="kb">基于知识库生成题目</option>
+              <option value="resume">从简历生成题目</option>
+              <option value="jd">从JD生成题目</option>
+              <option value="combined">简历+JD联合生成</option>
+              <option value="custom">手动输入题目</option>
+            </select>
+          </div>
+          <div class="input-group" id="cat-filter-group">
+            <label class="input-label">题目分类</label>
+            <select class="input-field" id="bank-cat">
+              <option value="all">全部分类</option>
+              <option value="design">产品设计</option>
+              <option value="ai">AI基础</option>
+              <option value="bq">行为问题BQ</option>
+              <option value="case">案例分析</option>
+            </select>
+          </div>
+        </div>
+        <div id="ai-cat-group" style="display:none">
+          <label class="input-label" style="margin-top:12px;display:block">题目方向 <span style="font-weight:400;color:var(--text-muted)">（可选，不选则随机）</span></label>
+          <div class="cat-pills" id="ai-cat-pills" data-selected="random">
+            <button class="cat-pill active" onclick="selectCatPill(this,'random')">🎲 随机</button>
+            <button class="cat-pill" onclick="selectCatPill(this,'产品思维')">🎨 产品思维</button>
+            <button class="cat-pill" onclick="selectCatPill(this,'AI基础知识')">🤖 AI基础知识</button>
+            <button class="cat-pill" onclick="selectCatPill(this,'个人动机')">🙋 个人动机</button>
+            <button class="cat-pill" onclick="selectCatPill(this,'行为问题BQ')">💬 行为问题BQ</button>
+          </div>
+        </div>
+        <div id="resume-section-group" style="display:none">
+          <label class="input-label" style="margin-top:12px;display:block">简历部分 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
+          <div class="cat-pills" id="resume-section-pills" data-selected="random">
+            <button class="cat-pill active" onclick="selectResumeSectionPill(this,'random')">🎲 随机</button>
+            <button class="cat-pill" onclick="selectResumeSectionPill(this,'教育背景')">🎓 教育背景</button>
+            <button class="cat-pill" onclick="selectResumeSectionPill(this,'实习经历')">💼 实习经历</button>
+            <button class="cat-pill" onclick="selectResumeSectionPill(this,'项目经历')">🛠 项目经历</button>
+          </div>
+        </div>
+        <div id="kb-module-group" style="display:none">
+          <label class="input-label" style="margin-top:12px;display:block">知识库模块 <span style="font-weight:400;color:var(--text-muted)">（不选则随机轮换）</span></label>
+          <div class="cat-pills" id="kb-module-pills" data-selected="random">
+            <button class="cat-pill active" onclick="selectKBPill(this,'random')">🎲 随机轮换</button>
+            <button class="cat-pill" onclick="selectKBPill(this,'projects')">💼 项目经历</button>
+            <button class="cat-pill" onclick="selectKBPill(this,'qna')">📝 面试Q&A</button>
+            <button class="cat-pill" onclick="selectKBPill(this,'notes')">📚 知识点</button>
+          </div>
+        </div>
+        <div id="kb-file-group" style="display:none">
+          <label class="input-label" style="margin-top:10px;display:block">指定文件 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
+          <div class="cat-pills" id="kb-file-pills" data-selected="random"></div>
+        </div>
+        <div id="custom-q-group" style="display:none;margin-top:10px">
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">自定义题目</label>
+            <input type="text" class="input-field" id="custom-q-input" placeholder="输入你想练习的面试题…">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" id="start-btn" onclick="startInterview()">▶ 开始面试</button>
+          <button class="btn btn-danger" id="end-btn" style="display:none" onclick="endInterview()">⏹ 结束面试</button>
+          <button class="btn btn-ghost btn-sm" id="reconfig-btn" style="display:none" onclick="showInterviewConfig()">⚙ 换题重配</button>
+          <span id="interview-status" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+      </div>
+
+      <div class="chat-area" id="chat-area">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-empty" id="chat-empty">
+            <div class="empty-icon">🎯</div>
+            <div>点击「开始面试」开始练习</div>
+            <div style="font-size:12px;color:var(--text-dim)">AI将扮演严格面试官，进行2-3轮追问</div>
+          </div>
+        </div>
+        <div class="turn-indicator" id="turn-indicator" style="display:none">
+          <span class="turn-dot" id="td0"></span>
+          <span class="turn-dot inactive" id="td1"></span>
+          <span class="turn-dot inactive" id="td2"></span>
+          <span class="turn-dot inactive" id="td3"></span>
+          <span class="turn-dot inactive" id="td4"></span>
+          <span id="turn-label" style="font-size:12px;color:var(--text-muted);margin-left:4px">第1轮</span>
+          <span style="margin-left:auto;font-size:12px" id="turn-mode-label"></span>
+        </div>
+        <div class="chat-input-area" id="chat-input-area" style="display:none">
+          <textarea class="chat-input" id="chat-input" rows="1" placeholder="输入你的回答… (Enter发送，Shift+Enter换行)" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="语音输入">🎤</button>
+          <button class="btn btn-ghost btn-sm" id="rewrite-btn" onclick="showRewrite()" title="参考改写 + 标准答案" style="height:38px;white-space:nowrap">✨ 参考</button>
+          <button class="btn btn-primary btn-sm" id="send-btn" onclick="sendMessage()" style="height:38px">发送</button>
+        </div>
+        </div>
+        <!-- voice-tip is OUTSIDE chat-area (which has overflow:hidden) so it's always visible -->
+        <div id="voice-tip" style="display:none;margin-top:8px;padding:8px 12px;background:var(--surface3);border-left:3px solid var(--primary);border-radius:0 8px 8px 0;font-size:12px;line-height:1.7">
+          <div style="color:var(--text-dim)">🎤 识别原文：<span id="vt-raw" style="font-style:italic"></span></div>
+          <div style="color:var(--text-primary);margin-top:2px">✅ AI理解：<span id="vt-clean"></span></div>
+        </div>
+
+      <!-- Score panel -->
+      <div class="score-panel" id="score-panel" style="display:none">
+        <div class="card-title">📊 面试评分报告</div>
+        <div id="score-content"></div>
+        <div class="mt-16 flex gap-8">
+          <button class="btn btn-primary" onclick="startInterview()">🔄 再来一题</button>
+          <button class="btn btn-secondary" onclick="showInterviewConfig()">⚙ 换题重配</button>
+          <button class="btn btn-ghost" onclick="navigate('history')">📊 查看历史</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Page: 历史 ── -->
+    <section class="page" id="page-history">
+      <div class="page-header flex justify-between items-center">
+        <div>
+          <div class="page-title">📊 历史记录</div>
+          <div class="page-sub">查看过往面试练习记录</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="clearHistory()">清空记录</button>
+      </div>
+      <div class="grid3" id="history-stats" style="margin-bottom:16px"></div>
+      <div class="cat-pills" id="hf-src-pills" data-selected="all" style="margin-bottom:8px">
+        <button class="cat-pill active" onclick="setHfSrc(this,'all')">全部</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'fav')">⭐ 收藏</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'resume')">💼 简历</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'kb')">📚 知识库</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'random')">🤖 AI随机</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'bank')">🗂 题库</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'jd')">📋 JD</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'combined')">🔗 联合</button>
+      </div>
+      <div id="hf-sub-row" style="display:none;margin-bottom:12px">
+        <div class="cat-pills" id="hf-sub-pills" data-selected="all"></div>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </section>
+
+    <!-- ── Page: 设置 ── -->
+    <section class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">⚙️ 设置</div>
+        <div class="page-sub">配置API密钥和面试偏好</div>
+      </div>
+      <div class="card">
+        <div class="settings-section">
+          <div class="settings-section-title">🔑 API 配置</div>
+          <div class="input-group">
+            <label class="input-label">AI 服务商</label>
+            <select class="input-field" id="provider-select" onchange="onProviderChange()">
+              <option value="anthropic">Anthropic Claude（claude-haiku）</option>
+              <option value="deepseek">DeepSeek（deepseek-chat，限流更宽松）</option>
+            </select>
+          </div>
+          <div class="input-group" id="anthropic-key-group">
+            <label class="input-label">Anthropic API Key</label>
+            <div class="flex gap-8">
+              <input type="password" class="input-field flex-1" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off">
+              <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('api-key-input')">👁</button>
+            </div>
+          </div>
+          <div class="input-group" id="deepseek-key-group" style="display:none">
+            <label class="input-label">DeepSeek API Key</label>
+            <div class="flex gap-8">
+              <input type="password" class="input-field flex-1" id="deepseek-key-input" placeholder="sk-…" autocomplete="off">
+              <button class="btn btn-secondary" onclick="toggleApiKeyVisibility('deepseek-key-input')">👁</button>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+              前往 <a href="https://platform.deepseek.com/api_keys" target="_blank" style="color:var(--primary)">platform.deepseek.com</a> 获取 Key，免费额度更多，价格约为 Claude 的 1/6
+            </div>
+          </div>
+          <div class="mt-12" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="saveApiKey()">💾 保存</button>
+            <button class="btn btn-secondary" id="test-api-btn" onclick="testApiConnection()">🔌 测试连接</button>
+            <span id="api-status" style="font-size:12px;color:var(--text-muted)"></span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="settings-section">
+          <div class="settings-section-title">🎯 面试偏好</div>
+          <div class="input-group">
+            <label class="input-label">面试难度</label>
+            <select class="input-field" id="difficulty-select" onchange="savePref()">
+              <option value="normal">普通 — 友好引导，追问1-2次</option>
+              <option value="strict">严格 — 深度追问，质疑逻辑漏洞</option>
+              <option value="hell">地狱 — 极度严苛，连续追问不留情面</option>
+            </select>
+          </div>
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">面试风格</label>
+            <select class="input-field" id="style-select" onchange="savePref()">
+              <option value="general">通用风格</option>
+              <option value="bytedance">字节跳动风格 — 逻辑推理、数据驱动</option>
+              <option value="baidu">百度风格 — 技术理解、AI能力边界</option>
+              <option value="alibaba">阿里巴巴风格 — 业务价值、用户增长</option>
+            </select>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="settings-section">
+          <div class="settings-section-title">🗑️ 数据管理</div>
+          <div class="flex gap-8 flex-wrap">
+            <button class="btn btn-danger btn-sm" onclick="clearAllData()">清空所有数据</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportData()">📤 导出数据</button>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-12">
+        <div class="card-title">💡 使用说明</div>
+        <ol style="padding-left:20px;line-height:2;font-size:13px;color:var(--text-muted)">
+          <li>在「设置」中填入 Anthropic API Key（<a href="https://console.anthropic.com" target="_blank" style="color:var(--primary)">获取API Key</a>）</li>
+          <li>（可选）在「简历管理」粘贴你的简历，在「目标职位」填写JD</li>
+          <li>在「题库」浏览和收藏题目，或添加自定义题目</li>
+          <li>进入「开始面试」选择题目来源，点击「开始面试」</li>
+          <li>面试结束后查看AI给出的评分和改进建议</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── Page: 知识库 ── -->
+    <section class="page" id="page-kb">
+      <div class="page-header">
+        <div class="page-title">🧠 知识库</div>
+        <div class="page-sub">上传文件或手动填写，AI 面试时会自动作为背景参考</div>
+      </div>
+
+      <!-- Projects -->
+      <div class="card">
+        <div class="card-title">💼 项目 &amp; 实习经历 <span class="badge badge-blue">背景</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">项目经历、担任角色、核心成果（面试官会基于这些追问）</div>
+        <div id="kb-files-projects" class="kb-file-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📎 上传文件
+            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple onchange="uploadKBFile('projects',this)">
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)">PDF / Word / TXT，可多选</span>
+          <span id="kb-status-projects" style="font-size:12px;margin-left:auto"></span>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="toggleKBText('projects')">✏️ 手动补充文字</button>
+          <div id="kb-text-wrap-projects" style="display:none;margin-top:8px">
+            <textarea class="input-field" id="kb-text-projects" rows="5"
+              placeholder="直接输入补充内容，会与上传文件一起作为背景…"
+              oninput="saveKBTextSection('projects')"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q&A -->
+      <div class="card">
+        <div class="card-title">📝 面试 Q&amp;A 准备 <span class="badge badge-green">答案库</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">准备好的问答，AI 会出针对性追问，帮你查漏补缺</div>
+        <div id="kb-files-qna" class="kb-file-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📎 上传文件
+            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple onchange="uploadKBFile('qna',this)">
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)">PDF / Word / TXT，可多选</span>
+          <span id="kb-status-qna" style="font-size:12px;margin-left:auto"></span>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="toggleKBText('qna')">✏️ 手动补充文字</button>
+          <div id="kb-text-wrap-qna" style="display:none;margin-top:8px">
+            <textarea class="input-field" id="kb-text-qna" rows="5"
+              placeholder="Q: 你最大的优势是什么？&#10;A: ..."
+              oninput="saveKBTextSection('qna')"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card">
+        <div class="card-title">📖 知识点笔记 <span class="badge badge-yellow">备考</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">AI 知识点、产品方法论、行业洞察等，帮助 AI 出更有深度的题</div>
+        <div id="kb-files-notes" class="kb-file-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📎 上传文件
+            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple onchange="uploadKBFile('notes',this)">
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)">PDF / Word / TXT，可多选</span>
+          <span id="kb-status-notes" style="font-size:12px;margin-left:auto"></span>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="toggleKBText('notes')">✏️ 手动补充文字</button>
+          <div id="kb-text-wrap-notes" style="display:none;margin-top:8px">
+            <textarea class="input-field" id="kb-text-notes" rows="5"
+              placeholder="例如：【RAG理解】RAG = 检索增强生成…"
+              oninput="saveKBTextSection('notes')"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── Modal: 添加题目 ── -->
+<div class="modal-overlay" id="add-q-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ 添加自定义题目</div>
+      <button class="modal-close" onclick="closeModal('add-q-modal')">×</button>
+    </div>
+    <div class="input-group">
+      <label class="input-label">题目内容</label>
+      <textarea class="input-field" id="new-q-text" rows="4" placeholder="输入面试题内容…"></textarea>
+    </div>
+    <div class="input-group">
+      <label class="input-label">题目分类</label>
+      <select class="input-field" id="new-q-cat">
+        <option value="design">产品设计</option>
+        <option value="ai">AI基础</option>
+        <option value="bq">行为问题BQ</option>
+        <option value="case">案例分析</option>
+        <option value="custom">自定义</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-q-modal')">取消</button>
+      <button class="btn btn-primary" onclick="addCustomQuestion()">添加题目</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: 参考改写 ── -->
+<div class="modal-overlay rewrite-modal" id="rewrite-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✨ 参考改写 &amp; 标准答案</div>
+      <button class="modal-close" onclick="closeModal('rewrite-modal')">×</button>
+    </div>
+    <div class="rewrite-section">
+      <div class="rewrite-section-title" style="color:var(--primary)">📝 改写版本 <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0">— 基于你的回答优化表达</span></div>
+      <div class="rewrite-box" id="rewrite-improved">正在生成…</div>
+      <button class="btn btn-secondary btn-sm rewrite-use-btn" onclick="useRewrite('improved')">使用此版本</button>
+    </div>
+    <div class="rewrite-section">
+      <div class="rewrite-section-title" style="color:var(--accent)">⭐ 标准答案 <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0">— AI面试官视角的满分回答</span></div>
+      <div class="rewrite-box" id="rewrite-standard">正在生成…</div>
+      <button class="btn btn-secondary btn-sm rewrite-use-btn" onclick="useRewrite('standard')">使用此版本</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('rewrite-modal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  QUESTION BANK DATA
+// ═══════════════════════════════════════════════
+const BUILTIN_QUESTIONS = [
+  // ── 产品设计（20题）──
+  {id:'q001',cat:'design',text:'请设计一个AI写作助手，目标用户是职场人士。描述核心功能、差异化卖点，以及如何解决"生成内容同质化"的问题。'},
+  {id:'q002',cat:'design',text:'设计一个面向中小企业的AI客服产品，从0到1。你如何做冷启动？知识库如何构建？如何衡量上线效果？'},
+  {id:'q003',cat:'design',text:'如果你是豆包/Kimi/文心一言的产品经理，你会优先优化哪三个功能？为什么？'},
+  {id:'q004',cat:'design',text:'为一个医疗问诊场景设计AI助手产品。你会如何处理"AI误诊"的风险？从产品层面如何保护用户？'},
+  {id:'q005',cat:'design',text:'如果你负责TikTok/抖音的AI内容审核系统（从产品角度），你会定义哪些核心指标？如何处理误杀率和漏杀率之间的权衡？'},
+  {id:'q006',cat:'design',text:'为一个企业内部知识管理场景设计基于RAG的AI产品。如何解决"检索不准"和"幻觉"问题（从产品而非算法角度）？'},
+  {id:'q007',cat:'design',text:'设计一款AI会议助手（类似飞书妙记），核心功能和差异化竞争点是什么？如何处理多语言、隐私等挑战？'},
+  {id:'q008',cat:'design',text:'如何设计AI助手的"人设"与个性化体验？AI助手应该有情感反馈吗？如何通过人设设计提升用户留存？'},
+  {id:'q009',cat:'design',text:'如何为AI产品设计「失败状态」体验——当AI无法给出满意答案时，如何维持用户体验和品牌信任？'},
+  {id:'q010',cat:'design',text:'你如何设计AI产品的用户反馈机制？如何利用反馈数据驱动模型和产品持续改进？'},
+  {id:'q011',cat:'design',text:'请设计一款针对K12教育的AI辅导产品。如何保证内容安全？如何针对不同年级学生提供差异化体验？'},
+  {id:'q012',cat:'design',text:'为一个流媒体平台（如爱奇艺）设计一个AI智能体（Agent）。描述其功能范围、工具调用链，以及fallback机制。'},
+  {id:'q013',cat:'design',text:'如何为AI产品设计「可信度」展示机制？用户如何判断AI答案是否可靠？有哪些具体的产品设计手段？'},
+  {id:'q014',cat:'design',text:'你来负责一款AI搜索产品的改版，旧版本用关键词，新版本用自然语言。如何设计迁移策略不影响DAU？'},
+  {id:'q015',cat:'design',text:'如果产品用户反馈AI生成内容存在性别/种族偏见，作为PM你会如何制定短期和长期的优化方案？'},
+  {id:'q016',cat:'design',text:'为一个to-B的AI代码助手（如GitHub Copilot竞品）设计企业级功能。优先解决哪些企业痛点？如何定价？'},
+  {id:'q017',cat:'design',text:'如何为AI产品设计从"免费版"到"付费版"的转化路径？用哪些产品机制推动付费转化？'},
+  {id:'q018',cat:'design',text:'如何为AI产品设计用户分层运营策略？区分普通用户、重度用户和付费用户，分别给出产品策略。'},
+  {id:'q019',cat:'design',text:'设计一个AI辅助的绩效评估系统，需要考虑哪些算法偏见和伦理问题？如何保证公平性？'},
+  {id:'q020',cat:'design',text:'如何设计AI产品的用户引导（Onboarding）流程，让用户快速理解AI的能力边界，同时建立信任？'},
+  // ── AI理解（15题）──
+  {id:'q021',cat:'ai',text:'请用非技术语言解释"幻觉"（Hallucination）是什么，为什么会发生，以及从产品角度你能做什么来缓解它的负面影响？'},
+  {id:'q022',cat:'ai',text:'什么是RAG（检索增强生成）？相比直接提示词工程，RAG的核心优势是什么？适合哪类产品场景？'},
+  {id:'q023',cat:'ai',text:'Fine-tuning、RAG、Prompt Engineering三者的核心区别是什么？作为PM，你会在什么情况下选择哪种方案？'},
+  {id:'q024',cat:'ai',text:'如何判断一个产品需求是否应该用AI/大模型来解决，而不是用规则引擎或传统算法？你有什么决策框架？'},
+  {id:'q025',cat:'ai',text:'什么是模型对齐（Alignment）和RLHF？它在产品层面解决了什么问题，又引入了什么新问题？'},
+  {id:'q026',cat:'ai',text:'AI Agent的核心架构（规划、记忆、工具调用）是什么？你认为当前AI Agent落地的最大产品挑战是什么？'},
+  {id:'q027',cat:'ai',text:'什么是模型漂移（Model Drift）？作为产品经理，你如何在产品层面设计监控机制来早期发现模型效果下降？'},
+  {id:'q028',cat:'ai',text:'大模型的"上下文窗口"（Context Window）是什么？它的大小对产品功能设计有什么影响？'},
+  {id:'q029',cat:'ai',text:'开源模型（如LLaMA/Qwen）和闭源模型（如GPT-4/Claude）各有什么产品化优劣势？你会在什么场景选择哪种？'},
+  {id:'q030',cat:'ai',text:'多模态AI（文字+图像+语音）给产品带来了哪些新的可能性？同时它的技术局限性在产品设计上意味着什么？'},
+  {id:'q031',cat:'ai',text:'AI产品的延迟（Latency）问题如何影响用户体验？有哪些产品层面的解决思路（而非纯技术侧）？'},
+  {id:'q032',cat:'ai',text:'端侧AI（On-device AI）和云端AI各自适合什么产品场景？在做技术路线选型时你会考虑哪些因素？'},
+  {id:'q033',cat:'ai',text:'如何向非技术背景的高管解释"模型评估"是什么？你会汇报哪些指标？如何让他们理解模型效果的进展？'},
+  {id:'q034',cat:'ai',text:'GDPR、《生成式AI管理规定》等合规要求对AI产品的数据收集和模型训练有哪些具体影响？作为PM你如何应对？'},
+  {id:'q035',cat:'ai',text:'你有哪些"负责任AI"的原则？在上线一个AI功能前，你的checklist包含哪些内容？'},
+  // ── 行为问题BQ（13题）──
+  {id:'q036',cat:'bq',text:'讲一个你主导或深度参与的AI产品项目。你扮演什么角色？遇到了哪些挑战？结果如何？'},
+  {id:'q037',cat:'bq',text:'描述一次你在AI产品中遇到了"算法效果未达预期"的情况。你是如何推动团队找到根因并解决问题的？'},
+  {id:'q038',cat:'bq',text:'你的AI产品上线后出现了"幻觉"或产出不当内容，引发用户投诉。你第一时间如何响应？如何做事后复盘？'},
+  {id:'q039',cat:'bq',text:'给我一个例子：你需要在"加快上线速度"和"提高模型准确率"之间做权衡。你是如何决策的？'},
+  {id:'q040',cat:'bq',text:'描述一次与算法工程师或数据科学家发生意见分歧的经历。你是如何解决的？结果如何？'},
+  {id:'q041',cat:'bq',text:'描述一次你识别到了一个用AI解决用户问题的机会，但周围人没有注意到。你是如何推动这件事落地的？'},
+  {id:'q042',cat:'bq',text:'讲一个你利用数据分析说服团队改变产品方向的例子。数据是什么，结论是什么，遇到了哪些阻力？'},
+  {id:'q043',cat:'bq',text:'描述一次你需要向兴奋的高管或客户解释AI产品局限性或不确定性的经历。你是如何表达的？'},
+  {id:'q044',cat:'bq',text:'描述一次你在AI项目中需要协调数据科学、工程、业务多方优先级冲突的经历。你是如何处理的？'},
+  {id:'q045',cat:'bq',text:'讲一个你做过的最失败的AI产品决策。你从中学到了什么？如果重来你会怎么做？'},
+  {id:'q046',cat:'bq',text:'你如何平衡AI产品的短期商业KPI（如MAU、收入）和长期技术健康（如数据质量、模型债务）？'},
+  {id:'q047',cat:'bq',text:'你如何处理AI产品中的伦理或偏见问题？有没有亲历过即使有业务压力也坚持负责任AI原则的情况？'},
+  {id:'q048',cat:'bq',text:'你如何在竞争激烈的AI赛道保持产品差异化？有没有被竞品功能模仿的经历，你是如何应对的？'},
+  // ── 案例分析（17题）──
+  {id:'q049',cat:'case',text:'如何定义一个AI对话产品的北极星指标？请区分技术指标、用户体验指标和业务指标，并说明它们之间的关系。'},
+  {id:'q050',cat:'case',text:'假设你负责一款AI写作工具，DAU突然下降20%。你会如何排查原因？请给出完整的分析框架。'},
+  {id:'q051',cat:'case',text:'某AI产品的用户7日留存率只有30%，远低于预期。请给出你的诊断思路和至少3个可能的改进方向。'},
+  {id:'q052',cat:'case',text:'你被要求在6个月内让一款AI产品实现盈利。你会选择什么商业模式？为什么？（比较订阅制、按量计费、API授权等）'},
+  {id:'q053',cat:'case',text:'微信想在对话框中加入AI助手功能，作为PM你会如何规划第一个版本？MVP是什么，如何评估成功？'},
+  {id:'q054',cat:'case',text:'竞争对手在你计划发布前6个月发布了相似的AI功能，你如何制定应对策略？'},
+  {id:'q055',cat:'case',text:'分析国内AI对话产品竞争格局（豆包、Kimi、文心一言、通义千问等）。你认为谁会赢？核心竞争优势是什么？'},
+  {id:'q056',cat:'case',text:'如果你是某大厂AI助手的产品负责人，你会如何制定未来一年的产品路线图？依据是什么？'},
+  {id:'q057',cat:'case',text:'某企业级AI助手产品的NPS持续偏低（净推荐值-15分），你会如何诊断根本原因并制定改善计划？'},
+  {id:'q058',cat:'case',text:'如何为AI产品上线一个概率性功能（模型预测不总是准确）？你的灰度发布和风险控制策略是什么？'},
+  {id:'q059',cat:'case',text:'某K12教育平台想引入AI批改作文功能，如何评估这个功能的商业可行性和对学生学习的实际价值？'},
+  {id:'q060',cat:'case',text:'抖音的推荐算法被批评会导致"信息茧房"，作为负责该产品的PM你会如何应对这一挑战？'},
+  {id:'q061',cat:'case',text:'如何设计AI产品的数据飞轮（Data Flywheel）？什么阶段的产品最需要建立数据飞轮壁垒？'},
+  {id:'q062',cat:'case',text:'某AI图像生成工具遭遇版权纠纷（训练数据含版权内容），作为PM你会如何处理这场危机？'},
+  {id:'q063',cat:'case',text:'如何评估AI产品是否达到Product-Market Fit？传统的PMF评估框架需要哪些针对AI产品的调整？'},
+  {id:'q064',cat:'case',text:'一家传统SaaS公司要将现有产品「AI化」，你作为顾问会给出哪些关键建议？优先从哪里入手？'},
+  {id:'q065',cat:'case',text:'如果给你3个月时间和1个10人团队，你会为字节跳动设计什么样的AI新产品？请阐述你的完整思考过程。'},
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+const STATE = {
+  currentFilter: 'all',
+  interview: {
+    active: false,
+    question: '',
+    messages: [],  // [{role,content,time}]
+    turn: 0,
+    maxTurns: 3,
+    source: 'bank',
+  },
+  recognition: null,
+  isRecording: false,
+  isGenerating: false,
+};
+
+// ═══════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)) } catch { return null } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { } },
+  getStr: k => localStorage.getItem(k) || '',
+  setStr: (k, v) => localStorage.setItem(k, v),
+};
+const getResume = () => LS.getStr('resume');
+const getJD = () => LS.get('jd') || {};
+// KB: files stored per-section as array of {name, content}, plus optional manual text
+const KB_SECTIONS = ['projects', 'qna', 'notes'];
+const getKBFiles  = (sec) => LS.get(`kb_files_${sec}`) || [];
+const saveKBFiles = (sec, arr) => LS.set(`kb_files_${sec}`, arr);
+const getKBText   = (sec) => LS.getStr(`kb_text_${sec}`);
+const saveKBText  = (sec, v) => localStorage.setItem(`kb_text_${sec}`, v);
+
+const getKBContext = () => {
+  const parts = [];
+  const build = (sec, label) => {
+    const files = getKBFiles(sec);
+    const text  = getKBText(sec);
+    const chunks = [];
+    files.forEach(f => { if (f.content?.trim()) chunks.push(`[${f.name}]\n${f.content.trim()}`); });
+    if (text?.trim()) chunks.push(text.trim());
+    if (chunks.length) parts.push(`【${label}】\n${chunks.join('\n\n---\n\n')}`);
+  };
+  build('projects', '候选人项目/实习经历');
+  build('qna',      '候选人已准备的Q&A');
+  build('notes',    '候选人知识点笔记');
+  return parts.join('\n\n');
+};
+const getCustomQuestions = () => LS.get('custom_questions') || [];
+const getFavorites = () => LS.get('favorites') || [];
+const getHistory = () => LS.get('history') || [];
+const getApiKey      = () => LS.getStr('api_key');
+const getProvider    = () => LS.getStr('ai_provider') || 'anthropic'; // 'anthropic' | 'deepseek'
+const getDeepSeekKey = () => LS.getStr('deepseek_key');
+const getActiveKey   = () => getProvider() === 'deepseek' ? getDeepSeekKey() : getApiKey();
+const getPref = () => LS.get('pref') || { difficulty: 'strict', style: 'general' };
+const getAllQuestions = () => {
+  const custom = getCustomQuestions().map(q => ({ ...q, custom: true }));
+  return [...BUILTIN_QUESTIONS, ...custom];
+};
+
+// ═══════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════
+// ── Global API request queue: serialise all Claude calls to avoid rate-limit bursts ──
+const API_QUEUE = (() => {
+  let running = false;
+  let lastDone = 0;          // timestamp of last completed request
+  const MIN_GAP = 2200;      // ms — enforced between ANY two requests
+  const queue = [];
+  async function drain() {
+    if (running) return;
+    running = true;
+    while (queue.length) {
+      const { fn, resolve, reject } = queue.shift();
+      // Enforce minimum gap from the moment the previous request FINISHED
+      const wait = MIN_GAP - (Date.now() - lastDone);
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      try { resolve(await fn()); } catch (e) { reject(e); }
+      lastDone = Date.now();
+    }
+    running = false;
+  }
+  return {
+    add(fn) {
+      return new Promise((resolve, reject) => {
+        queue.push({ fn, resolve, reject });
+        drain();
+      });
+    }
+  };
+})();
+
+// Robust JSON parser: handles trailing commas, smart quotes, unescaped newlines in strings
+function robustParseJSON(raw) {
+  // 1. Extract JSON block
+  let s = (raw.match(/\{[\s\S]*\}/) || [raw])[0];
+  // 2. Remove trailing commas before } or ]
+  s = s.replace(/,\s*([\}\]])/g, '$1');
+  // 3. Replace smart/curly quotes with straight quotes
+  s = s.replace(/[\u201C\u201D\u300C\u300D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  // 4. Replace literal newlines inside strings with \n
+  s = s.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => '"' + inner.replace(/\n/g, '\\n').replace(/\r/g, '') + '"');
+  try { return JSON.parse(s); } catch (e) { throw new Error(`评分JSON解析失败：${e.message}\n原始内容：${raw.slice(0, 200)}`); }
+}
+
+async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false) {
+  return API_QUEUE.add(() => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode));
+}
+
+async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false) {
+  const provider = getProvider();
+  const apiKey   = getActiveKey();
+  if (!apiKey) throw new Error(`请先在设置页填写 ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} API Key`);
+
+  // Build request depending on provider
+  let fetchUrl, fetchHeaders, fetchBody;
+  if (provider === 'deepseek') {
+    fetchUrl = '/proxy/deepseek/v1/chat/completions';
+    fetchHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+    const dsMessages = [];
+    if (systemPrompt) dsMessages.push({ role: 'system', content: systemPrompt });
+    dsMessages.push(...messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : m.role, content: m.content })));
+    const dsBody = { model: 'deepseek-chat', max_tokens: 2048, messages: dsMessages, stream: !!onStream };
+    if (jsonMode) dsBody.response_format = { type: 'json_object' }; // force valid JSON output
+    fetchBody = JSON.stringify(dsBody);
+  } else {
+    fetchUrl = '/proxy/anthropic/v1/messages';
+    fetchHeaders = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
+    // In JSON mode, add an assistant prefill "{" so Claude is forced to output a JSON object
+    const anthropicMsgs = messages.map(m => ({ role: m.role, content: m.content }));
+    if (jsonMode) anthropicMsgs.push({ role: 'assistant', content: '{' });
+    fetchBody = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2048, system: systemPrompt, messages: anthropicMsgs, stream: !!onStream });
+  }
+
+  let res;
+  try {
+    res = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: fetchBody });
+  } catch {
+    throw new Error('网络请求失败，请确认服务器正在运行（node server.js）');
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || '';
+    if (res.status === 401) throw new Error('API Key 无效，请在「设置」页重新填写');
+    if (res.status === 429) {
+      const maxRetries = 4;
+      if (_retry < maxRetries) {
+        const retryAfterHeader = res.headers.get('retry-after');
+        const fallbackSecs = [30, 45, 60, 90][_retry] ?? 60;
+        const waitSecs = retryAfterHeader ? Math.max(parseInt(retryAfterHeader, 10), 5) : fallbackSecs;
+        let remaining = waitSecs;
+        const iv = setInterval(() => { remaining--; if (remaining > 0) toast(`请求受限，${remaining}s 后自动重试…`, 'info', 1100); else clearInterval(iv); }, 1000);
+        toast(`请求受限，${waitSecs}s 后自动重试…`, 'info', 1100);
+        await new Promise(r => setTimeout(r, waitSecs * 1000));
+        clearInterval(iv);
+        return _callClaudeRaw(messages, systemPrompt, onStream, _retry + 1, jsonMode);
+      }
+      throw new Error('请求过于频繁，请稍后重新开始');
+    }
+    throw new Error(msg || `API 请求失败 (${res.status})`);
+  }
+
+  // Parse streaming response
+  if (onStream) {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let full = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          // Anthropic format
+          if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+            full += parsed.delta.text; onStream(full);
+          }
+          // OpenAI/DeepSeek format
+          if (parsed.choices?.[0]?.delta?.content != null) {
+            full += parsed.choices[0].delta.content; onStream(full);
+          }
+        } catch { }
+      }
+    }
+    return full;
+  } else {
+    const data = await res.json();
+    // Anthropic format
+    if (data.content?.[0]?.text) {
+      const text = data.content[0].text;
+      // If we used JSON prefill (assistant: '{'), prepend it back
+      return (jsonMode && provider !== 'deepseek') ? '{' + text : text;
+    }
+    // OpenAI/DeepSeek format
+    return data.choices?.[0]?.message?.content || '';
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+
+  if (page === 'questions') renderQuestions();
+  if (page === 'history') renderHistory();
+  if (page === 'settings') renderSettings();
+  if (page === 'resume') renderResumePage();
+  if (page === 'jd') renderJDPage();
+  if (page === 'kb') renderKBPage();
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  t.innerHTML = `<span>${icons[type] || ''}</span><span>${msg}</span>`;
+  container.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, duration);
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id)?.classList.add('open') }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open') }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
+});
+
+// ═══════════════════════════════════════════════
+//  RESUME PAGE
+// ═══════════════════════════════════════════════
+const PDF_VER = '3.11.174';
+const PDF_WORKER_CDN = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDF_VER}/pdf.worker.min.js`;
+let _pdfWorkerBlobUrl = null;
+
+// Load worker script as a Blob URL to bypass same-origin restrictions
+async function ensurePDFWorker(onProgress) {
+  if (_pdfWorkerBlobUrl) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = _pdfWorkerBlobUrl;
+    return;
+  }
+  onProgress?.('加载解析引擎…');
+  try {
+    const resp = await fetch(PDF_WORKER_CDN);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const text = await resp.text();
+    const blob = new Blob([text], { type: 'application/javascript' });
+    _pdfWorkerBlobUrl = URL.createObjectURL(blob);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = _pdfWorkerBlobUrl;
+  } catch {
+    // Fallback: use CDN URL directly (may fail on file:// but worth trying)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER_CDN;
+  }
+}
+
+// ── Resume tab switching ──
+function switchResumeTab(tab) {
+  const isUpload = tab === 'upload';
+  document.getElementById('resume-upload-panel').style.display = isUpload ? '' : 'none';
+  document.getElementById('resume-paste-panel').style.display  = isUpload ? 'none' : '';
+  document.getElementById('tab-upload').classList.toggle('active', isUpload);
+  document.getElementById('tab-paste').classList.toggle('active', !isUpload);
+}
+
+// ── Drag & drop ──
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+function onDragLeave(e) {
+  document.getElementById('upload-zone').classList.remove('drag-over');
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer?.files?.[0];
+  if (file) processPDF(file);
+}
+function onFileSelect(e) {
+  const file = e.target.files?.[0];
+  if (file) processPDF(file);
+}
+
+// ── Generic file text extraction (PDF / TXT / MD) ──
+async function extractFileText(file, onProgress) {
+  const name = file.name.toLowerCase();
+  // Plain text files
+  if (name.endsWith('.txt') || name.endsWith('.md') || name.endsWith('.markdown')) {
+    onProgress?.('读取文件…');
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result || '');
+      reader.onerror = () => reject(new Error('文件读取失败'));
+      reader.readAsText(file, 'utf-8');
+    });
+  }
+  // Word document (.docx)
+  if (name.endsWith('.docx') || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+    if (typeof mammoth === 'undefined') throw new Error('Word 解析库未加载，请刷新重试');
+    onProgress?.('解析 Word 文档…');
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value?.trim() || '';
+  }
+  // PDF
+  if (file.type === 'application/pdf' || name.endsWith('.pdf')) {
+    if (typeof pdfjsLib === 'undefined') throw new Error('PDF 解析库未加载，请刷新重试');
+    if (file.size > 20 * 1024 * 1024) throw new Error('PDF 文件不能超过 20MB');
+    onProgress?.('加载解析引擎…');
+    await ensurePDFWorker(onProgress);
+    onProgress?.('读取文件…');
+    const typedArray = new Uint8Array(await file.arrayBuffer());
+    const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      onProgress?.(`提取第 ${i}/${pdf.numPages} 页…`);
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(item => item.str).join(' ') + '\n';
+    }
+    return text.trim();
+  }
+  throw new Error('不支持的文件格式，请上传 PDF / TXT / MD');
+}
+
+// ── KB file upload ──
+async function uploadKBFile(section, inputEl) {
+  const files = [...(inputEl.files || [])];
+  if (!files.length) return;
+  inputEl.value = '';
+
+  const statusEl = document.getElementById(`kb-status-${section}`);
+  if (!statusEl) return;
+
+  const succeeded = [], failed = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    statusEl.style.color = 'var(--text-muted)';
+    statusEl.textContent = files.length > 1 ? `解析 ${i + 1}/${files.length}：${file.name}…` : '解析中…';
+    try {
+      const content = await extractFileText(file, msg => {
+        statusEl.textContent = files.length > 1 ? `(${i + 1}/${files.length}) ${msg}` : msg;
+      });
+      // Replace file with same name, otherwise append
+      const arr = getKBFiles(section).filter(f => f.name !== file.name);
+      arr.push({ name: file.name, content, uploadedAt: Date.now() });
+      saveKBFiles(section, arr);
+      succeeded.push(file.name);
+    } catch (e) {
+      failed.push(`${file.name}：${e.message}`);
+    }
+  }
+
+  renderKBFileList(section);
+
+  if (succeeded.length) {
+    statusEl.textContent = `✅ 已导入 ${succeeded.length} 个文件`;
+    statusEl.style.color = 'var(--success)';
+    toast(`已导入：${succeeded.join('、')}`, 'success');
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  }
+  if (failed.length) {
+    statusEl.textContent = `❌ ${failed[0]}`;
+    statusEl.style.color = 'var(--danger)';
+    toast(failed.join('\n'), 'error');
+  }
+}
+
+function renderKBFileList(section) {
+  const el = document.getElementById(`kb-files-${section}`);
+  if (!el) return;
+  const files = getKBFiles(section);
+  if (!files.length) { el.innerHTML = ''; return; }
+  const iconMap = { pdf: '📄', docx: '📝', doc: '📝', txt: '📃', md: '📃' };
+  el.innerHTML = files.map((f, i) => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const icon = iconMap[ext] || '📄';
+    return `<div class="kb-file-chip">
+      <span class="kb-chip-icon">${icon}</span>
+      <span class="kb-chip-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
+      <span class="kb-chip-del" onclick="deleteKBFile('${section}',${i})" title="删除">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function deleteKBFile(section, idx) {
+  const arr = getKBFiles(section);
+  const name = arr[idx]?.name || '此文件';
+  arr.splice(idx, 1);
+  saveKBFiles(section, arr);
+  renderKBFileList(section);
+  toast(`已删除：${name}`, 'info');
+}
+
+function toggleKBText(section) {
+  const wrap = document.getElementById(`kb-text-wrap-${section}`);
+  if (!wrap) return;
+  const open = wrap.style.display === 'none';
+  wrap.style.display = open ? 'block' : 'none';
+  if (open) {
+    const ta = document.getElementById(`kb-text-${section}`);
+    if (ta) ta.value = getKBText(section) || '';
+  }
+}
+
+function saveKBTextSection(section) {
+  const ta = document.getElementById(`kb-text-${section}`);
+  if (ta) saveKBText(section, ta.value);
+}
+
+// ── PDF parsing ──
+async function processPDF(file) {
+  if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+    toast('请上传 PDF 格式文件', 'error'); return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    toast('文件大小不能超过 20MB', 'error'); return;
+  }
+  if (typeof pdfjsLib === 'undefined') {
+    toast('PDF 解析库未加载，请检查网络连接后刷新页面', 'error'); return;
+  }
+
+  const progress = document.getElementById('upload-progress');
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+  progress.style.display = 'block';
+  fill.style.width = '5%';
+  label.textContent = '准备中…';
+
+  try {
+    // Step 1: ensure worker is ready (fetched as blob to avoid same-origin issues)
+    await ensurePDFWorker(msg => { label.textContent = msg; });
+    fill.style.width = '20%'; label.textContent = '读取文件…';
+
+    // Step 2: read file as Uint8Array (more compatible than ArrayBuffer)
+    const arrayBuffer = await file.arrayBuffer();
+    const typedArray = new Uint8Array(arrayBuffer);
+    fill.style.width = '35%'; label.textContent = '解析 PDF 结构…';
+
+    const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
+    const totalPages = pdf.numPages;
+    let fullText = '';
+
+    for (let i = 1; i <= totalPages; i++) {
+      fill.style.width = (30 + Math.round(60 * i / totalPages)) + '%';
+      label.textContent = `提取文字 ${i}/${totalPages} 页…`;
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map(item => item.str)
+        .join(' ')
+        .replace(/ {2,}/g, ' ')
+        .trim();
+      if (pageText) fullText += pageText + '\n';
+    }
+
+    fill.style.width = '100%'; label.textContent = '解析完成 ✅';
+
+    if (!fullText.trim()) {
+      toast('未能提取到文字，请检查 PDF 是否为扫描图片格式', 'error');
+      progress.style.display = 'none'; return;
+    }
+
+    // Show file info bar
+    const infoBar = document.getElementById('pdf-info-bar');
+    infoBar.style.display = 'flex';
+    infoBar.className = 'pdf-info';
+    infoBar.innerHTML = `
+      <span class="pdf-icon">📄</span>
+      <div style="flex:1;min-width:0">
+        <div class="pdf-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</div>
+        <div class="pdf-pages">共 ${totalPages} 页 · 已提取 ${fullText.length} 个字符</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearResume()">移除</button>`;
+
+    // Auto-save
+    LS.setStr('resume', fullText.trim());
+    LS.setStr('resume_filename', file.name);
+    updateResumeStatus();
+    toast(`PDF 解析成功，共 ${totalPages} 页`, 'success');
+
+    setTimeout(() => { progress.style.display = 'none'; }, 1200);
+  } catch (err) {
+    progress.style.display = 'none';
+    console.error('[PDF] 解析失败:', err);
+    const msg = err?.message || String(err) || '未知错误';
+    toast('PDF 解析失败：' + msg, 'error', 6000);
+  }
+}
+
+function migrateOldKB() {
+  // One-time migration: move old kb.{projects,qna,notes} text into new kb_text_{sec} keys
+  if (localStorage.getItem('kb_migrated')) return;
+  try {
+    const old = LS.get('kb');
+    if (old) {
+      const map = { projects: old.projects, qna: old.qna, notes: old.notes };
+      Object.entries(map).forEach(([sec, val]) => {
+        if (val?.trim() && !getKBText(sec)) saveKBText(sec, val.trim());
+      });
+    }
+  } catch {}
+  localStorage.setItem('kb_migrated', '1');
+}
+
+function renderKBPage() {
+  migrateOldKB();
+  KB_SECTIONS.forEach(sec => renderKBFileList(sec));
+  // Restore any manual text areas that have content
+  KB_SECTIONS.forEach(sec => {
+    const ta = document.getElementById(`kb-text-${sec}`);
+    const wrap = document.getElementById(`kb-text-wrap-${sec}`);
+    const txt = getKBText(sec);
+    if (ta && txt) {
+      ta.value = txt;
+      if (wrap) wrap.style.display = 'block';
+    }
+  });
+}
+
+function renderResumePage() {
+  const resume = getResume();
+  const filename = LS.getStr('resume_filename');
+
+  // Restore paste textarea
+  const ta = document.getElementById('resume-text');
+  if (ta) ta.value = resume;
+
+  // Restore PDF info bar if uploaded via PDF
+  if (resume && filename) {
+    const infoBar = document.getElementById('pdf-info-bar');
+    if (infoBar) {
+      infoBar.style.display = 'flex';
+      infoBar.className = 'pdf-info';
+      infoBar.innerHTML = `
+        <span class="pdf-icon">📄</span>
+        <div style="flex:1;min-width:0">
+          <div class="pdf-name" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(filename)}</div>
+          <div class="pdf-pages">已提取 ${resume.length} 个字符</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="clearResume()">移除</button>`;
+    }
+  }
+  updateResumeStatus();
+}
+
+function updateResumeStatus() {
+  const resume = getResume();
+  const badge = document.getElementById('resume-status');
+  const card = document.getElementById('resume-preview-card');
+  const preview = document.getElementById('resume-preview');
+  if (resume && resume.trim()) {
+    badge.textContent = '已保存';
+    badge.className = 'badge badge-green';
+    card.style.display = 'block';
+    preview.textContent = resume.slice(0, 400) + (resume.length > 400 ? '…' : '');
+  } else {
+    badge.textContent = '未填写';
+    badge.className = 'badge badge-blue';
+    card.style.display = 'none';
+  }
+}
+
+function saveResume() {
+  // If on paste tab, save from textarea; PDF tab already auto-saves
+  const pastePanel = document.getElementById('resume-paste-panel');
+  if (pastePanel && pastePanel.style.display !== 'none') {
+    const val = document.getElementById('resume-text')?.value?.trim();
+    if (!val) { toast('请先输入简历内容', 'error'); return; }
+    LS.setStr('resume', val);
+    LS.setStr('resume_filename', '');  // clear filename since it's pasted text
+  }
+  if (!getResume()?.trim()) { toast('请先上传 PDF 或粘贴简历内容', 'error'); return; }
+  updateResumeStatus();
+  toast('简历已保存', 'success');
+}
+
+function clearResume() {
+  const ta = document.getElementById('resume-text');
+  if (ta) ta.value = '';
+  LS.setStr('resume', '');
+  LS.setStr('resume_filename', '');
+  const infoBar = document.getElementById('pdf-info-bar');
+  if (infoBar) infoBar.style.display = 'none';
+  const fileInput = document.getElementById('pdf-file-input');
+  if (fileInput) fileInput.value = '';
+  updateResumeStatus();
+}
+
+async function generateResumeQuestions() {
+  const resume = getResume();
+  if (!resume?.trim()) { toast('请先保存简历', 'error'); return; }
+  await generateAndAddQuestions('resume', resume, null);
+}
+
+// ═══════════════════════════════════════════════
+//  JD PAGE
+// ═══════════════════════════════════════════════
+function renderJDPage() {
+  const jd = getJD();
+  if (jd.company) document.getElementById('jd-company').value = jd.company || '';
+  if (jd.title) document.getElementById('jd-title').value = jd.title || '';
+  if (jd.text) document.getElementById('jd-text').value = jd.text || '';
+  updateJDStatus();
+}
+
+function updateJDStatus() {
+  const jd = getJD();
+  const card = document.getElementById('jd-status-card');
+  const info = document.getElementById('jd-saved-info');
+  if (jd.text?.trim()) {
+    card.style.display = 'block';
+    info.textContent = `${jd.company || '未知公司'} · ${jd.title || '未知职位'}`;
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+function saveJD() {
+  const company = document.getElementById('jd-company')?.value?.trim();
+  const title = document.getElementById('jd-title')?.value?.trim();
+  const text = document.getElementById('jd-text')?.value?.trim();
+  if (!text) { toast('请先输入职位描述', 'error'); return; }
+  LS.set('jd', { company, title, text });
+  updateJDStatus();
+  toast('JD已保存', 'success');
+}
+
+function clearJD() {
+  ['jd-company', 'jd-title', 'jd-text'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  LS.set('jd', {});
+  updateJDStatus();
+}
+
+async function generateJDQuestions() {
+  const company = document.getElementById('jd-company')?.value?.trim();
+  const title = document.getElementById('jd-title')?.value?.trim();
+  const text = document.getElementById('jd-text')?.value?.trim();
+  if (!text) { toast('请先填写职位描述', 'error'); return; }
+  await generateAndAddQuestions('jd', null, { company, title, text });
+}
+
+async function generateCombinedQuestions() {
+  const resume = getResume();
+  const jd = getJD();
+  if (!resume?.trim() || !jd?.text?.trim()) { toast('请先填写简历和JD', 'error'); return; }
+  await generateAndAddQuestions('combined', resume, jd);
+}
+
+async function generateAndAddQuestions(mode, resume, jd) {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  let prompt = '';
+  if (mode === 'resume') {
+    prompt = `你是一位资深AI产品经理面试官。根据以下候选人简历，生成6个针对性面试题，要深挖简历中具体项目经历和AI PM能力。\n\n简历：\n${resume}\n\n请只输出6个问题，每行一个，不加编号序号以外的格式。`;
+  } else if (mode === 'jd') {
+    prompt = `你是一位资深AI产品经理面试官。根据以下职位描述，生成6个针对性面试题，考察候选人是否具备该职位所需能力。\n\n公司：${jd.company || '未知'}\n职位：${jd.title || '未知'}\nJD内容：\n${jd.text}\n\n请只输出6个问题，每行一个，不加编号序号以外的格式。`;
+  } else {
+    prompt = `你是一位资深AI产品经理面试官。综合候选人简历与目标职位，生成6个高度针对性的面试题，覆盖gap分析和能力验证。\n\n简历：\n${resume}\n\n目标公司：${jd.company || '未知'}\n目标职位：${jd.title || '未知'}\nJD：\n${jd.text}\n\n请只输出6个问题，每行一个，不加编号序号以外的格式。`;
+  }
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 生成中…'; }
+  try {
+    const result = await callClaude([{ role: 'user', content: prompt }], '');
+    const lines = result.split('\n').map(l => l.replace(/^[\d\.\)、]+\s*/, '').trim()).filter(l => l.length > 10);
+    const catMap = { resume: 'custom', jd: 'custom', combined: 'custom' };
+    const cat = catMap[mode] || 'custom';
+    const existing = getCustomQuestions();
+    const newQs = lines.map((text, i) => ({
+      id: `gen_${Date.now()}_${i}`,
+      cat,
+      text,
+      generated: true,
+      source: mode,
+    }));
+    LS.set('custom_questions', [...existing, ...newQs]);
+    updateBadges();
+    toast(`已生成 ${newQs.length} 道面试题并加入题库`, 'success');
+    navigate('questions');
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = { resume: '🤖 从简历生成面试题', jd: '🤖 从JD生成面试题', combined: '🎯 简历+JD联合生成题目' }[mode] || '生成题目'; }
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  QUESTION BANK
+// ═══════════════════════════════════════════════
+function setFilter(cat) {
+  STATE.currentFilter = cat;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const filter = STATE.currentFilter;
+  const search = document.getElementById('q-search')?.value?.toLowerCase() || '';
+  const favs = getFavorites();
+  let qs = getAllQuestions();
+
+  if (filter === 'fav') qs = qs.filter(q => favs.includes(q.id));
+  else if (filter !== 'all') qs = qs.filter(q => q.cat === filter);
+  if (search) qs = qs.filter(q => q.text.toLowerCase().includes(search));
+
+  const listEl = document.getElementById('q-list');
+  if (!listEl) return;
+
+  if (qs.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>${filter === 'fav' ? '还没有收藏的题目' : '暂无匹配题目'}</p></div>`;
+    return;
+  }
+
+  const catInfo = {
+    design: { label: '产品设计', cls: 'cat-design' },
+    ai:     { label: 'AI基础',  cls: 'cat-ai' },
+    bq:     { label: '行为问题', cls: 'cat-bq' },
+    case:   { label: '案例分析', cls: 'cat-case' },
+    custom: { label: '自定义',   cls: 'cat-custom' },
+  };
+
+  listEl.innerHTML = qs.map(q => {
+    const ci = catInfo[q.cat] || catInfo.custom;
+    const isFav = favs.includes(q.id);
+    return `<div class="q-card">
+      <div class="q-content">
+        <div class="q-text">${escHtml(q.text)}</div>
+        <div class="q-meta">
+          <span class="q-cat ${ci.cls}">${ci.label}</span>
+          ${q.generated ? `<span class="chip">AI生成</span>` : ''}
+        </div>
+      </div>
+      <div class="q-actions">
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
+          ${isFav ? '⭐' : '☆'}
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="useQuestion('${escHtml(q.text.replace(/'/g,"&#39;"))}')">练习</button>
+        ${q.custom || q.generated ? `<button class="btn btn-ghost btn-sm" onclick="deleteQuestion('${q.id}')">删</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleFav(id) {
+  const favs = getFavorites();
+  const idx = favs.indexOf(id);
+  if (idx >= 0) favs.splice(idx, 1);
+  else favs.push(id);
+  LS.set('favorites', favs);
+  renderQuestions();
+}
+
+function deleteQuestion(id) {
+  const qs = getCustomQuestions().filter(q => q.id !== id);
+  LS.set('custom_questions', qs);
+  renderQuestions();
+  updateBadges();
+}
+
+function useQuestion(text) {
+  navigate('interview');
+  setTimeout(() => {
+    document.getElementById('q-source').value = 'custom';
+    const grp = document.getElementById('custom-q-group');
+    if (grp) grp.style.display = 'block';
+    const cf = document.getElementById('cat-filter-group');
+    if (cf) cf.style.display = 'none';
+    const inp = document.getElementById('custom-q-input');
+    if (inp) inp.value = decodeHtml(text);
+  }, 100);
+}
+
+function openAddQuestionModal() {
+  document.getElementById('new-q-text').value = '';
+  openModal('add-q-modal');
+}
+
+function addCustomQuestion() {
+  const text = document.getElementById('new-q-text')?.value?.trim();
+  const cat = document.getElementById('new-q-cat')?.value || 'custom';
+  if (!text) { toast('请输入题目内容', 'error'); return; }
+  const qs = getCustomQuestions();
+  qs.push({ id: `custom_${Date.now()}`, cat, text, custom: true });
+  LS.set('custom_questions', qs);
+  updateBadges();
+  renderQuestions();
+  closeModal('add-q-modal');
+  toast('题目已添加', 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  INTERVIEW
+// ═══════════════════════════════════════════════
+function showInterviewConfig() {
+  document.getElementById('interview-config').style.display = '';
+  document.getElementById('active-q-bar').style.display = 'none';
+  document.getElementById('start-btn').style.display = '';
+  document.getElementById('end-btn').style.display = 'none';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  document.getElementById('score-panel').style.display = 'none';
+}
+
+function selectCatPill(btn, val) {
+  const pills = document.getElementById('ai-cat-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+}
+
+function selectKBPill(btn, val) {
+  const pills = document.getElementById('kb-module-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+  renderKBFilePills(val);
+}
+
+function renderKBFilePills(sec) {
+  const group = document.getElementById('kb-file-group');
+  const pills = document.getElementById('kb-file-pills');
+  if (!group || !pills) return;
+  if (sec === 'random') { group.style.display = 'none'; return; }
+
+  const files = getKBFiles(sec).filter(f => f.content?.trim());
+  const hasManual = !!getKBText(sec)?.trim();
+  if (!files.length && !hasManual) { group.style.display = 'none'; return; }
+
+  let html = '<button class="cat-pill active" onclick="selectKBFilePill(this,\'random\')">🎲 随机</button>';
+  files.forEach((f, i) => {
+    html += `<button class="cat-pill" onclick="selectKBFilePill(this,'f${i}')">${escHtml(f.name)}</button>`;
+  });
+  if (hasManual) html += `<button class="cat-pill" onclick="selectKBFilePill(this,'manual')">✏️ 手动输入</button>`;
+
+  pills.innerHTML = html;
+  pills.dataset.selected = 'random';
+  group.style.display = 'block';
+}
+
+function selectKBFilePill(btn, val) {
+  const pills = document.getElementById('kb-file-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+}
+
+function getSelectedKBFile(sec) {
+  const pills = document.getElementById('kb-file-pills');
+  const sel = pills?.dataset.selected || 'random';
+  if (sel === 'random') return null;
+  if (sel === 'manual') return { name: '手动输入', content: getKBText(sec) || '' };
+  const idx = parseInt(sel.slice(1));
+  const files = getKBFiles(sec).filter(f => f.content?.trim());
+  return files[idx] || null;
+}
+
+function selectResumeSectionPill(btn, val) {
+  const pills = document.getElementById('resume-section-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+}
+
+function getSelectedResumeSection() {
+  return document.getElementById('resume-section-pills')?.dataset.selected || 'random';
+}
+
+function getSelectedCat() {
+  return document.getElementById('ai-cat-pills')?.dataset.selected || 'random';
+}
+
+function getSelectedKBModule() {
+  return document.getElementById('kb-module-pills')?.dataset.selected || 'random';
+}
+
+function onSourceChange() {
+  const src = document.getElementById('q-source')?.value;
+  const catGrp = document.getElementById('cat-filter-group');
+  const aiCatGrp = document.getElementById('ai-cat-group');
+  const kbModGrp = document.getElementById('kb-module-group');
+  const customGrp = document.getElementById('custom-q-group');
+  if (catGrp) catGrp.style.display = src === 'bank' ? 'block' : 'none';
+  // Show direction pills for AI sources (except kb which has its own module picker)
+  const aiSrcs = ['random', 'resume', 'jd', 'combined'];
+  if (aiCatGrp) aiCatGrp.style.display = aiSrcs.includes(src) ? 'block' : 'none';
+  if (kbModGrp) kbModGrp.style.display = src === 'kb' ? 'block' : 'none';
+  const kbFileGrp = document.getElementById('kb-file-group');
+  if (kbFileGrp && src !== 'kb') kbFileGrp.style.display = 'none';
+  // Resume section selector: show for resume/combined
+  const resumeSecGrp = document.getElementById('resume-section-group');
+  if (resumeSecGrp) resumeSecGrp.style.display = (src === 'resume' || src === 'combined') ? 'block' : 'none';
+  // Reset selections when switching
+  if (aiSrcs.includes(src)) {
+    const pills = document.getElementById('ai-cat-pills');
+    if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
+  }
+  if (src === 'kb') {
+    const pills = document.getElementById('kb-module-pills');
+    if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
+    if (kbFileGrp) kbFileGrp.style.display = 'none';
+  }
+  if (src === 'resume' || src === 'combined') {
+    const pills = document.getElementById('resume-section-pills');
+    if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
+  }
+  if (customGrp) customGrp.style.display = src === 'custom' ? 'block' : 'none';
+  // Show KB hint if kb source selected but KB is empty
+  if (src === 'kb') {
+    const kbCtx = getKBContext();
+    if (!kbCtx) toast('知识库为空，请先在「知识库」页面添加内容', 'info', 4000);
+  }
+}
+
+// Parse a question out of Claude's response — skip label lines ending with ：/:
+function parseQuestion(raw) {
+  const lines = raw.split('\n')
+    .map(l => l.replace(/^[\d\.\)、\-\*]+\s*/, '').trim())
+    .filter(l => l.length > 8 && !/[：:]$/.test(l) && !/^(面试题|问题|题目|以下是|这是|下面是)/.test(l));
+  if (!lines.length) throw new Error('未能生成题目，请重试');
+  return lines[0];
+}
+
+async function genQuestion(prompt) {
+  const sys = '你是面试出题专家。直接输出题目本身，不加序号、前缀或任何解释。';
+  const result = await callClaude([{ role: 'user', content: prompt }], sys);
+  return parseQuestion(result);
+}
+
+async function startInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  const startBtn = document.getElementById('start-btn');
+  if (startBtn.disabled) return;
+  startBtn.disabled = true;
+
+  const src = document.getElementById('q-source')?.value;
+  let question = '';
+  let subCategory = ''; // tracks resume section or KB module actually used
+
+  const abort = (msg, dest) => { startBtn.disabled = false; toast(msg, 'error'); if (dest) navigate(dest); };
+
+  if (src === 'custom') {
+    question = document.getElementById('custom-q-input')?.value?.trim();
+    if (!question) { abort('请输入自定义题目'); return; }
+  } else if (src === 'bank') {
+    const cat = document.getElementById('bank-cat')?.value;
+    let pool = getAllQuestions();
+    if (cat !== 'all') pool = pool.filter(q => q.cat === cat);
+    if (pool.length === 0) { abort('当前分类没有题目'); return; }
+    question = pool[Math.floor(Math.random() * pool.length)].text;
+  } else if (src === 'kb') {
+    const kbCtx = getKBContext();
+    if (!kbCtx) { abort('知识库为空，请先在「知识库」页面添加内容', 'kb'); return; }
+    // Determine focus: user-selected module or auto-rotate
+    const selectedMod = getSelectedKBModule();
+    let focus;
+    if (selectedMod !== 'random') {
+      focus = selectedMod;
+    } else {
+      const kbSections = [];
+      if (getKBFiles('projects').length || getKBText('projects')) kbSections.push('projects');
+      if (getKBFiles('qna').length     || getKBText('qna'))      kbSections.push('qna');
+      if (getKBFiles('notes').length   || getKBText('notes'))    kbSections.push('notes');
+      const lastFocus = STATE._kbLastFocus || '';
+      const remaining = kbSections.filter(s => s !== lastFocus);
+      focus = remaining.length ? remaining[Math.floor(Math.random() * remaining.length)] : kbSections[0];
+      STATE._kbLastFocus = focus;
+    }
+
+    const focusLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点' };
+
+    // Pick one random document from the focused section so every doc gets equal coverage
+    function pickOneDoc(sec) {
+      const files = getKBFiles(sec).filter(f => f.content?.trim());
+      const manualText = getKBText(sec)?.trim();
+      const pool = [];
+      files.forEach(f => pool.push({ name: f.name, content: f.content.trim() }));
+      if (manualText) pool.push({ name: '手动输入', content: manualText });
+      if (!pool.length) return null;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    // Build a context using selected file (if any) or random pick
+    let focusCtx = kbCtx;
+    let focusInstruction = '';
+    if (focus === 'projects') {
+      const doc = getSelectedKBFile('projects') || pickOneDoc('projects');
+      if (doc) {
+        focusCtx = `【本次考察的项目/实习经历】\n[${doc.name}]\n${doc.content}`;
+        focusInstruction = `针对上面这段项目/实习经历，出1道深挖候选人决策过程、遇到的挑战或可量化成果的面试题。直接输出题目，不超过60字，不加前缀。`;
+      }
+    } else if (focus === 'qna') {
+      const doc = getSelectedKBFile('qna') || pickOneDoc('qna');
+      if (doc) {
+        focusCtx = `【本次考察的Q&A】\n[${doc.name}]\n${doc.content}`;
+        focusInstruction = `分析上面这条Q&A答案，找出其中1个最值得追问的薄弱点或可深挖的地方，针对它出1道追问题。直接输出题目，不超过60字，不加前缀。`;
+      }
+    } else if (focus === 'notes') {
+      const doc = getSelectedKBFile('notes') || pickOneDoc('notes');
+      if (doc) {
+        focusCtx = `【本次考察的知识点】\n[${doc.name}]\n${doc.content}`;
+        focusInstruction = `根据上面这份知识点笔记，出1道考察候选人对该知识点真实理解深度或实际应用能力的面试题（产品侧，不考算法）。直接输出题目，不超过60字，不加前缀。`;
+      }
+    }
+    if (!focusInstruction) {
+      // fallback
+      focusInstruction = focus === 'projects'
+        ? `根据候选人的【项目/实习经历】，出1道深挖其项目决策、遇到的挑战或成果的面试题。直接输出题目，不超过60字，不加前缀。`
+        : focus === 'qna'
+        ? `根据候选人【已准备的Q&A答案库】，找出一个答案中可能存在的薄弱点，针对它出1道追问题。直接输出题目，不超过60字，不加前缀。`
+        : `根据候选人的【知识点笔记】，出1道考察其对某个知识点的真实理解深度或实际应用能力的面试题。直接输出题目，不超过60字，不加前缀。`;
+    }
+
+    subCategory = focus; // 'projects' | 'qna' | 'notes' | 'random'
+    const selFile = focus !== 'random' ? getSelectedKBFile(focus) : null;
+    const toastLabel = selFile ? `「${selFile.name}」` : `「${focusLabels[focus] || focus}」`;
+    toast(`基于 ${toastLabel} 生成题目…`, 'info');
+    try {
+      const prompt = `${focusInstruction}\n\n候选人资料：\n${focusCtx}`;
+      question = await genQuestion(prompt);
+    } catch (e) { abort(e.message); return; }
+  } else if (src === 'random') {
+    const selCat = getSelectedCat();
+    const fallbackCats = ['产品思维', 'AI基础知识', '行为问题BQ'];
+    const cat = selCat === 'random' ? fallbackCats[Math.floor(Math.random() * fallbackCats.length)] : selCat;
+    toast(`生成「${cat}」方向题目…`, 'info');
+    try {
+      const catDesc = {
+        '产品思维': '产品设计、功能规划、需求分析、用户体验、数据驱动决策、商业变现——可同时考察AI产品视角',
+        'AI基础知识': 'LLM原理、RAG、Prompt工程、模型评估、AI伦理、幻觉问题、AI产品落地挑战——可结合产品场景出题',
+        '个人动机': '为什么想做AI产品经理、对AI行业的理解与判断、职业规划、个人经历与转型动机',
+        '行为问题BQ': '过往项目经历、跨团队协作、冲突处理、失败复盘、领导力（请用STAR法则框架回答）',
+      };
+      const prompt = `直接输出1道「${cat}」方向的AI产品经理面试题，覆盖范围：${catDesc[cat] || cat}。不超过60字，不加任何前缀、序号、解释。`;
+      question = await genQuestion(prompt);
+    } catch (e) { abort(e.message); return; }
+  } else {
+    const resume = getResume();
+    const jd = getJD();
+    if ((src === 'resume' || src === 'combined') && !resume?.trim()) { abort('请先填写简历', 'resume'); return; }
+    if ((src === 'jd' || src === 'combined') && !jd?.text?.trim()) { abort('请先填写JD', 'jd'); return; }
+    // Determine resume section before prompt so it can be saved to history
+    if (src === 'resume' || src === 'combined') {
+      const sel = getSelectedResumeSection();
+      subCategory = sel !== 'random' ? sel : RESUME_SECTIONS[Math.floor(Math.random() * RESUME_SECTIONS.length)];
+    }
+    toast('正在生成题目…', 'info');
+    try {
+      const selCat = getSelectedCat();
+      const catHint = selCat !== 'random' ? `\n\n题目方向限定为「${selCat}」类问题。` : '';
+      question = await genQuestion(buildGenPrompt(src, resume, jd, subCategory) + catHint);
+    } catch (e) { abort(e.message); return; }
+  }
+
+  // Reset state
+  const pref = getPref();
+  const maxTurns = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, hasVoiceInput: false, rewrites: [] };
+
+  // Reset UI
+  document.getElementById('chat-empty').style.display = 'none';
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  // Collapse config, show question bar
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+
+  // First message from AI
+  await askQuestion();
+}
+
+const RESUME_SECTIONS = ['教育背景', '实习经历', '项目经历'];
+
+function buildGenPrompt(src, resume, jd, forcedSection) {
+  const kbCtx = getKBContext();
+  const kbSection = kbCtx ? `\n\n${kbCtx}` : '';
+
+  // Use pre-determined section (passed in) for even coverage; fallback to random if not provided
+  const needsSection = (src === 'resume' || src === 'combined');
+  let sectionHint = '\n只输出题目本身，不加任何前缀。';
+  if (needsSection) {
+    const sec = forcedSection || RESUME_SECTIONS[Math.floor(Math.random() * RESUME_SECTIONS.length)];
+    sectionHint = `\n\n出题要求：只根据简历中【${sec}】部分的内容出1道深度面试题，不要参考其他部分。只输出题目本身，不加任何前缀。`;
+  }
+
+  if (src === 'resume') return `你是面试官，根据以下简历生成1个深度面试题：\n${resume}${sectionHint}`;
+  if (src === 'jd') return `你是面试官，根据以下JD生成1个针对性面试题：\n公司：${jd?.company}\n职位：${jd?.title}\nJD：${jd?.text}${kbSection}\n只输出题目本身，不加任何前缀。`;
+  return `你是面试官，综合以下简历和JD生成1个高度针对性的面试题：\n简历：${resume}\n\n目标：${jd?.company} ${jd?.title}\n${jd?.text}${sectionHint}`;
+}
+
+async function askQuestion() {
+  const { question, messages, turn, maxTurns } = STATE.interview;
+  const pref = getPref();
+
+  const styleDesc = {
+    general: '面试风格：通用，综合考察各维度能力。',
+    bytedance: '面试风格：字节跳动风格，注重逻辑推理、数据驱动思维，会challenge思维漏洞。',
+    baidu: '面试风格：百度风格，注重AI技术理解深度，考察对LLM/搜索/AI能力边界的认知。',
+    alibaba: '面试风格：阿里巴巴风格，注重业务价值、GMV/ROI思维和用户增长方法论。',
+  };
+  const diffDesc = {
+    normal: '难度：普通。态度友好，追问引导性强，给候选人思考空间。',
+    strict: '难度：严格。直接质疑逻辑漏洞，不接受模糊表述，要求具体数据和案例。',
+    hell: '难度：地狱。极度严苛，主动寻找答案弱点，连续追问，不接受任何模糊或表面答案。',
+  };
+
+  const lastAnswerWasVoice = STATE.interview.lastTurnVoice || false;
+  const voiceNote = lastAnswerWasVoice
+    ? `- 候选人刚才是语音输入。请在回复最前面先输出一行"[理解：用15字内概括你理解候选人表达的核心意思]"，然后换行再问追问。第1轮不需要理解行。`
+    : `- 候选人可能使用语音输入，请理解其实际意图`;
+
+  const kbCtx = getKBContext();
+  const kbSection = kbCtx ? `
+
+【候选人知识库——追问必读】
+以下是候选人上传的真实背景资料，包含项目经历、Q&A准备和知识点笔记。
+
+追问规则：
+1. 当候选人回答中提到某段经历或项目时，立刻对照下方资料，用资料里的具体细节（数据、技术、决策）发起追问，例如："你提到XX项目，资料里显示你负责了YY模块，当时遇到的最大挑战是什么？"
+2. 若候选人的回答与资料内容有出入或表述模糊，直接点出并追问："你刚才说了A，但你的资料里提到B，能解释一下吗？"
+3. 若候选人没有主动提到某段重要经历，可以在追问时主动引出："我看到你有过XX经历，结合这次题目，你认为……？"
+
+${kbCtx}` : '';
+
+  const system = `你是AI产品经理面试官。
+${styleDesc[pref.style] || styleDesc.general}
+${diffDesc[pref.difficulty] || diffDesc.strict}
+
+严格遵守：
+- 第1轮：直接提出面试题，不加任何开场白，最多1句话
+- 第2~${maxTurns}轮：只问1个追问，不超过40字，不拆分成多个子问题，不用"第一…第二…"列举
+- 第${maxTurns}轮回答后：先输出"[INTERVIEW_END]"，再用1句话点评
+- 禁止：多问题列举、"好的""我来问你""别急着说""先把…讲透"等废话前缀
+- 每次回复必须只含1个问号
+${voiceNote}
+${kbSection}
+
+追问方向（只能从以下方向深挖）：
+- 产品思维：用户价值、需求优先级、功能边界、竞品差异
+- 商业逻辑：变现模式、增长路径、成功指标、ROI
+- 执行落地：MVP范围、资源分配、上线策略、风险应对
+- 数据决策：如何衡量、如何验证假设、数据指标定义
+- 团队协作：如何推动跨部门对齐、如何与算法团队合作
+
+严禁追问以下内容（这是PM面试，不是算法岗）：
+- 算法原理、数学公式、模型架构细节
+- 代码实现、时间复杂度、具体工程方案
+- 模型参数调优、训练数据处理等纯技术问题
+
+- 面试题：${question}`;
+
+  const apiMessages = turn === 0
+    ? [{ role: 'user', content: '开始' }]
+    : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+  addMessage('ai', '');
+  const lastMsgEl = document.getElementById('chat-messages').lastElementChild;
+  const bubbleEl = lastMsgEl?.querySelector('.msg-bubble');
+  if (bubbleEl) bubbleEl.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+  STATE.isGenerating = true;
+  document.getElementById('send-btn').disabled = true;
+
+  // Helper: strip [理解：...] prefix from text, show it in voice-tip instead
+  const extractUnderstanding = (text) => {
+    const m = text.match(/^\[理解[：:]\s*(.+?)\]\n?/);
+    if (!m) return text;
+    const vtClean = document.getElementById('vt-clean');
+    if (vtClean) vtClean.textContent = m[1].trim();
+    return text.slice(m[0].length);
+  };
+
+  try {
+    let finalText = '';
+    finalText = await callClaude(apiMessages, system, text => {
+      const display = extractUnderstanding(text);
+      if (bubbleEl) bubbleEl.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
+      scrollChat();
+    });
+
+    const displayText = extractUnderstanding(finalText);
+    if (bubbleEl) bubbleEl.innerHTML = formatMsg(displayText);
+
+    // Store clean text (without [理解：] prefix) in messages
+    const msgs = STATE.interview.messages;
+    if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
+      msgs[msgs.length - 1].content = displayText;
+    }
+
+    if (displayText.includes('[INTERVIEW_END]')) {
+      endInterviewFlow();
+    }
+  } catch (e) {
+    if (bubbleEl) bubbleEl.innerHTML = `<span style="color:var(--danger)">⚠️ ${e.message}</span>`;
+    toast(e.message, 'error');
+  } finally {
+    STATE.isGenerating = false;
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+function addMessage(role, content) {
+  const { messages } = STATE.interview;
+  const msg = { role, content, time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) };
+  messages.push(msg);
+
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  el.innerHTML = `
+    <div class="msg-avatar">${role === 'ai' ? '🤖' : '👤'}</div>
+    <div>
+      <div class="msg-bubble">${formatMsg(content)}</div>
+      <div class="msg-meta">${msg.time}</div>
+    </div>`;
+  document.getElementById('chat-messages').appendChild(el);
+  scrollChat();
+  return el;
+}
+
+function scrollChat() {
+  const el = document.getElementById('chat-messages');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendMessage() {
+  if (STATE.isGenerating) return;
+  const input = document.getElementById('chat-input');
+  const content = input?.value?.trim();
+  if (!content) return;
+  if (!STATE.interview.active) { toast('请先点击「开始面试」', 'info'); return; }
+
+  input.value = '';
+  autoResize(input);
+
+  STATE.interview.turn++;
+  // Track whether THIS turn used voice (for per-turn [理解：] echo)
+  STATE.interview.lastTurnVoice = STATE.isRecording || STATE.interview._pendingVoice || false;
+  STATE.interview._pendingVoice = false;
+  if (STATE.isRecording) {
+    STATE.interview.hasVoiceInput = true;
+    stopVoice();
+  }
+  addMessage('user', content);
+  updateTurnIndicator();
+
+  await askQuestion();
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function updateTurnIndicator() {
+  const { turn, maxTurns } = STATE.interview;
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById(`td${i}`);
+    if (!dot) continue;
+    dot.style.display = i < maxTurns ? '' : 'none'; // hide extra dots
+    dot.className = 'turn-dot' + (i < turn ? '' : ' inactive');
+  }
+  const label = document.getElementById('turn-label');
+  if (label) label.textContent = turn < maxTurns ? `第${turn + 1}轮` : '最终轮';
+  const pref = getPref();
+  const modeLabel = document.getElementById('turn-mode-label');
+  if (modeLabel) {
+    const diffLabels = { normal: '普通', strict: '严格', hell: '地狱🔥' };
+    const styleLabels = { general: '通用', bytedance: '字节风格', baidu: '百度风格', alibaba: '阿里风格' };
+    modeLabel.textContent = `${diffLabels[pref.difficulty] || ''} · ${styleLabels[pref.style] || ''}`;
+  }
+}
+
+function endInterview() {
+  if (!STATE.interview.active) return;
+  STATE.interview.active = false;
+  addMessage('ai', '面试已结束，正在评分中…');
+  endInterviewFlow();
+}
+
+async function endInterviewFlow() {
+  STATE.interview.active = false;
+  document.getElementById('end-btn').style.display = 'none';
+  document.getElementById('chat-input-area').style.display = 'none';
+  document.getElementById('turn-indicator').style.display = 'none';
+  // Keep config hidden, show reconfig button
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('reconfig-btn').style.display = 'none';
+
+  // Generate score (start-btn stays hidden during scoring to prevent double-start)
+  await generateScore();
+
+  // Show action buttons in score panel instead of config
+}
+
+async function generateScore() {
+  const { messages, question, hasVoiceInput } = STATE.interview;
+  if (messages.length < 2) return;
+
+  const dialog = messages.map(m => `${m.role === 'ai' ? '[面试官]' : '[候选人]'} ${m.content}`).join('\n\n');
+
+  const voiceScoreNote = hasVoiceInput
+    ? `\n重要提示：候选人本次使用了语音输入。评分时请：
+- 聚焦于内容质量、思维深度和逻辑结构，而非语言流畅度
+- 对口语化表达、同音字错误、断句问题保持宽容，不视为表达能力弱
+- "表达能力"维度只评估思路清晰度和论点组织，不评估书面语规范性`
+    : '';
+
+  const system = `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
+
+你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
+- score: 整体综合分（整数1-10）
+- structural_thinking: 结构化思维分（整数1-10）
+- product_sense: 产品感分（整数1-10）
+- ai_depth: AI理解深度分（整数1-10）
+- communication: 表达能力分（整数1-10）
+- highlights: 亮点字符串数组（2-3条）
+- weaknesses: 不足字符串数组（1-2条）
+- suggestions: 改进建议字符串数组（2-3条）
+- summary: 总结性点评字符串（100字内）
+
+示例格式（请填入真实评分，不要照抄示例）：
+{"score":7,"structural_thinking":7,"product_sense":6,"ai_depth":8,"communication":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}`;
+
+  const prompt = `面试题目：${question}\n\n面试对话：\n${dialog}`;
+
+  const scorePanel = document.getElementById('score-panel');
+  const scoreContent = document.getElementById('score-content');
+  scorePanel.style.display = 'block';
+  scoreContent.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)">⏳ AI正在评分中…</div>';
+  scorePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    const raw = await callClaude([{ role: 'user', content: prompt }], system, null, 0, true /* jsonMode */);
+    const data = robustParseJSON(raw);
+    renderScore(data);
+    // Save to history
+    const history = getHistory();
+    const pref = getPref();
+    const hId = `h_${Date.now()}`;
+    history.unshift({
+      id: hId,
+      time: new Date().toLocaleString('zh-CN'),
+      question: question.slice(0, 80),
+      source: STATE.interview.source,
+      subCategory: STATE.interview.subCategory || '',
+      turns: STATE.interview.turn,
+      messages: STATE.interview.messages,
+      score: data,
+      difficulty: pref.difficulty,
+      style: pref.style,
+    });
+    LS.set('history', history.slice(0, 50));
+    updateBadges();
+
+    // Auto-generate reference answers in background and save to history
+    generateReferenceAnswer(STATE.interview.messages, question, hId);
+  } catch (e) {
+    console.error('[评分失败]', e);
+    scoreContent.innerHTML = `<div style="color:var(--danger);padding:16px;line-height:1.7">
+      <div style="font-weight:600;margin-bottom:6px">⚠️ 评分失败</div>
+      <div style="font-size:12px;opacity:.85;word-break:break-all">${escHtml(e.message)}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;font-size:12px" onclick="retryScore()">🔄 重新评分</button>
+    </div>`;
+  }
+}
+
+// Retry scoring with the current interview state
+async function retryScore() {
+  const { messages } = STATE.interview;
+  if (!messages || messages.length < 2) { toast('无法重新评分：对话记录已丢失', 'error'); return; }
+  await generateScore();
+}
+
+async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
+  const section = document.getElementById('score-ref-section');
+  if (!section) return;
+
+  // Extract Q&A pairs (skip [INTERVIEW_END] messages)
+  const pairs = [];
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i];
+    if (m.role === 'ai' && !m.content.includes('[INTERVIEW_END]')) {
+      pairs.push({ question: m.content, userAnswer: messages[i + 1]?.content || '' });
+    }
+  }
+  if (pairs.length === 0) return;
+
+  // Render skeleton — 改写 + 参考答案 per round
+  section.innerHTML = `
+    <div class="score-section-title" style="color:var(--accent);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:20px 0 12px;display:flex;align-items:center;gap:6px">
+      ✨ 各轮改写 &amp; 参考答案
+    </div>
+    ${pairs.map((p, i) => `
+      <div style="margin-bottom:22px">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">第${i + 1}轮问题</div>
+        <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.6">${escHtml(p.question)}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:6px">📝 改写版本</div>
+        <div class="rewrite-box" id="ref-imp-${i}" style="white-space:pre-wrap;line-height:1.75;min-height:40px"><span style="color:var(--text-muted)">生成中…</span></div>
+        <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px;margin-top:10px">⭐ 参考答案</div>
+        <div class="rewrite-box" id="ref-ans-${i}" style="white-space:pre-wrap;line-height:1.75;min-height:40px"><span style="color:var(--text-muted)">生成中…</span></div>
+      </div>`).join('')}`;
+
+  // Include KB context to ground personal-experience answers in real data
+  const kbCtx = getKBContext();
+  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
+
+  // Single API call: improved rewrite + standard reference per round
+  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出两部分内容：
+1. 改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
+2. 参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
+
+重要规则：
+- 若题目涉及候选人自身经历（"你做过什么""你负责了什么"等），改写版本必须严格基于【候选人真实背景资料】中的真实信息，不得虚构项目名称、数据或职责
+- 参考答案可以展示理想回答结构，但凡引用候选人经历时，同样只能使用背景资料中存在的内容
+- 候选人没有做过的事、资料中没有的数据，不要编造`;
+
+  const questionsText = pairs.map((p, i) =>
+    `【第${i+1}轮问题】${p.question}\n【第${i+1}轮候选人回答】${p.userAnswer}`
+  ).join('\n\n');
+
+  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的两部分内容。${kbBlock}
+格式严格如下（不加任何多余文字）：
+
+【第1轮改写版本】
+...
+
+【第1轮参考答案】
+...
+
+【第2轮改写版本】
+...
+
+【第2轮参考答案】
+...
+
+面试内容：
+${questionsText}`;
+
+  // Build marker → element-id map for streaming updates
+  const allMarkers = [];
+  const markerToEl = {};
+  pairs.forEach((_, i) => {
+    const impM = `【第${i+1}轮改写版本】`, ansM = `【第${i+1}轮参考答案】`;
+    allMarkers.push(impM, ansM);
+    markerToEl[impM] = `ref-imp-${i}`;
+    markerToEl[ansM] = `ref-ans-${i}`;
+  });
+
+  // Extract one section from accumulated text
+  function extractSection(text, marker) {
+    const start = text.indexOf(marker);
+    if (start === -1) return null; // not yet seen
+    const afterStart = start + marker.length;
+    let end = text.length;
+    for (const m of allMarkers) {
+      const pos = text.indexOf(m, afterStart);
+      if (pos !== -1 && pos < end) end = pos;
+    }
+    return text.slice(afterStart, end).trimStart();
+  }
+
+  // Stream callback: update each element as text arrives
+  function onRefStream(text) {
+    for (const [marker, elId] of Object.entries(markerToEl)) {
+      const content = extractSection(text, marker);
+      if (content === null) continue; // marker not yet seen
+      const el = document.getElementById(elId);
+      if (el) el.textContent = content;
+    }
+  }
+
+  try {
+    const result = await callClaude([{ role: 'user', content: prompt }], system, onRefStream);
+
+    // Final pass: trim and save
+    const parsedAnswers = pairs.map((p, i) => {
+      const improved = (extractSection(result, `【第${i+1}轮改写版本】`) || '').trim();
+      const answer   = (extractSection(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const impEl = document.getElementById(`ref-imp-${i}`);
+      const ansEl = document.getElementById(`ref-ans-${i}`);
+      if (impEl) impEl.textContent = improved || '–';
+      if (ansEl) ansEl.textContent = answer   || '–';
+      return { question: p.question, userAnswer: p.userAnswer, improved, answer };
+    });
+
+    if (hId && parsedAnswers.length) {
+      const hist = getHistory();
+      const rec = hist.find(h => h.id === hId);
+      if (rec) { rec.refAnswers = parsedAnswers; LS.set('history', hist.slice(0, 50)); }
+    }
+  } catch (e) {
+    pairs.forEach((_, i) => {
+      [document.getElementById(`ref-imp-${i}`), document.getElementById(`ref-ans-${i}`)].forEach(el => {
+        if (el) { el.textContent = '生成失败：' + e.message; el.style.color = 'var(--danger)'; }
+      });
+    });
+  }
+}
+
+function renderScore(data) {
+  const pct = (data.score / 10 * 100).toFixed(0);
+  const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
+  const dims = [
+    { name: '结构化思维', val: data.structural_thinking },
+    { name: '产品感', val: data.product_sense },
+    { name: 'AI理解深度', val: data.ai_depth },
+    { name: '表达能力', val: data.communication },
+  ];
+  document.getElementById('score-content').innerHTML = `
+    <div class="score-header">
+      <div class="score-big" style="--pct:${pct}%;background:conic-gradient(${color} ${pct}%,var(--surface2) 0%)">
+        <div class="score-big-num" style="color:${color}">${data.score}</div>
+      </div>
+      <div>
+        <div class="score-title">综合评分 ${data.score}/10</div>
+        <div class="score-summary">${escHtml(data.summary || '')}</div>
+      </div>
+    </div>
+    <div class="score-dims">
+      ${dims.map(d => `
+        <div class="dim-item">
+          <div class="dim-name">${d.name}</div>
+          <div class="dim-bar-wrap"><div class="dim-bar" style="width:${(d.val||0)*10}%"></div></div>
+          <div class="dim-val">${d.val || '-'}/10</div>
+        </div>`).join('')}
+    </div>
+    <div class="score-section">
+      <div class="score-section-title">✨ 亮点</div>
+      <div class="score-list">
+        ${(data.highlights || []).map(h => `<div class="score-list-item"><span class="icon">💡</span><span>${escHtml(h)}</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="score-section">
+      <div class="score-section-title">⚠️ 不足</div>
+      <div class="score-list">
+        ${(data.weaknesses || []).map(w => `<div class="score-list-item"><span class="icon">❗</span><span>${escHtml(w)}</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="score-section">
+      <div class="score-section-title">🎯 改进建议</div>
+      <div class="score-list">
+        ${(data.suggestions || []).map(s => `<div class="score-list-item"><span class="icon">→</span><span>${escHtml(s)}</span></div>`).join('')}
+      </div>
+    </div>
+    <div id="score-ref-section"></div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  VOICE
+// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  REWRITE / REFERENCE ANSWER
+// ═══════════════════════════════════════════════
+async function showRewrite() {
+  const input = document.getElementById('chat-input');
+  const userAnswer = input?.value?.trim();
+  if (!userAnswer) { toast('请先输入或语音录入你的回答', 'info'); return; }
+  if (!STATE.interview.active && !STATE.interview.question) { toast('请先开始面试', 'info'); return; }
+
+  const question = STATE.interview.question || '';
+
+  // Store for useRewrite()
+  STATE.rewriteImproved = '';
+  STATE.rewriteStandard = '';
+
+  openModal('rewrite-modal');
+  document.getElementById('rewrite-improved').textContent = '生成中…';
+  document.getElementById('rewrite-standard').textContent = '生成中…';
+  // Show "使用此版本" buttons (live interview mode)
+  document.querySelectorAll('.rewrite-use-btn').forEach(b => b.style.display = '');
+
+  const isVoice = STATE.interview.hasVoiceInput || STATE.isRecording;
+  const systemImproved = `你是一位资深AI产品经理面试辅导专家。
+任务：对候选人的面试回答进行语言和结构优化，保留其核心观点，使表达更清晰、逻辑更严密、更有说服力。
+要求：
+- 保持第一人称，保留候选人原有的核心思路和亮点
+- 优化结构（如加入STAR、总分总等框架）
+- 语言精炼，去掉废话，增强专业感
+- 直接输出改写后的答案，不加任何说明前缀${isVoice ? '\n- 输入来自语音识别，可能含口语化表达或识别错误，请先理解实际意图再改写，不要保留明显的识别偏差词汇' : ''}`;
+
+  const systemStandard = `你是一位资深AI产品经理，同时也是顶级面试官。
+任务：针对该面试题，给出一个满分级别的标准参考答案。
+要求：
+- 结构清晰（可使用STAR、总分总、数据佐证等）
+- 体现AI PM的核心能力：产品思维、数据驱动、AI理解深度
+- 答案完整但精炼，约200-300字
+- 直接输出答案，不加任何说明前缀`;
+
+  const userMsgImproved = `面试题：${question}\n\n候选人的回答：${userAnswer}\n\n请对候选人的回答进行改写优化。`;
+  const userMsgStandard = `面试题：${question}\n\n请给出这道题的标准参考答案。`;
+
+  // Run sequentially via the API queue — parallel calls trigger rate limits
+  try {
+    await callClaude([{ role: 'user', content: userMsgImproved }], systemImproved, text => {
+      STATE.rewriteImproved = text;
+      const el = document.getElementById('rewrite-improved');
+      if (el) el.textContent = text;
+    });
+  } catch (e) {
+    const el = document.getElementById('rewrite-improved');
+    if (el) el.textContent = '生成失败：' + e.message;
+  }
+
+  try {
+    await callClaude([{ role: 'user', content: userMsgStandard }], systemStandard, text => {
+      STATE.rewriteStandard = text;
+      const el = document.getElementById('rewrite-standard');
+      if (el) el.textContent = text;
+    });
+  } catch (e) {
+    const el = document.getElementById('rewrite-standard');
+    if (el) el.textContent = '生成失败：' + e.message;
+  }
+
+}
+
+function useRewrite(type) {
+  const text = type === 'improved' ? STATE.rewriteImproved : STATE.rewriteStandard;
+  if (!text) return;
+  const input = document.getElementById('chat-input');
+  if (input) { input.value = text; autoResize(input); input.focus(); }
+  closeModal('rewrite-modal');
+  toast('已填入输入框，确认后点发送', 'success');
+}
+
+
+function stopVoice(autoTranscribe = false) {
+  if (STATE.recognition) {
+    STATE.recognition.onresult = null;
+    STATE.recognition.onerror = null;
+    STATE.recognition.onend = null;
+    try { STATE.recognition.stop(); } catch {}
+    STATE.recognition = null;
+  }
+  STATE.isRecording = false;
+  if (STATE.interview) STATE.interview._pendingVoice = true; // mark that voice was used this turn
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.classList.remove('recording'); btn.title = '语音输入'; }
+
+  // Show raw voice text in tip immediately — no extra API call
+  if (autoTranscribe) {
+    const inp = document.getElementById('chat-input');
+    const raw = inp?.value?.trim();
+    if (raw) {
+      const tip = document.getElementById('voice-tip');
+      const vtRaw = document.getElementById('vt-raw');
+      const vtClean = document.getElementById('vt-clean');
+      if (tip && vtRaw && vtClean) {
+        vtRaw.textContent = raw;
+        vtClean.textContent = '面试官回复时会显示理解结果…';
+        tip.style.display = 'block';
+      }
+    }
+  }
+}
+
+function hideVoiceTip() {
+  const tip = document.getElementById('voice-tip');
+  if (tip) tip.style.display = 'none';
+}
+
+
+// autoTranscribeVoice removed — understanding is now embedded in interviewer response ([理解：...])
+
+function toggleVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { toast('浏览器不支持语音识别，请使用Chrome', 'error'); return; }
+
+  if (STATE.isRecording) { stopVoice(true); return; } // true = AI cleanup
+
+  // Clear input and voice tip before each new recording session
+  const input = document.getElementById('chat-input');
+  if (input) { input.value = ''; autoResize(input); }
+  hideVoiceTip();
+
+  const rec = new SpeechRecognition();
+  rec.lang = 'zh-CN';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 3;
+  rec.onresult = e => {
+    let finalText = '';
+    let interimText = '';
+    for (let i = 0; i < e.results.length; i++) {
+      // isFinal results are fully processed and more accurate
+      if (e.results[i].isFinal) {
+        finalText += e.results[i][0].transcript;
+      } else {
+        interimText += e.results[i][0].transcript;
+      }
+    }
+    STATE._voiceFinal = finalText;
+    const inp = document.getElementById('chat-input');
+    if (inp) { inp.value = finalText + interimText; autoResize(inp); }
+  };
+  rec.onerror = () => stopVoice(false);
+  rec.onend = () => stopVoice(false);
+  rec.start();
+  STATE.recognition = rec;
+  STATE.isRecording = true;
+  const btn = document.getElementById('voice-btn');
+  if (btn) { btn.classList.add('recording'); btn.title = '点击停止录音'; }
+  toast('开始语音输入…', 'info');
+}
+
+// ═══════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════
+let _hfSrc = 'all', _hfSub = 'all';
+
+const HF_SUB_CATS = {
+  resume: [
+    { val: 'all', label: '全部' },
+    { val: '教育背景', label: '🎓 教育背景' },
+    { val: '实习经历', label: '💼 实习经历' },
+    { val: '项目经历', label: '🛠 项目经历' },
+  ],
+  kb: [
+    { val: 'all', label: '全部' },
+    { val: 'projects', label: '💼 项目经历' },
+    { val: 'qna', label: '📝 面试Q&A' },
+    { val: 'notes', label: '📚 知识点' },
+  ],
+};
+
+function setHfSrc(btn, val) {
+  _hfSrc = val;
+  _hfSub = 'all';
+  const srcPills = document.getElementById('hf-src-pills');
+  srcPills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Show sub-category row for resume / kb
+  const subRow = document.getElementById('hf-sub-row');
+  const subPills = document.getElementById('hf-sub-pills');
+  const subCats = HF_SUB_CATS[val];
+  if (subCats) {
+    subPills.innerHTML = subCats.map((c, i) =>
+      `<button class="cat-pill${i === 0 ? ' active' : ''}" onclick="setHfSub(this,'${c.val}')">${c.label}</button>`
+    ).join('');
+    subRow.style.display = 'block';
+  } else {
+    subRow.style.display = 'none';
+  }
+  renderHistory();
+}
+
+function setHfSub(btn, val) {
+  _hfSub = val;
+  const subPills = document.getElementById('hf-sub-pills');
+  subPills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+// keep old name as alias so nothing else breaks
+function setHistoryFilter(f) {
+  const btn = document.querySelector(`#hf-src-pills .cat-pill[onclick*="'${f}'"]`);
+  if (btn) setHfSrc(btn, f);
+  renderHistory();
+}
+
+function toggleFavorite(id) {
+  const history = getHistory();
+  const h = history.find(x => x.id === id);
+  if (h) { h.starred = !h.starred; LS.set('history', history); renderHistory(); updateBadges(); }
+}
+
+function deleteHistory(id) {
+  const history = getHistory().filter(x => x.id !== id);
+  LS.set('history', history);
+  renderHistory();
+  updateBadges();
+  toast('已删除', 'info');
+}
+
+function buildHistoryDialog(h) {
+  let userIdx = 0;
+  return (h.messages || []).map(function(m) {
+    var isUser = m.role === 'user';
+    var ref = (isUser && h.refAnswers && h.refAnswers.length) ? h.refAnswers[userIdx] : null;
+    if (isUser) userIdx++;
+    var refHtml = '';
+    if (ref) {
+      refHtml = '<div style="margin-left:32px;margin-top:6px;border-left:2px solid var(--primary);padding-left:10px">'
+        + '<div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:3px">📝 改写版本</div>'
+        + '<div style="font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap;margin-bottom:8px">' + escHtml(ref.improved || '–') + '</div>'
+        + '<div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:3px">⭐ 参考答案</div>'
+        + '<div style="font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap">' + escHtml(ref.answer || '–') + '</div>'
+        + '</div>';
+    }
+    var avatar = '<div style="width:24px;height:24px;border-radius:6px;background:' + (isUser ? 'var(--accent-dim)' : 'var(--primary-dim)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px">' + (isUser ? '👤' : '🤖') + '</div>';
+    var bubble = '<div style="background:var(--surface3);border-radius:8px;padding:8px 12px;font-size:12.5px;' + (isUser ? 'margin-left:32px' : 'margin-right:32px') + ';line-height:1.55">' + escHtml(m.content) + '</div>';
+    var row = '<div style="display:flex;gap:8px;' + (isUser ? 'flex-direction:row-reverse' : '') + '">' + avatar + '<div style="flex:1;min-width:0">' + bubble + refHtml + '</div></div>';
+    return row;
+  }).join('');
+}
+
+function renderHistory() {
+  let history = getHistory();
+  const listEl = document.getElementById('history-list');
+  const statsEl = document.getElementById('history-stats');
+
+  const favCount = history.filter(h => h.starred).length;
+  const avg = history.length > 0 ? (history.reduce((s, h) => s + (h.score?.score || 0), 0) / history.length).toFixed(1) : '-';
+  const best = history.length > 0 ? Math.max(...history.map(h => h.score?.score || 0)) : '-';
+  statsEl.innerHTML = [
+    { val: history.length, label: '总练习次数' },
+    { val: avg, label: '平均评分' },
+    { val: best, label: '最高评分' },
+    { val: favCount, label: '⭐ 收藏' },
+  ].map(s => `<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  if (_hfSrc === 'fav') {
+    history = history.filter(h => h.starred);
+  } else if (_hfSrc !== 'all') {
+    history = history.filter(h => h.source === _hfSrc);
+    if (_hfSub !== 'all') history = history.filter(h => h.subCategory === _hfSub);
+  }
+
+  if (history.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${_hfSrc === 'fav' ? '⭐' : '📭'}</div><p>${_hfSrc === 'fav' ? '还没有收藏记录' : '该分类暂无面试记录'}</p></div>`;
+    return;
+  }
+
+  const srcLabels = { bank: '题库', random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历' };
+  const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
+
+  listEl.innerHTML = history.map((h, i) => {
+    const score = h.score?.score || 0;
+    const scoreColor = score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--primary)' : score >= 4 ? 'var(--warning)' : 'var(--danger)';
+    const starIcon = h.starred ? '⭐' : '☆';
+    const subLabel = h.subCategory ? subCatLabels[h.subCategory] || h.subCategory : '';
+    const srcTag = subLabel
+      ? `${srcLabels[h.source] || h.source} · ${subLabel}`
+      : (srcLabels[h.source] || h.source);
+    return `<div class="history-card" id="hcard-${h.id}">
+      <div class="history-head" onclick="toggleHistoryDetail('h-detail-${i}')">
+        <div class="history-score-circle" style="background:${scoreColor}22;color:${scoreColor}">${score}</div>
+        <div class="history-meta">
+          <div class="history-title">${escHtml(h.question)}…</div>
+          <div class="history-info">
+            <span>🕐 ${h.time}</span>
+            <span>📌 ${srcTag}</span>
+            <span>🔄 ${h.turns}轮</span>
+            <span>⚡ ${diffLabels[h.difficulty] || h.difficulty || '-'}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${h.starred ? '取消收藏' : '收藏'}" onclick="toggleFavorite('${h.id}')">${starIcon}</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="删除" onclick="deleteHistory('${h.id}')">🗑</button>
+          <span class="history-expand" id="h-arrow-${i}" onclick="toggleHistoryDetail('h-detail-${i}')">▼</span>
+        </div>
+      </div>
+      <div class="history-detail" id="h-detail-${i}">
+        ${h.score ? `<div style="margin-bottom:12px;font-size:13px">
+          <strong>评分：</strong>${h.score.score}/10 &nbsp;
+          <strong>亮点：</strong>${(h.score.highlights||[]).join('；')}
+        </div>` : ''}
+        <div class="history-dialog">${buildHistoryDialog(h)}</div>
+        ${!(h.refAnswers && h.refAnswers.length) ? `
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ 生成各轮改写 &amp; 参考答案</button>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function genHistoryRefAnswers(hId) {
+  const sec = document.getElementById(`ref-section-${hId}`);
+  if (sec) sec.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">⏳ 生成中…</div>';
+
+  const hist = getHistory();
+  const rec = hist.find(h => h.id === hId);
+  if (!rec || !rec.messages?.length) { if (sec) sec.innerHTML = '<div style="color:var(--danger);font-size:12px">无对话记录</div>'; return; }
+
+  const kbCtx = getKBContext();
+  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
+
+  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出两部分内容：
+1. 改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
+2. 参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
+
+重要规则：
+- 若题目涉及候选人自身经历（"你做过什么""你负责了什么"等），改写版本必须严格基于【候选人真实背景资料】中的真实信息，不得虚构项目名称、数据或职责
+- 参考答案可以展示理想回答结构，但凡引用候选人经历时，同样只能使用背景资料中存在的内容
+- 候选人没有做过的事、资料中没有的数据，不要编造`;
+
+  const pairs = [];
+  for (let i = 0; i < rec.messages.length; i++) {
+    const m = rec.messages[i];
+    if (m.role === 'ai' && !m.content.includes('[INTERVIEW_END]')) {
+      pairs.push({ question: m.content, userAnswer: rec.messages[i+1]?.content || '' });
+    }
+  }
+  if (!pairs.length) { if (sec) sec.innerHTML = '<div style="color:var(--danger);font-size:12px">无有效问题</div>'; return; }
+
+  // Render streaming skeleton so elements exist before API call
+  const pfx = `hr-${hId}`; // unique prefix to avoid ID collisions
+  if (sec) sec.innerHTML = pairs.map((p, i) => `
+    <div style="margin-bottom:18px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">第${i+1}轮问题</div>
+      <div style="font-size:12px;background:var(--surface3);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px;line-height:1.6">${escHtml(p.question)}</div>
+      <div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:3px">📝 改写版本</div>
+      <div id="${pfx}-imp-${i}" style="font-size:12px;white-space:pre-wrap;line-height:1.7;min-height:24px;color:var(--text-muted)">生成中…</div>
+      <div style="font-size:11px;font-weight:600;color:var(--accent);margin-top:8px;margin-bottom:3px">⭐ 参考答案</div>
+      <div id="${pfx}-ans-${i}" style="font-size:12px;white-space:pre-wrap;line-height:1.7;min-height:24px;color:var(--text-muted)">生成中…</div>
+    </div>`).join('');
+
+  const questionsText = pairs.map((p, i) =>
+    `【第${i+1}轮问题】${p.question}\n【第${i+1}轮候选人回答】${p.userAnswer}`
+  ).join('\n\n');
+  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的两部分内容。${kbBlock}
+格式严格如下：
+
+【第1轮改写版本】
+...
+
+【第1轮参考答案】
+...
+
+【第2轮改写版本】
+...
+
+【第2轮参考答案】
+...
+
+面试内容：
+${questionsText}`;
+
+  const allMarkers2 = [];
+  const markerToEl2 = {};
+  pairs.forEach((_, i) => {
+    const impM = `【第${i+1}轮改写版本】`, ansM = `【第${i+1}轮参考答案】`;
+    allMarkers2.push(impM, ansM);
+    markerToEl2[impM] = `${pfx}-imp-${i}`;
+    markerToEl2[ansM] = `${pfx}-ans-${i}`;
+  });
+
+  function extractSec2(text, marker) {
+    const start = text.indexOf(marker);
+    if (start === -1) return null;
+    const afterStart = start + marker.length;
+    let end = text.length;
+    for (const m of allMarkers2) {
+      const pos = text.indexOf(m, afterStart);
+      if (pos !== -1 && pos < end) end = pos;
+    }
+    return text.slice(afterStart, end).trimStart();
+  }
+
+  try {
+    const result = await callClaude([{ role: 'user', content: prompt }], system, (text) => {
+      for (const [marker, elId] of Object.entries(markerToEl2)) {
+        const content = extractSec2(text, marker);
+        if (content === null) continue;
+        const el = document.getElementById(elId);
+        if (el) { el.textContent = content; el.style.color = 'var(--text)'; }
+      }
+    });
+
+    const parsedAnswers = pairs.map((p, i) => {
+      const improved = (extractSec2(result, `【第${i+1}轮改写版本】`) || '').trim();
+      const answer   = (extractSec2(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const impEl = document.getElementById(`${pfx}-imp-${i}`);
+      const ansEl = document.getElementById(`${pfx}-ans-${i}`);
+      if (impEl) { impEl.textContent = improved || '–'; impEl.style.color = 'var(--text)'; }
+      if (ansEl) { ansEl.textContent = answer   || '–'; ansEl.style.color = 'var(--text)'; }
+      return { question: p.question, userAnswer: p.userAnswer, improved, answer };
+    });
+    rec.refAnswers = parsedAnswers;
+    LS.set('history', hist.slice(0, 50));
+  } catch (e) {
+    if (sec) sec.innerHTML = `<div style="color:var(--danger);font-size:12px">生成失败：${e.message}</div>`;
+  }
+}
+
+function toggleHistoryDetail(id) {
+  const detail = document.getElementById(id);
+  const idx = id.split('-').pop();
+  const arrow = document.getElementById('h-arrow-' + idx);
+  if (detail) {
+    detail.classList.toggle('open');
+    if (arrow) arrow.classList.toggle('open');
+  }
+}
+
+function clearHistory() {
+  if (!confirm('确定要清空所有历史记录吗？')) return;
+  LS.set('history', []);
+  renderHistory();
+  updateBadges();
+  toast('历史记录已清空', 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════
+function onProviderChange() {
+  const p = document.getElementById('provider-select')?.value;
+  document.getElementById('anthropic-key-group').style.display = p === 'anthropic' ? '' : 'none';
+  document.getElementById('deepseek-key-group').style.display  = p === 'deepseek'  ? '' : 'none';
+}
+
+function renderSettings() {
+  const pref = getPref();
+  const provSel = document.getElementById('provider-select');
+  if (provSel) { provSel.value = getProvider(); onProviderChange(); }
+  const inp = document.getElementById('api-key-input');
+  if (inp) inp.value = getApiKey();
+  const dsInp = document.getElementById('deepseek-key-input');
+  if (dsInp) dsInp.value = getDeepSeekKey();
+  const diff = document.getElementById('difficulty-select');
+  if (diff) diff.value = pref.difficulty;
+  const style = document.getElementById('style-select');
+  if (style) style.value = pref.style;
+  updateApiStatus();
+}
+
+function updateApiStatus() {
+  const status = document.getElementById('api-status');
+  if (!status) return;
+  const key = getActiveKey();
+  const provider = getProvider();
+  if (key) { status.textContent = `✅ ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} 已配置`; status.style.color = 'var(--success)'; }
+  else { status.textContent = '未配置'; status.style.color = 'var(--text-dim)'; }
+}
+
+function saveApiKey() {
+  const provider = document.getElementById('provider-select')?.value || 'anthropic';
+  LS.setStr('ai_provider', provider);
+  if (provider === 'deepseek') {
+    const val = document.getElementById('deepseek-key-input')?.value?.trim();
+    if (!val) { toast('请输入 DeepSeek API Key', 'error'); return; }
+    LS.setStr('deepseek_key', val);
+  } else {
+    const val = document.getElementById('api-key-input')?.value?.trim();
+    if (!val) { toast('请输入 Anthropic API Key', 'error'); return; }
+    LS.setStr('api_key', val);
+  }
+  updateApiStatus();
+  toast('已保存', 'success');
+}
+
+function toggleApiKeyVisibility(id) {
+  const inp = document.getElementById(id || 'api-key-input');
+  if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testApiConnection() {
+  const provider = document.getElementById('provider-select')?.value || getProvider();
+  const key = provider === 'deepseek'
+    ? (document.getElementById('deepseek-key-input')?.value?.trim() || getDeepSeekKey())
+    : (document.getElementById('api-key-input')?.value?.trim() || getApiKey());
+  if (!key) { toast('请先输入 API Key', 'error'); return; }
+
+  const btn = document.getElementById('test-api-btn');
+  const status = document.getElementById('api-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ 测试中…';
+  status.textContent = '';
+
+  try {
+    let res;
+    if (provider === 'deepseek') {
+      res = await fetch('/proxy/deepseek/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] }),
+      });
+    } else {
+      res = await fetch('/proxy/anthropic/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] }),
+      });
+    }
+    if (res.status === 401) {
+      status.textContent = '❌ API Key 无效';
+      status.style.color = 'var(--danger)';
+    } else if (res.ok) {
+      status.textContent = `✅ ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} 连接成功！`;
+      status.style.color = 'var(--success)';
+      if (provider === 'deepseek') LS.setStr('deepseek_key', key);
+      else LS.setStr('api_key', key);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      status.textContent = `❌ ${err?.error?.message || `错误 ${res.status}`}`;
+      status.style.color = 'var(--danger)';
+    }
+  } catch {
+    status.textContent = '❌ 网络不通，请在真实浏览器 (http://localhost:3456) 中打开';
+    status.style.color = 'var(--danger)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔌 测试连接';
+  }
+}
+
+function savePref() {
+  const diff = document.getElementById('difficulty-select')?.value;
+  const style = document.getElementById('style-select')?.value;
+  LS.set('pref', { difficulty: diff, style });
+}
+
+function clearAllData() {
+  if (!confirm('确定要清空所有本地数据吗？此操作不可撤销。')) return;
+  localStorage.clear();
+  toast('所有数据已清空', 'success');
+  setTimeout(() => location.reload(), 1000);
+}
+
+function exportData() {
+  const data = {
+    resume: getResume(),
+    jd: getJD(),
+    customQuestions: getCustomQuestions(),
+    favorites: getFavorites(),
+    history: getHistory(),
+    pref: getPref(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `interview-data-${Date.now()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('数据已导出', 'success');
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function decodeHtml(str) {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = str; return txt.value;
+}
+function formatMsg(text) {
+  return escHtml(text)
+    .replace(/\[INTERVIEW_END\]/g, '<span style="color:var(--accent);font-weight:600">【面试结束】</span>')
+    .replace(/\n/g, '<br>');
+}
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function updateBadges() {
+  const qCount = getAllQuestions().length;
+  const badge = document.getElementById('q-count-badge');
+  if (badge) badge.textContent = qCount;
+  const hBadge = document.getElementById('history-badge');
+  if (hBadge) hBadge.textContent = getHistory().length;
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+function init() {
+  updateBadges();
+  renderResumePage();
+  renderSettings();
+
+  // Load pref into interview selectors
+  const pref = getPref();
+  const diffSel = document.getElementById('difficulty-select');
+  if (diffSel) diffSel.value = pref.difficulty;
+  const styleSel = document.getElementById('style-select');
+  if (styleSel) styleSel.value = pref.style;
+  // Init category pill visibility based on default source
+  onSourceChange();
+
+  // If no API key set, suggest settings
+  if (!getActiveKey()) {
+    setTimeout(() => toast('请先在「设置」中填写 API Key', 'info', 5000), 500);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

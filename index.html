@@ -1355,10 +1355,11 @@ async function uploadFileToFolder(folderId, inputEl) {
   toast(`正在解析 ${files.length} 个文件…`, 'info');
   for (const file of files) {
     try {
-      const content = await extractFileContent(file);
+      const content = await extractFileText(file, msg => toast(msg, 'info'));
+      if (!content?.trim()) throw new Error('文件内容为空');
       if (!folder.files) folder.files = [];
       folder.files.push({ name: file.name, content });
-    } catch(e) { toast(`${file.name} 解析失败`, 'error'); }
+    } catch(e) { toast(`${file.name} 解析失败：${e.message}`, 'error'); }
   }
   saveProjFolders(folders);
   renderFolderFiles(folderId);

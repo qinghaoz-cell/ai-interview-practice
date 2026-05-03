@@ -484,6 +484,27 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 
+/* ── Project Folders (KB) ── */
+.pf-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:10px;overflow:hidden;
+}
+.pf-header{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  cursor:pointer;user-select:none;transition:background .15s;
+}
+.pf-header:hover{background:var(--surface3)}
+.pf-icon{font-size:18px;flex-shrink:0}
+.pf-name{font-size:14px;font-weight:600;flex:1}
+.pf-meta{font-size:12px;color:var(--text-muted);flex-shrink:0}
+.pf-chevron{color:var(--text-dim);font-size:12px;flex-shrink:0;transition:transform .2s}
+.pf-chevron.open{transform:rotate(180deg)}
+.pf-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.pf-section-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 6px}
+.pf-resume-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px;font-size:13px;resize:vertical;min-height:80px;line-height:1.6}
+.pf-resume-input:focus{outline:none;border-color:var(--primary)}
+.pf-empty{color:var(--text-dim);font-size:12px;padding:8px 0}
+
 /* ── Product Category Cards ── */
 .product-cat-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;
@@ -757,6 +778,19 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <label class="input-label" style="margin-top:10px;display:block">指定文件 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
           <div class="cat-pills" id="kb-file-pills" data-selected="random"></div>
         </div>
+        <!-- Project folder selector (only when projects module selected) -->
+        <div id="proj-folder-group" style="display:none">
+          <label class="input-label" style="margin-top:12px;display:block">选择项目/实习 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
+          <div class="cat-pills" id="proj-folder-pills" data-selected="random"></div>
+        </div>
+        <!-- Mode toggle (only when a specific project folder is selected) -->
+        <div id="proj-mode-group" style="display:none">
+          <label class="input-label" style="margin-top:10px;display:block">出题范围</label>
+          <div class="cat-pills" id="proj-mode-pills" data-selected="all">
+            <button class="cat-pill active" onclick="selectProjModePill(this,'all')">📚 文件夹全部内容</button>
+            <button class="cat-pill" onclick="selectProjModePill(this,'resume')">📄 仅简历描述</button>
+          </div>
+        </div>
         <div id="custom-q-group" style="display:none;margin-top:10px">
           <div class="input-group" style="margin-bottom:0">
             <label class="input-label">自定义题目</label>
@@ -994,26 +1028,15 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <div class="page-sub">上传文件或手动填写，AI 面试时会自动作为背景参考</div>
       </div>
 
-      <!-- Projects -->
+      <!-- Projects (Folder-based) -->
       <div class="card">
-        <div class="card-title">💼 项目 &amp; 实习经历 <span class="badge badge-blue">背景</span></div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">项目经历、担任角色、核心成果（面试官会基于这些追问）</div>
-        <div id="kb-files-projects" class="kb-file-list"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
-            📎 上传文件
-            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple onchange="uploadKBFile('projects',this)">
-          </label>
-          <span style="font-size:12px;color:var(--text-muted)">PDF / Word / TXT，可多选</span>
-          <span id="kb-status-projects" style="font-size:12px;margin-left:auto"></span>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="card-title" style="margin:0">💼 项目 &amp; 实习经历 <span class="badge badge-blue">背景</span></div>
+          <button class="btn btn-primary btn-sm" onclick="addProjFolder()">+ 新建文件夹</button>
         </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="toggleKBText('projects')">✏️ 手动补充文字</button>
-          <div id="kb-text-wrap-projects" style="display:none;margin-top:8px">
-            <textarea class="input-field" id="kb-text-projects" rows="5"
-              placeholder="直接输入补充内容，会与上传文件一起作为背景…"
-              oninput="saveKBTextSection('projects')"></textarea>
-          </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">每个文件夹对应一段项目或实习经历，面试官会基于这些内容追问</div>
+        <div id="proj-folders-list">
+          <div class="pf-empty" id="proj-folders-empty">还没有项目文件夹，点击「新建文件夹」开始添加</div>
         </div>
       </div>
 
@@ -1232,6 +1255,198 @@ const getKBFiles  = (sec) => LS.get(`kb_files_${sec}`) || [];
 const saveKBFiles = (sec, arr) => LS.set(`kb_files_${sec}`, arr);
 const getKBText   = (sec) => LS.getStr(`kb_text_${sec}`);
 const saveKBText  = (sec, v) => localStorage.setItem(`kb_text_${sec}`, v);
+
+// ── Project Folders ───────────────────────────────────────────
+function getProjFolders() { return LS.get('kbProjectFolders') || []; }
+function saveProjFolders(arr) { LS.set('kbProjectFolders', arr); }
+
+function addProjFolder() {
+  const name = prompt('输入项目/实习名称（如：字节跳动实习、竞品洞察Agent）');
+  if (!name?.trim()) return;
+  const folders = getProjFolders();
+  folders.push({ id: Date.now().toString(), name: name.trim(), files: [], resumeText: '' });
+  saveProjFolders(folders);
+  renderProjFolders();
+}
+
+function deleteProjFolder(id) {
+  if (!confirm('确认删除这个文件夹？')) return;
+  saveProjFolders(getProjFolders().filter(f => f.id !== id));
+  renderProjFolders();
+  renderProjFolderPills(); // refresh interview picker
+}
+
+function toggleProjFolder(id) {
+  const body = document.getElementById(`pfb-${id}`);
+  const chevron = document.getElementById(`pfc-${id}`);
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  chevron?.classList.toggle('open', !open);
+}
+
+function renderProjFolders() {
+  const list = document.getElementById('proj-folders-list');
+  const empty = document.getElementById('proj-folders-empty');
+  if (!list) return;
+  const folders = getProjFolders();
+  if (!folders.length) { if (empty) empty.style.display = ''; list.querySelectorAll('.pf-card').forEach(e=>e.remove()); return; }
+  if (empty) empty.style.display = 'none';
+
+  // Remove old cards, re-render
+  list.querySelectorAll('.pf-card').forEach(e => e.remove());
+  folders.forEach(folder => {
+    const card = document.createElement('div');
+    card.className = 'pf-card';
+    card.id = `pfc-card-${folder.id}`;
+    const fileCount = folder.files?.length || 0;
+    card.innerHTML = `
+      <div class="pf-header" onclick="toggleProjFolder('${folder.id}')">
+        <span class="pf-icon">📁</span>
+        <span class="pf-name">${escHtml(folder.name)}</span>
+        <span class="pf-meta">${fileCount ? fileCount + '个文件' : '暂无文件'}</span>
+        <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="event.stopPropagation();deleteProjFolder('${folder.id}')">🗑</button>
+        <span class="pf-chevron" id="pfc-${folder.id}">▼</span>
+      </div>
+      <div class="pf-body" id="pfb-${folder.id}">
+        <div class="pf-section-label">📄 简历描述</div>
+        <textarea class="pf-resume-input" id="pfr-${folder.id}"
+          placeholder="粘贴这段经历在简历中的描述，面试官会基于此追问…"
+          oninput="saveProjFolderResume('${folder.id}',this.value)">${escHtml(folder.resumeText||'')}</textarea>
+
+        <div class="pf-section-label">📎 项目文件</div>
+        <div id="pff-${folder.id}" class="kb-file-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📎 上传文件
+            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple
+              onchange="uploadFileToFolder('${folder.id}',this)">
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)">项目介绍文档、面试Q&A题库等</span>
+        </div>
+      </div>`;
+    list.appendChild(card);
+    renderFolderFiles(folder.id);
+  });
+}
+
+function renderFolderFiles(folderId) {
+  const el = document.getElementById(`pff-${folderId}`);
+  if (!el) return;
+  const folders = getProjFolders();
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  el.innerHTML = folder.files?.length
+    ? folder.files.map((f, i) => `
+        <div class="kb-file-item">
+          <span class="kb-file-icon">📄</span>
+          <span class="kb-file-name">${escHtml(f.name)}</span>
+          <button class="kb-file-del" onclick="removeFileFromFolder('${folderId}',${i})">×</button>
+        </div>`).join('')
+    : `<div class="pf-empty">暂无文件</div>`;
+}
+
+async function uploadFileToFolder(folderId, inputEl) {
+  const files = Array.from(inputEl.files);
+  if (!files.length) return;
+  const folders = getProjFolders();
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  toast(`正在解析 ${files.length} 个文件…`, 'info');
+  for (const file of files) {
+    try {
+      const content = await extractFileContent(file);
+      if (!folder.files) folder.files = [];
+      folder.files.push({ name: file.name, content });
+    } catch(e) { toast(`${file.name} 解析失败`, 'error'); }
+  }
+  saveProjFolders(folders);
+  renderFolderFiles(folderId);
+  renderProjFolderPills();
+  // update file count in header
+  const meta = document.querySelector(`#pfc-card-${folderId} .pf-meta`);
+  if (meta) meta.textContent = folder.files.length + '个文件';
+  inputEl.value = '';
+  toast('文件上传成功', 'success');
+}
+
+function removeFileFromFolder(folderId, idx) {
+  const folders = getProjFolders();
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  folder.files.splice(idx, 1);
+  saveProjFolders(folders);
+  renderFolderFiles(folderId);
+  renderProjFolderPills();
+  const meta = document.querySelector(`#pfc-card-${folderId} .pf-meta`);
+  if (meta) meta.textContent = (folder.files.length ? folder.files.length + '个文件' : '暂无文件');
+}
+
+function saveProjFolderResume(folderId, val) {
+  const folders = getProjFolders();
+  const folder = folders.find(f => f.id === folderId);
+  if (!folder) return;
+  folder.resumeText = val;
+  saveProjFolders(folders);
+}
+
+// Interview picker
+function renderProjFolderPills() {
+  const group = document.getElementById('proj-folder-group');
+  const pills = document.getElementById('proj-folder-pills');
+  if (!group || !pills) return;
+  const folders = getProjFolders();
+  if (!folders.length) { group.style.display = 'none'; return; }
+  let html = '<button class="cat-pill active" onclick="selectProjFolderPill(this,\'random\')">🎲 随机</button>';
+  folders.forEach(f => {
+    html += `<button class="cat-pill" onclick="selectProjFolderPill(this,'${f.id}')">${escHtml(f.name)}</button>`;
+  });
+  pills.innerHTML = html;
+  pills.dataset.selected = 'random';
+  group.style.display = 'block';
+  document.getElementById('proj-mode-group').style.display = 'none';
+}
+
+function selectProjFolderPill(btn, val) {
+  const pills = document.getElementById('proj-folder-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+  // Show mode toggle only when a specific folder is selected
+  const modeGrp = document.getElementById('proj-mode-group');
+  if (modeGrp) modeGrp.style.display = val === 'random' ? 'none' : 'block';
+}
+
+function selectProjModePill(btn, val) {
+  const pills = document.getElementById('proj-mode-pills');
+  if (!pills) return;
+  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  pills.dataset.selected = val;
+}
+
+function getSelectedProjFolder() {
+  return document.getElementById('proj-folder-pills')?.dataset.selected || 'random';
+}
+
+function getSelectedProjMode() {
+  return document.getElementById('proj-mode-pills')?.dataset.selected || 'all';
+}
+
+function buildProjFolderContext(folder, mode) {
+  if (mode === 'resume') {
+    return folder.resumeText?.trim()
+      ? `【${folder.name}——简历描述】\n${folder.resumeText.trim()}`
+      : null;
+  }
+  // all: resumeText + files
+  const parts = [];
+  if (folder.resumeText?.trim()) parts.push(`[简历描述]\n${folder.resumeText.trim()}`);
+  (folder.files || []).forEach(f => { if (f.content?.trim()) parts.push(`[${f.name}]\n${f.content.trim()}`); });
+  return parts.length ? `【${folder.name}】\n${parts.join('\n\n---\n\n')}` : null;
+}
+// ──────────────────────────────────────────────────────────────
 
 const getKBContext = () => {
   const parts = [];
@@ -2032,7 +2247,17 @@ function selectKBPill(btn, val) {
   pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   pills.dataset.selected = val;
-  renderKBFilePills(val);
+  // Projects module → show folder picker; others → show file picker
+  const projGrp = document.getElementById('proj-folder-group');
+  const projModeGrp = document.getElementById('proj-mode-group');
+  if (val === 'projects') {
+    if (projGrp) renderProjFolderPills();
+    document.getElementById('kb-file-group').style.display = 'none';
+  } else {
+    if (projGrp) projGrp.style.display = 'none';
+    if (projModeGrp) projModeGrp.style.display = 'none';
+    renderKBFilePills(val);
+  }
 }
 
 function renderKBFilePills(sec) {
@@ -2170,17 +2395,72 @@ async function startInterview() {
     question = pool[Math.floor(Math.random() * pool.length)].text;
   } else if (src === 'kb') {
     const kbCtx = getKBContext();
-    if (!kbCtx) { abort('知识库为空，请先在「知识库」页面添加内容', 'kb'); return; }
-    // Determine focus: user-selected module or auto-rotate
     const selectedMod = getSelectedKBModule();
     let focus;
+
+    // ── Projects module: use folder-based logic ──
+    if (selectedMod === 'projects' || (selectedMod === 'random' && getProjFolders().length)) {
+      const folders = getProjFolders();
+      const selFolderId = getSelectedProjFolder();
+      const projMode = getSelectedProjMode();
+
+      // Pick folder
+      let folder;
+      if (selFolderId !== 'random') {
+        folder = folders.find(f => f.id === selFolderId);
+      } else {
+        const lastId = STATE._kbLastProjId || '';
+        const remaining = folders.filter(f => f.id !== lastId);
+        folder = remaining.length ? remaining[Math.floor(Math.random() * remaining.length)] : folders[0];
+        STATE._kbLastProjId = folder?.id;
+      }
+
+      if (!folder) { abort('项目文件夹为空，请先在「知识库」页面新建项目文件夹', 'kb'); return; }
+
+      const ctx = buildProjFolderContext(folder, projMode);
+      if (!ctx) { abort(`「${folder.name}」还没有内容，请先添加简历描述或上传文件`, 'kb'); return; }
+
+      const modeLabel = projMode === 'resume' ? '简历描述' : '全部内容';
+      toast(`基于「${folder.name}」${modeLabel}生成题目…`, 'info');
+      subCategory = folder.id; // store folder id as subCategory
+      const instruction = projMode === 'resume'
+        ? `根据候选人在简历中对这段经历的描述，出1道面试官会问的追问题，深挖决策过程、遇到的挑战或可量化成果。直接输出题目，不超过60字，不加前缀。`
+        : `根据候选人提供的这段项目/实习经历（包含项目文档和简历描述），出1道能深度考察候选人真实贡献、技术判断或产品决策的面试题。直接输出题目，不超过60字，不加前缀。`;
+      try {
+        question = await genQuestion(`${instruction}\n\n候选人资料：\n${ctx}`);
+      } catch(e) { abort(e.message); return; }
+      startBtn.disabled = false;
+      // Jump to interview launch
+      const pref2 = getPref();
+      const mt2 = pref2.difficulty === 'normal' ? 3 : pref2.difficulty === 'hell' ? 5 : 4;
+      STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns: mt2, source: 'kb', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
+      document.getElementById('chat-empty').style.display = 'none';
+      document.getElementById('chat-messages').innerHTML = '';
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('end-btn').style.display = '';
+      document.getElementById('chat-input-area').style.display = '';
+      document.getElementById('turn-indicator').style.display = '';
+      document.getElementById('score-panel').style.display = 'none';
+      document.getElementById('chat-input').value = '';
+      document.getElementById('reconfig-btn').style.display = 'none';
+      hideVoiceTip();
+      document.getElementById('interview-config').style.display = 'none';
+      document.getElementById('active-q-bar').style.display = 'block';
+      document.getElementById('active-q-text').textContent = question;
+      updateTurnIndicator();
+      await askQuestion();
+      return;
+    }
+
+    if (!kbCtx) { abort('知识库为空，请先在「知识库」页面添加内容', 'kb'); return; }
+    // Determine focus: user-selected module or auto-rotate
     if (selectedMod !== 'random') {
       focus = selectedMod;
     } else {
       const kbSections = [];
-      if (getKBFiles('projects').length || getKBText('projects')) kbSections.push('projects');
-      if (getKBFiles('qna').length     || getKBText('qna'))      kbSections.push('qna');
-      if (getKBFiles('notes').length   || getKBText('notes'))    kbSections.push('notes');
+      if (getProjFolders().length) kbSections.push('projects');
+      if (getKBFiles('qna').length || getKBText('qna')) kbSections.push('qna');
+      if (getKBFiles('notes').length || getKBText('notes')) kbSections.push('notes');
       const lastFocus = STATE._kbLastFocus || '';
       const remaining = kbSections.filter(s => s !== lastFocus);
       focus = remaining.length ? remaining[Math.floor(Math.random() * remaining.length)] : kbSections[0];
@@ -2189,7 +2469,6 @@ async function startInterview() {
 
     const focusLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点' };
 
-    // Pick one random document from the focused section so every doc gets equal coverage
     function pickOneDoc(sec) {
       const files = getKBFiles(sec).filter(f => f.content?.trim());
       const manualText = getKBText(sec)?.trim();
@@ -2200,14 +2479,15 @@ async function startInterview() {
       return pool[Math.floor(Math.random() * pool.length)];
     }
 
-    // Build a context using selected file (if any) or random pick
     let focusCtx = kbCtx;
     let focusInstruction = '';
     if (focus === 'projects') {
-      const doc = getSelectedKBFile('projects') || pickOneDoc('projects');
-      if (doc) {
-        focusCtx = `【本次考察的项目/实习经历】\n[${doc.name}]\n${doc.content}`;
-        focusInstruction = `针对上面这段项目/实习经历，出1道深挖候选人决策过程、遇到的挑战或可量化成果的面试题。直接输出题目，不超过60字，不加前缀。`;
+      // folder-based random pick
+      const folders = getProjFolders();
+      if (folders.length) {
+        const folder = folders[Math.floor(Math.random() * folders.length)];
+        const ctx = buildProjFolderContext(folder, 'all');
+        if (ctx) { focusCtx = ctx; focusInstruction = `根据候选人提供的这段项目/实习经历，出1道深挖其决策过程、遇到的挑战或可量化成果的面试题。直接输出题目，不超过60字，不加前缀。`; }
       }
     } else if (focus === 'qna') {
       const doc = getSelectedKBFile('qna') || pickOneDoc('qna');
@@ -3584,6 +3864,7 @@ function init() {
   updateBadges();
   renderResumePage();
   renderSettings();
+  renderProjFolders();
 
   // Load pref into interview selectors
   const pref = getPref();

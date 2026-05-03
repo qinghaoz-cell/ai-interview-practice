@@ -484,6 +484,44 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 
+/* ── Product Category Cards ── */
+.product-cat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;
+}
+@media(max-width:768px){.product-cat-grid{grid-template-columns:repeat(2,1fr)}}
+.pcat-card{
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:var(--radius);padding:16px;cursor:pointer;
+  transition:all .18s;user-select:none;
+}
+.pcat-card:hover{border-color:var(--border2);background:var(--surface2)}
+.pcat-card.active{border-color:var(--primary);background:var(--primary-dim)}
+.pcat-icon{font-size:26px;margin-bottom:8px}
+.pcat-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.pcat-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+.product-bank-list{
+  display:flex;flex-direction:column;gap:8px;margin-top:12px;
+}
+.bank-q-item{
+  padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);cursor:pointer;font-size:13px;
+  transition:all .15s;line-height:1.5;
+}
+.bank-q-item:hover{border-color:var(--primary);color:var(--primary)}
+.bank-q-item.selected{border-color:var(--primary);background:var(--primary-dim);color:var(--primary);font-weight:600}
+
+.mode-toggle{
+  display:flex;gap:0;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;
+  margin-bottom:14px;width:fit-content;
+}
+.mode-btn{
+  padding:6px 16px;border-radius:6px;border:none;
+  background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.mode-btn.active{background:var(--surface3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
 /* ── Responsive ── */
 @media(max-width:768px){
   .sidebar{position:fixed;left:-220px;z-index:100;height:100%;transition:left .25s}
@@ -521,6 +559,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-label">练习</div>
       <div class="nav-item" data-page="interview" onclick="navigate('interview')">
         <span class="nav-icon">🎙️</span>开始面试
+      </div>
+      <div class="nav-item" data-page="product" onclick="navigate('product')">
+        <span class="nav-icon">🧩</span>产品思维专项
       </div>
       <div class="nav-item" data-page="history" onclick="navigate('history')">
         <span class="nav-icon">📊</span>历史记录
@@ -772,6 +813,72 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       </div>
     </section>
 
+    <!-- ── Page: 产品思维专项 ── -->
+    <section class="page" id="page-product">
+      <div class="page-header">
+        <div class="page-title">🧩 产品思维专项</div>
+        <div class="page-sub">针对PM核心考察维度，专项突破薄弱环节</div>
+      </div>
+
+      <!-- Category Cards -->
+      <div class="product-cat-grid" id="pcat-grid">
+        <div class="pcat-card" data-cat="random" onclick="selectPCat(this,'random')">
+          <div class="pcat-icon">🎲</div>
+          <div class="pcat-name">随机抽题</div>
+          <div class="pcat-desc">从全部7个分类中随机出一题，模拟真实面试的不确定性</div>
+        </div>
+        <div class="pcat-card active" data-cat="design" onclick="selectPCat(this,'design')">
+          <div class="pcat-icon">🎨</div>
+          <div class="pcat-name">产品设计</div>
+          <div class="pcat-desc">为特定用户群设计功能或产品，考察用户同理心与系统思维</div>
+        </div>
+        <div class="pcat-card" data-cat="metrics" onclick="selectPCat(this,'metrics')">
+          <div class="pcat-icon">📊</div>
+          <div class="pcat-name">数据分析</div>
+          <div class="pcat-desc">指标异常归因与数据驱动决策，考察分析框架的运用</div>
+        </div>
+        <div class="pcat-card" data-cat="strategy" onclick="selectPCat(this,'strategy')">
+          <div class="pcat-icon">🚀</div>
+          <div class="pcat-name">产品策略</div>
+          <div class="pcat-desc">竞争策略、增长路径与功能优先级取舍，考察商业判断力</div>
+        </div>
+        <div class="pcat-card" data-cat="competitive" onclick="selectPCat(this,'competitive')">
+          <div class="pcat-icon">🔍</div>
+          <div class="pcat-name">竞品分析</div>
+          <div class="pcat-desc">对比市场上的竞争产品，找出差异化机会点</div>
+        </div>
+        <div class="pcat-card" data-cat="estimation" onclick="selectPCat(this,'estimation')">
+          <div class="pcat-icon">🧮</div>
+          <div class="pcat-name">估算题</div>
+          <div class="pcat-desc">市场规模与关键数字的量化估算，考察结构化拆解能力</div>
+        </div>
+        <div class="pcat-card" data-cat="insight" onclick="selectPCat(this,'insight')">
+          <div class="pcat-icon">👥</div>
+          <div class="pcat-name">用户洞察</div>
+          <div class="pcat-desc">发现并验证用户真实需求，考察用户研究方法与洞察力</div>
+        </div>
+        <div class="pcat-card" data-cat="aipm" onclick="selectPCat(this,'aipm')" style="border-color:var(--accent);background:var(--accent-dim)">
+          <div class="pcat-icon">🤖</div>
+          <div class="pcat-name">AI产品专项</div>
+          <div class="pcat-desc">AI产品设计、指标体系、模型选型、落地挑战——AI PM必考</div>
+        </div>
+      </div>
+
+      <!-- Mode & Start -->
+      <div class="card">
+        <div class="card-title" id="pcat-title">🎨 产品设计题</div>
+        <!-- AI mode hint -->
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+          🤖 AI基于真实市场面试规律实时出题，每次不同。
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="startProductInterview()">▶ 开始练习</button>
+          <span style="font-size:12px;color:var(--text-muted)">完成后可在「历史记录 → 产品专项」查看</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ── Page: 历史 ── -->
     <section class="page" id="page-history">
       <div class="page-header flex justify-between items-center">
@@ -791,6 +898,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <button class="cat-pill" onclick="setHfSrc(this,'bank')">🗂 题库</button>
         <button class="cat-pill" onclick="setHfSrc(this,'jd')">📋 JD</button>
         <button class="cat-pill" onclick="setHfSrc(this,'combined')">🔗 联合</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'product')">🧩 产品专项</button>
       </div>
       <div id="hf-sub-row" style="display:none;margin-bottom:12px">
         <div class="cat-pills" id="hf-sub-pills" data-selected="all"></div>
@@ -2192,6 +2300,190 @@ async function startInterview() {
 
 const RESUME_SECTIONS = ['教育背景', '实习经历', '项目经历'];
 
+// ── 产品思维专项 ──────────────────────────────────────────────
+const PRODUCT_BANK = {
+  design: [
+    '为农村老年用户设计一款简化版微信，解决他们操作困难的问题，描述核心功能和关键交互',
+    '如果你是微信读书的PM，设计一个能提升用户坚持阅读率的功能，并说明如何验证它的价值',
+    '为视障用户重新设计一款外卖APP，在保证核心下单体验的前提下，你会如何重新设计？',
+    '设计一个帮助应届生找AI方向实习的产品，描述目标用户、核心功能和冷启动策略',
+    '如果你是钉钉的PM，如何为中小企业主设计一个AI助手功能，优先解决他们什么问题？',
+  ],
+  metrics: [
+    '你负责的App次日留存率突然下降了15%，你会从哪些维度入手分析原因，如何定位根因？',
+    '某功能上线后DAU涨了，但付费转化率下降了8%，你如何解读这个数据并决策下一步？',
+    '新功能A/B测试结果：实验组点击率+10%但完单率-5%，你会选择发版还是回滚，为什么？',
+    '你的产品MAU连续3个月停滞不增，如何通过数据诊断问题根源并制定增长策略？',
+    '用户投诉"App越来越慢"，但技术说性能指标没变化，你作为PM如何推进这个问题？',
+  ],
+  strategy: [
+    '如果你是某AI写作助手的PM，如何规划未来6个月的产品路线图，优先级如何排序？',
+    '一个工具类产品有10万用户但营收为零，如何设计变现路径同时不损害用户体验？',
+    '面对大厂用相似功能抄袭你的产品，你作为创业公司PM应该如何应对？',
+    '微信视频号如何与抖音形成差异化竞争？从PM视角给出至少两个可执行的策略',
+    '你的产品要从C端免费工具转型为B端付费SaaS，面临哪些核心挑战，如何过渡？',
+  ],
+  competitive: [
+    '对比ChatGPT和Claude的产品差异，从用户体验和产品定位角度分析各自优劣势',
+    '分析飞书和钉钉的产品定位差异，各自核心用户群和护城河是什么？',
+    '对比小红书和抖音的内容推荐逻辑有何不同，这对产品设计有什么启示？',
+    '分析Notion和飞书文档的产品差异，如果你要做第三款协作文档，差异化在哪里？',
+    '对比国内外主流AI助手产品（如文心一言、通义千问 vs ChatGPT），从产品角度找出关键差距',
+  ],
+  estimation: [
+    '请估算北京市每天产生多少份外卖订单，列出你的假设和计算推理过程',
+    '请估算微信每天新增多少条朋友圈动态，说明你的拆解逻辑',
+    '请估算中国当前AI产品经理相关岗位的市场规模有多大',
+    '请估算滴滴App每天处理多少次叫车请求，你会如何拆解这个问题？',
+    '请估算一线城市白领平均每天在手机App上花费多少时间，你的拆解思路是什么？',
+  ],
+  insight: [
+    '你要做一个帮助PM高效写PRD的AI工具，如何在两周内验证用户是否真的有这个需求？',
+    '用户调研中大家都说想要某功能，但上线后数据显示几乎没人用，如何解读这个现象？',
+    '如何快速深入了解一个你完全不熟悉行业（如农业或工业制造）的用户需求？',
+    '你发现核心用户在用一种"意外"的方式使用你的产品，你会怎么处理这个洞察？',
+    '如何区分用户的"想要"和"需要"？举一个你在真实项目中遇到这种情况的例子',
+  ],
+  aipm: [
+    // 产品设计
+    '为没有任何提示词经验的中小企业主设计一款AI助手产品，如何让他们在不懂Prompt的情况下也能用好它？',
+    '设计一个AI驱动的简历筛选工具，如何在提升效率的同时避免算法歧视，你会设置哪些产品机制？',
+    '你负责一款AI客服产品，用户投诉"AI答非所问"的比例达到20%，你会如何从产品侧解决这个问题？',
+    // 数据分析
+    '你的AI对话助手用户满意度（👍率）从75%下降到60%，你如何判断是模型问题还是产品设计问题？',
+    'AI产品上线后发现用户平均每次对话只有1.2轮就离开，你认为这说明什么问题，如何分析和改善？',
+    '如何为一款AI写作助手设计核心指标体系？你会选择哪些指标作为North Star Metric，为什么？',
+    // 策略
+    '你的公司要做一款AI产品，面临"自研大模型 vs 调用API"的选型决策，你作为PM如何推动这个决策？',
+    '一个基于LLM的AI助手产品如何建立数据飞轮？从产品设计角度说明如何让产品越用越好？',
+    '面对大模型幻觉问题（AI编造信息），你作为PM应该在产品层面设计哪些机制来降低风险？',
+    // 竞品/落地
+    'RAG（检索增强生成）技术在产品中有哪些典型应用场景？你会如何向非技术的业务方解释它的价值？',
+    '对比现有几款主流AI编程助手产品（如Cursor、GitHub Copilot），如果你要做第三款，差异化在哪里？',
+  ],
+};
+
+const PRODUCT_CAT_LABELS = {
+  design: '🎨 产品设计',
+  metrics: '📊 数据分析',
+  strategy: '🚀 产品策略',
+  competitive: '🔍 竞品分析',
+  estimation: '🧮 估算题',
+  insight: '👥 用户洞察',
+  aipm: '🤖 AI产品专项',
+};
+
+const PRODUCT_CAT_PROMPTS = {
+  design: `你是一位大厂（字节/腾讯/阿里/百度）资深面试官，请出1道产品设计类面试题。
+出题规律参考：
+- 常见形式：改善一款你熟悉的产品（如微信/抖音/小红书）、为特定人群设计功能（老人/残障/下沉市场）、冷启动/用户增长设计
+- 考察重点：用户同理心、需求拆解、功能优先级、MVP思维
+- 难度：中等偏难，有具体场景约束
+直接输出题目，不超过70字，不加任何前缀序号。`,
+
+  metrics: `你是一位大厂数据/产品面试官，请出1道数据分析类面试题。
+出题规律参考：
+- 常见形式：某核心指标（DAU/留存率/转化率/GMV）出现异常下降或上升，要求分析原因；或A/B测试结论存在矛盾，要求决策
+- 考察重点：分析框架（拆解维度）、归因思路、数据驱动决策能力
+- 要给出具体数字（如"下降了20%"），增加真实感
+直接输出题目，不超过75字，不加任何前缀序号。`,
+
+  strategy: `你是一位大厂产品总监，请出1道产品策略类面试题。
+出题规律参考：
+- 常见形式：如何进入新市场/防御竞争对手、某产品如何从0到1冷启动、功能优先级取舍（资源有限怎么办）、工具类产品如何变现
+- 考察重点：商业判断力、竞争意识、优先级思维
+- 有具体公司或产品背景，不要太泛
+直接输出题目，不超过70字，不加任何前缀序号。`,
+
+  competitive: `你是一位互联网公司产品面试官，请出1道竞品分析类面试题。
+出题规律参考：
+- 常见形式：对比两款真实存在的中国互联网产品（如飞书vs钉钉、小红书vs抖音、美团vs饿了么、Kimi vs 通义千问），分析差异化定位；或分析某款产品为何成功/失败
+- 考察重点：市场洞察、用户定位理解、差异化思维
+- 必须指定真实产品名称
+直接输出题目，不超过70字，不加任何前缀序号。`,
+
+  estimation: `你是一位咨询/互联网公司面试官，请出1道估算题（费米问题）。
+出题规律参考：
+- 常见真题：北京地铁日均乘客量、全国外卖订单日均量、某城市共享单车数量、微信日活用户发送消息条数、某App合理的DAU上限
+- 考察重点：结构化拆解、合理假设、量级判断，不需精确答案
+- 场景要具体、真实，与互联网/消费品相关
+直接输出题目，不超过60字，不加任何前缀序号。`,
+
+  insight: `你是一位大厂用户研究/产品面试官，请出1道用户洞察类面试题。
+出题规律参考：
+- 常见形式：如何发现某类用户未被满足的需求、用户说要A功能但实际行为是B怎么解读、如何快速了解一个陌生行业的用户需求、如何区分"用户想要"和"用户需要"
+- 考察重点：用户研究方法（访谈/数据/观察）、洞察转化为产品决策的能力
+直接输出题目，不超过70字，不加任何前缀序号。`,
+
+  aipm: `你是一位AI产品公司（如字节/百度/阿里/Kimi/智谱）的资深面试官，请出1道AI产品经理专项面试题。
+出题规律参考（从以下方向随机选一个）：
+- AI产品设计：涉及LLM幻觉/用户信任/Prompt交互设计等AI特有挑战的功能设计题
+- AI指标体系：如何设定AI产品的北极星指标，满意度/拒识率/幻觉率如何权衡
+- 模型选型与落地：自研vs调API的产品决策、RAG在垂直场景的应用、微调vs提示词工程的取舍
+- AI竞品分析：对比Kimi/DeepSeek/通义千问/ChatGPT等真实AI产品的差异化策略
+- AI数据飞轮：如何通过产品设计让AI产品越用越好
+难度偏高，考察AI产品深度认知，必须有具体场景和约束条件。不超过80字，不加任何前缀序号。`,
+};
+
+let _pCat = 'design';      // 当前选中的产品分类
+
+function selectPCat(el, cat) {
+  _pCat = cat;
+  _pBankSelected = null;
+  document.querySelectorAll('.pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', strategy:'🚀 产品策略题', competitive:'🔍 竞品分析题', estimation:'🧮 估算题', insight:'👥 用户洞察题', aipm:'🤖 AI产品专项题' };
+  document.getElementById('pcat-title').textContent = titles[cat] || cat;
+  if (_pMode === 'bank') renderProductBank();
+}
+
+
+const PRODUCT_ALL_CATS = ['design','metrics','strategy','competitive','estimation','insight','aipm'];
+
+async function startProductInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  navigate('interview');
+  await new Promise(r => setTimeout(r, 80));
+  showInterviewConfig();
+
+  // Resolve random category
+  const resolvedCat = _pCat === 'random'
+    ? PRODUCT_ALL_CATS[Math.floor(Math.random() * PRODUCT_ALL_CATS.length)]
+    : _pCat;
+  const catLabel = PRODUCT_CAT_LABELS[resolvedCat] || resolvedCat;
+
+  toast(`AI 生成「${catLabel}」题目中…`, 'info');
+  let question = '';
+  try {
+    question = await genQuestion(PRODUCT_CAT_PROMPTS[resolvedCat]);
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+
+  // Launch interview directly
+  const pref = getPref();
+  const maxTurns = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
+
+  document.getElementById('chat-empty').style.display = 'none';
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
+// ────────────────────────────────────────────────────────────
+
 function buildGenPrompt(src, resume, jd, forcedSection) {
   const kbCtx = getKBContext();
   const kbSection = kbCtx ? `\n\n${kbCtx}` : '';
@@ -2841,6 +3133,16 @@ const HF_SUB_CATS = {
     { val: 'qna', label: '📝 面试Q&A' },
     { val: 'notes', label: '📚 知识点' },
   ],
+  product: [
+    { val: 'all', label: '全部' },
+    { val: 'design', label: '🎨 产品设计' },
+    { val: 'metrics', label: '📊 数据分析' },
+    { val: 'strategy', label: '🚀 产品策略' },
+    { val: 'competitive', label: '🔍 竞品分析' },
+    { val: 'estimation', label: '🧮 估算题' },
+    { val: 'insight', label: '👥 用户洞察' },
+    { val: 'aipm', label: '🤖 AI产品专项' },
+  ],
 };
 
 function setHfSrc(btn, val) {
@@ -2942,8 +3244,8 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { bank: '题库', random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义' };
-  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历' };
+  const srcLabels = { bank: '题库', random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 
   listEl.innerHTML = history.map((h, i) => {

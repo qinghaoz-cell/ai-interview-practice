@@ -519,6 +519,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 .pcat-card.active{border-color:var(--primary);background:var(--primary-dim)}
 .pcat-icon{font-size:26px;margin-bottom:8px}
 .pcat-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.pcat-label{font-size:13px;font-weight:600;margin-bottom:4px}
 .pcat-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
 
 .product-bank-list{
@@ -568,10 +569,6 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-item" data-page="jd" onclick="navigate('jd')">
         <span class="nav-icon">💼</span>目标职位
       </div>
-      <div class="nav-item" data-page="questions" onclick="navigate('questions')">
-        <span class="nav-icon">📚</span>题库
-        <span class="nav-badge" id="q-count-badge">0</span>
-      </div>
       <div class="nav-item" data-page="kb" onclick="navigate('kb')">
         <span class="nav-icon">🧠</span>知识库
       </div>
@@ -583,6 +580,12 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       </div>
       <div class="nav-item" data-page="product" onclick="navigate('product')">
         <span class="nav-icon">🧩</span>产品思维专项
+      </div>
+      <div class="nav-item" data-page="resume-spec" onclick="navigate('resume-spec')">
+        <span class="nav-icon">💼</span>简历专项
+      </div>
+      <div class="nav-item" data-page="kb-spec" onclick="navigate('kb-spec')">
+        <span class="nav-icon">🧠</span>知识点专项
       </div>
       <div class="nav-item" data-page="history" onclick="navigate('history')">
         <span class="nav-icon">📊</span>历史记录
@@ -690,27 +693,6 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       </div>
     </section>
 
-    <!-- ── Page: 题库 ── -->
-    <section class="page" id="page-questions">
-      <div class="page-header flex justify-between items-center">
-        <div>
-          <div class="page-title">📚 题库</div>
-          <div class="page-sub">AI产品经理常见面试题，支持筛选、搜索和收藏</div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="openAddQuestionModal()">+ 添加自定义题目</button>
-      </div>
-      <div class="filter-bar">
-        <button class="filter-tab active" data-cat="all" onclick="setFilter('all')">全部</button>
-        <button class="filter-tab" data-cat="design" onclick="setFilter('design')">产品设计</button>
-        <button class="filter-tab" data-cat="ai" onclick="setFilter('ai')">AI基础</button>
-        <button class="filter-tab" data-cat="bq" onclick="setFilter('bq')">行为问题BQ</button>
-        <button class="filter-tab" data-cat="case" onclick="setFilter('case')">案例分析</button>
-        <button class="filter-tab" data-cat="fav" onclick="setFilter('fav')">⭐ 收藏</button>
-        <input type="text" class="search-box" id="q-search" placeholder="🔍 搜索题目…" oninput="renderQuestions()">
-      </div>
-      <div id="q-list" class="q-list"></div>
-    </section>
-
     <!-- ── Page: 面试 ── -->
     <section class="page" id="page-interview">
       <div class="page-header">
@@ -722,39 +704,15 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <div class="active-q-text" id="active-q-text"></div>
       </div>
       <div class="interview-config" id="interview-config">
-        <div class="config-row">
-          <div class="input-group">
-            <label class="input-label">题目来源</label>
-            <select class="input-field" id="q-source" onchange="onSourceChange()">
-              <option value="bank">从题库随机选题</option>
-              <option value="random">AI随机生成题目</option>
-              <option value="kb">基于知识库生成题目</option>
-              <option value="resume">从简历生成题目</option>
-              <option value="jd">从JD生成题目</option>
-              <option value="combined">简历+JD联合生成</option>
-              <option value="custom">手动输入题目</option>
-            </select>
-          </div>
-          <div class="input-group" id="cat-filter-group">
-            <label class="input-label">题目分类</label>
-            <select class="input-field" id="bank-cat">
-              <option value="all">全部分类</option>
-              <option value="design">产品设计</option>
-              <option value="ai">AI基础</option>
-              <option value="bq">行为问题BQ</option>
-              <option value="case">案例分析</option>
-            </select>
-          </div>
-        </div>
-        <div id="ai-cat-group" style="display:none">
-          <label class="input-label" style="margin-top:12px;display:block">题目方向 <span style="font-weight:400;color:var(--text-muted)">（可选，不选则随机）</span></label>
-          <div class="cat-pills" id="ai-cat-pills" data-selected="random">
-            <button class="cat-pill active" onclick="selectCatPill(this,'random')">🎲 随机</button>
-            <button class="cat-pill" onclick="selectCatPill(this,'产品思维')">🎨 产品思维</button>
-            <button class="cat-pill" onclick="selectCatPill(this,'AI基础知识')">🤖 AI基础知识</button>
-            <button class="cat-pill" onclick="selectCatPill(this,'个人动机')">🙋 个人动机</button>
-            <button class="cat-pill" onclick="selectCatPill(this,'行为问题BQ')">💬 行为问题BQ</button>
-          </div>
+        <div class="input-group">
+          <label class="input-label">题目来源</label>
+          <select class="input-field" id="q-source" onchange="onSourceChange()">
+            <option value="random">🎲 AI随机出题</option>
+            <option value="resume">从简历生成题目</option>
+            <option value="jd">从JD生成题目</option>
+            <option value="combined">简历+JD联合生成</option>
+            <option value="custom">手动输入题目</option>
+          </select>
         </div>
         <div id="resume-section-group" style="display:none">
           <label class="input-label" style="margin-top:12px;display:block">简历部分 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
@@ -763,32 +721,6 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
             <button class="cat-pill" onclick="selectResumeSectionPill(this,'教育背景')">🎓 教育背景</button>
             <button class="cat-pill" onclick="selectResumeSectionPill(this,'实习经历')">💼 实习经历</button>
             <button class="cat-pill" onclick="selectResumeSectionPill(this,'项目经历')">🛠 项目经历</button>
-          </div>
-        </div>
-        <div id="kb-module-group" style="display:none">
-          <label class="input-label" style="margin-top:12px;display:block">知识库模块 <span style="font-weight:400;color:var(--text-muted)">（不选则随机轮换）</span></label>
-          <div class="cat-pills" id="kb-module-pills" data-selected="random">
-            <button class="cat-pill active" onclick="selectKBPill(this,'random')">🎲 随机轮换</button>
-            <button class="cat-pill" onclick="selectKBPill(this,'projects')">💼 项目经历</button>
-            <button class="cat-pill" onclick="selectKBPill(this,'qna')">📝 面试Q&A</button>
-            <button class="cat-pill" onclick="selectKBPill(this,'notes')">📚 知识点</button>
-          </div>
-        </div>
-        <div id="kb-file-group" style="display:none">
-          <label class="input-label" style="margin-top:10px;display:block">指定文件 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
-          <div class="cat-pills" id="kb-file-pills" data-selected="random"></div>
-        </div>
-        <!-- Project folder selector (only when projects module selected) -->
-        <div id="proj-folder-group" style="display:none">
-          <label class="input-label" style="margin-top:12px;display:block">选择项目/实习 <span style="font-weight:400;color:var(--text-muted)">（不选则随机）</span></label>
-          <div class="cat-pills" id="proj-folder-pills" data-selected="random"></div>
-        </div>
-        <!-- Mode toggle (only when a specific project folder is selected) -->
-        <div id="proj-mode-group" style="display:none">
-          <label class="input-label" style="margin-top:10px;display:block">出题范围</label>
-          <div class="cat-pills" id="proj-mode-pills" data-selected="all">
-            <button class="cat-pill active" onclick="selectProjModePill(this,'all')">📚 文件夹全部内容</button>
-            <button class="cat-pill" onclick="selectProjModePill(this,'resume')">📄 仅简历描述</button>
           </div>
         </div>
         <div id="custom-q-group" style="display:none;margin-top:10px">
@@ -859,42 +791,32 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <div class="pcat-card" data-cat="random" onclick="selectPCat(this,'random')">
           <div class="pcat-icon">🎲</div>
           <div class="pcat-name">随机抽题</div>
-          <div class="pcat-desc">从全部7个分类中随机出一题，模拟真实面试的不确定性</div>
+          <div class="pcat-desc">从全部4个分类中随机出一题，模拟真实面试的不确定性</div>
         </div>
         <div class="pcat-card active" data-cat="design" onclick="selectPCat(this,'design')">
           <div class="pcat-icon">🎨</div>
           <div class="pcat-name">产品设计</div>
-          <div class="pcat-desc">为特定用户群设计功能或产品，考察用户同理心与系统思维</div>
+          <div class="pcat-desc">设计功能/产品，含体验与商业价值取舍，考察用户同理心与决策力</div>
         </div>
         <div class="pcat-card" data-cat="metrics" onclick="selectPCat(this,'metrics')">
           <div class="pcat-icon">📊</div>
           <div class="pcat-name">数据分析</div>
-          <div class="pcat-desc">指标异常归因与数据驱动决策，考察分析框架的运用</div>
-        </div>
-        <div class="pcat-card" data-cat="strategy" onclick="selectPCat(this,'strategy')">
-          <div class="pcat-icon">🚀</div>
-          <div class="pcat-name">产品策略</div>
-          <div class="pcat-desc">竞争策略、增长路径与功能优先级取舍，考察商业判断力</div>
+          <div class="pcat-desc">指标诊断、增长留存分析、A/B测试决策，考察数据驱动思维</div>
         </div>
         <div class="pcat-card" data-cat="competitive" onclick="selectPCat(this,'competitive')">
           <div class="pcat-icon">🔍</div>
           <div class="pcat-name">竞品分析</div>
-          <div class="pcat-desc">对比市场上的竞争产品，找出差异化机会点</div>
-        </div>
-        <div class="pcat-card" data-cat="estimation" onclick="selectPCat(this,'estimation')">
-          <div class="pcat-icon">🧮</div>
-          <div class="pcat-name">估算题</div>
-          <div class="pcat-desc">市场规模与关键数字的量化估算，考察结构化拆解能力</div>
-        </div>
-        <div class="pcat-card" data-cat="insight" onclick="selectPCat(this,'insight')">
-          <div class="pcat-icon">👥</div>
-          <div class="pcat-name">用户洞察</div>
-          <div class="pcat-desc">发现并验证用户真实需求，考察用户研究方法与洞察力</div>
+          <div class="pcat-desc">对比真实AI产品，找出差异化机会点与优化方向</div>
         </div>
         <div class="pcat-card" data-cat="aipm" onclick="selectPCat(this,'aipm')" style="border-color:var(--accent);background:var(--accent-dim)">
           <div class="pcat-icon">🤖</div>
           <div class="pcat-name">AI产品专项</div>
-          <div class="pcat-desc">AI产品设计、指标体系、模型选型、落地挑战——AI PM必考</div>
+          <div class="pcat-desc">RAG/Agent/Prompt/模型评估，AI PM必考硬核题</div>
+        </div>
+        <div class="pcat-card" data-cat="aiknowledge" onclick="selectPCat(this,'aiknowledge')" style="border-color:#a78bfa;background:#a78bfa18">
+          <div class="pcat-icon">🧠</div>
+          <div class="pcat-name">AI产品认知</div>
+          <div class="pcat-desc">Prompt调优、幻觉处理、AI边界判断等认知理解题</div>
         </div>
       </div>
 
@@ -908,8 +830,88 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
           <button class="btn btn-primary" onclick="startProductInterview()">▶ 开始练习</button>
-          <span style="font-size:12px;color:var(--text-muted)">完成后可在「历史记录 → 产品专项」查看</span>
         </div>
+      </div>
+
+      <!-- 产品专项历史记录 -->
+      <div style="margin-top:4px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="product-spec-history"></div>
+      </div>
+    </section>
+
+    <!-- ── Page: 简历专项 ── -->
+    <section class="page" id="page-resume-spec">
+      <div class="page-header">
+        <div class="page-title">💼 简历专项</div>
+        <div class="page-sub">选择一段项目/实习经历，AI 针对性深挖追问</div>
+      </div>
+
+      <!-- 空状态 -->
+      <div id="rspec-empty" class="card" style="display:none;text-align:center;padding:36px 20px">
+        <div style="font-size:32px;margin-bottom:12px">📂</div>
+        <div style="font-weight:600;margin-bottom:6px">还没有项目/实习经历</div>
+        <div style="color:var(--text-muted);font-size:13px;margin-bottom:16px">先去「知识库」新建项目文件夹，添加简历描述或上传文件</div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('kb')">前往知识库</button>
+      </div>
+
+      <!-- 文件夹卡片 -->
+      <div class="product-cat-grid" id="rspec-folders"></div>
+
+      <!-- 开始区 -->
+      <div class="card" id="rspec-start-card" style="display:none">
+        <div class="card-title" id="rspec-title">🎲 随机抽取经历</div>
+        <div class="input-group" style="margin-bottom:0">
+          <label class="input-label">追问深度</label>
+          <select class="input-field" id="rspec-mode">
+            <option value="all">全面深挖（简历描述 + 上传文件）</option>
+            <option value="resume">只追问简历描述</option>
+          </select>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="startResumeSpecInterview()">▶ 开始练习</button>
+          <span style="font-size:12px;color:var(--text-muted)">AI 基于你的真实经历出题，每次角度不同</span>
+        </div>
+      </div>
+
+      <!-- 简历专项历史记录 -->
+      <div style="margin-top:4px" id="rspec-history-section" style="display:none">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="rspec-history"></div>
+      </div>
+    </section>
+
+    <!-- ── Page: 知识点专项 ── -->
+    <section class="page" id="page-kb-spec">
+      <div class="page-header">
+        <div class="page-title">🧠 知识点专项</div>
+        <div class="page-sub">基于你的 Q&A 备题和知识点笔记，AI 针对性出题考察</div>
+      </div>
+
+      <!-- 空状态 -->
+      <div id="kbspec-empty" class="card" style="display:none;text-align:center;padding:36px 20px">
+        <div style="font-size:32px;margin-bottom:12px">📝</div>
+        <div style="font-weight:600;margin-bottom:6px">还没有 Q&A 或知识点内容</div>
+        <div style="color:var(--text-muted);font-size:13px;margin-bottom:16px">先去「知识库」添加面试 Q&A 或知识点笔记</div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('kb')">前往知识库</button>
+      </div>
+
+      <!-- 内容卡片 -->
+      <div class="product-cat-grid" id="kbspec-cards"></div>
+
+      <!-- 开始区 -->
+      <div class="card" id="kbspec-start-card" style="display:none">
+        <div class="card-title" id="kbspec-title">🎲 随机抽取内容</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">AI 基于所选内容出追问题，考察理解深度</div>
+        <div style="margin-top:4px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="startKBSpecInterview()">▶ 开始练习</button>
+        </div>
+      </div>
+
+      <!-- 知识点专项历史记录 -->
+      <div style="margin-top:4px" id="kbspec-history-section">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="kbspec-history"></div>
       </div>
     </section>
 
@@ -929,10 +931,11 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <button class="cat-pill" onclick="setHfSrc(this,'resume')">💼 简历</button>
         <button class="cat-pill" onclick="setHfSrc(this,'kb')">📚 知识库</button>
         <button class="cat-pill" onclick="setHfSrc(this,'random')">🤖 AI随机</button>
-        <button class="cat-pill" onclick="setHfSrc(this,'bank')">🗂 题库</button>
         <button class="cat-pill" onclick="setHfSrc(this,'jd')">📋 JD</button>
         <button class="cat-pill" onclick="setHfSrc(this,'combined')">🔗 联合</button>
         <button class="cat-pill" onclick="setHfSrc(this,'product')">🧩 产品专项</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'resume-spec')">💼 简历专项</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'kb-spec')">🧠 知识点专项</button>
       </div>
       <div id="hf-sub-row" style="display:none;margin-bottom:12px">
         <div class="cat-pills" id="hf-sub-pills" data-selected="all"></div>
@@ -985,9 +988,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <div class="input-group">
             <label class="input-label">面试难度</label>
             <select class="input-field" id="difficulty-select" onchange="savePref()">
-              <option value="normal">普通 — 友好引导，追问1-2次</option>
-              <option value="strict">严格 — 深度追问，质疑逻辑漏洞</option>
-              <option value="hell">地狱 — 极度严苛，连续追问不留情面</option>
+              <option value="normal">普通 — 友好引导，AI自行决定4-5轮结束</option>
+              <option value="strict">严格 — 深度追问，4-5轮，质疑逻辑漏洞</option>
+              <option value="hell">地狱 — 极度严苛，5-6轮，连续追问不留情面</option>
             </select>
           </div>
           <div class="input-group" style="margin-bottom:0">
@@ -1090,33 +1093,6 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
   </main>
 </div>
 
-<!-- ── Modal: 添加题目 ── -->
-<div class="modal-overlay" id="add-q-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">➕ 添加自定义题目</div>
-      <button class="modal-close" onclick="closeModal('add-q-modal')">×</button>
-    </div>
-    <div class="input-group">
-      <label class="input-label">题目内容</label>
-      <textarea class="input-field" id="new-q-text" rows="4" placeholder="输入面试题内容…"></textarea>
-    </div>
-    <div class="input-group">
-      <label class="input-label">题目分类</label>
-      <select class="input-field" id="new-q-cat">
-        <option value="design">产品设计</option>
-        <option value="ai">AI基础</option>
-        <option value="bq">行为问题BQ</option>
-        <option value="case">案例分析</option>
-        <option value="custom">自定义</option>
-      </select>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('add-q-modal')">取消</button>
-      <button class="btn btn-primary" onclick="addCustomQuestion()">添加题目</button>
-    </div>
-  </div>
-</div>
 
 <!-- ── Modal: 参考改写 ── -->
 <div class="modal-overlay rewrite-modal" id="rewrite-modal">
@@ -1124,6 +1100,10 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
     <div class="modal-header">
       <div class="modal-title">✨ 参考改写 &amp; 标准答案</div>
       <button class="modal-close" onclick="closeModal('rewrite-modal')">×</button>
+    </div>
+    <div class="rewrite-section" id="rewrite-framework-section">
+      <div class="rewrite-section-title" style="color:#a78bfa">🧭 答题思路 <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0">— 这类题的框架与切入点</span></div>
+      <div class="rewrite-box" id="rewrite-framework">正在生成…</div>
     </div>
     <div class="rewrite-section">
       <div class="rewrite-section-title" style="color:var(--primary)">📝 改写版本 <span style="font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0">— 基于你的回答优化表达</span></div>
@@ -1146,92 +1126,16 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 
 <script>
 // ═══════════════════════════════════════════════
-//  QUESTION BANK DATA
-// ═══════════════════════════════════════════════
-const BUILTIN_QUESTIONS = [
-  // ── 产品设计（20题）──
-  {id:'q001',cat:'design',text:'请设计一个AI写作助手，目标用户是职场人士。描述核心功能、差异化卖点，以及如何解决"生成内容同质化"的问题。'},
-  {id:'q002',cat:'design',text:'设计一个面向中小企业的AI客服产品，从0到1。你如何做冷启动？知识库如何构建？如何衡量上线效果？'},
-  {id:'q003',cat:'design',text:'如果你是豆包/Kimi/文心一言的产品经理，你会优先优化哪三个功能？为什么？'},
-  {id:'q004',cat:'design',text:'为一个医疗问诊场景设计AI助手产品。你会如何处理"AI误诊"的风险？从产品层面如何保护用户？'},
-  {id:'q005',cat:'design',text:'如果你负责TikTok/抖音的AI内容审核系统（从产品角度），你会定义哪些核心指标？如何处理误杀率和漏杀率之间的权衡？'},
-  {id:'q006',cat:'design',text:'为一个企业内部知识管理场景设计基于RAG的AI产品。如何解决"检索不准"和"幻觉"问题（从产品而非算法角度）？'},
-  {id:'q007',cat:'design',text:'设计一款AI会议助手（类似飞书妙记），核心功能和差异化竞争点是什么？如何处理多语言、隐私等挑战？'},
-  {id:'q008',cat:'design',text:'如何设计AI助手的"人设"与个性化体验？AI助手应该有情感反馈吗？如何通过人设设计提升用户留存？'},
-  {id:'q009',cat:'design',text:'如何为AI产品设计「失败状态」体验——当AI无法给出满意答案时，如何维持用户体验和品牌信任？'},
-  {id:'q010',cat:'design',text:'你如何设计AI产品的用户反馈机制？如何利用反馈数据驱动模型和产品持续改进？'},
-  {id:'q011',cat:'design',text:'请设计一款针对K12教育的AI辅导产品。如何保证内容安全？如何针对不同年级学生提供差异化体验？'},
-  {id:'q012',cat:'design',text:'为一个流媒体平台（如爱奇艺）设计一个AI智能体（Agent）。描述其功能范围、工具调用链，以及fallback机制。'},
-  {id:'q013',cat:'design',text:'如何为AI产品设计「可信度」展示机制？用户如何判断AI答案是否可靠？有哪些具体的产品设计手段？'},
-  {id:'q014',cat:'design',text:'你来负责一款AI搜索产品的改版，旧版本用关键词，新版本用自然语言。如何设计迁移策略不影响DAU？'},
-  {id:'q015',cat:'design',text:'如果产品用户反馈AI生成内容存在性别/种族偏见，作为PM你会如何制定短期和长期的优化方案？'},
-  {id:'q016',cat:'design',text:'为一个to-B的AI代码助手（如GitHub Copilot竞品）设计企业级功能。优先解决哪些企业痛点？如何定价？'},
-  {id:'q017',cat:'design',text:'如何为AI产品设计从"免费版"到"付费版"的转化路径？用哪些产品机制推动付费转化？'},
-  {id:'q018',cat:'design',text:'如何为AI产品设计用户分层运营策略？区分普通用户、重度用户和付费用户，分别给出产品策略。'},
-  {id:'q019',cat:'design',text:'设计一个AI辅助的绩效评估系统，需要考虑哪些算法偏见和伦理问题？如何保证公平性？'},
-  {id:'q020',cat:'design',text:'如何设计AI产品的用户引导（Onboarding）流程，让用户快速理解AI的能力边界，同时建立信任？'},
-  // ── AI理解（15题）──
-  {id:'q021',cat:'ai',text:'请用非技术语言解释"幻觉"（Hallucination）是什么，为什么会发生，以及从产品角度你能做什么来缓解它的负面影响？'},
-  {id:'q022',cat:'ai',text:'什么是RAG（检索增强生成）？相比直接提示词工程，RAG的核心优势是什么？适合哪类产品场景？'},
-  {id:'q023',cat:'ai',text:'Fine-tuning、RAG、Prompt Engineering三者的核心区别是什么？作为PM，你会在什么情况下选择哪种方案？'},
-  {id:'q024',cat:'ai',text:'如何判断一个产品需求是否应该用AI/大模型来解决，而不是用规则引擎或传统算法？你有什么决策框架？'},
-  {id:'q025',cat:'ai',text:'什么是模型对齐（Alignment）和RLHF？它在产品层面解决了什么问题，又引入了什么新问题？'},
-  {id:'q026',cat:'ai',text:'AI Agent的核心架构（规划、记忆、工具调用）是什么？你认为当前AI Agent落地的最大产品挑战是什么？'},
-  {id:'q027',cat:'ai',text:'什么是模型漂移（Model Drift）？作为产品经理，你如何在产品层面设计监控机制来早期发现模型效果下降？'},
-  {id:'q028',cat:'ai',text:'大模型的"上下文窗口"（Context Window）是什么？它的大小对产品功能设计有什么影响？'},
-  {id:'q029',cat:'ai',text:'开源模型（如LLaMA/Qwen）和闭源模型（如GPT-4/Claude）各有什么产品化优劣势？你会在什么场景选择哪种？'},
-  {id:'q030',cat:'ai',text:'多模态AI（文字+图像+语音）给产品带来了哪些新的可能性？同时它的技术局限性在产品设计上意味着什么？'},
-  {id:'q031',cat:'ai',text:'AI产品的延迟（Latency）问题如何影响用户体验？有哪些产品层面的解决思路（而非纯技术侧）？'},
-  {id:'q032',cat:'ai',text:'端侧AI（On-device AI）和云端AI各自适合什么产品场景？在做技术路线选型时你会考虑哪些因素？'},
-  {id:'q033',cat:'ai',text:'如何向非技术背景的高管解释"模型评估"是什么？你会汇报哪些指标？如何让他们理解模型效果的进展？'},
-  {id:'q034',cat:'ai',text:'GDPR、《生成式AI管理规定》等合规要求对AI产品的数据收集和模型训练有哪些具体影响？作为PM你如何应对？'},
-  {id:'q035',cat:'ai',text:'你有哪些"负责任AI"的原则？在上线一个AI功能前，你的checklist包含哪些内容？'},
-  // ── 行为问题BQ（13题）──
-  {id:'q036',cat:'bq',text:'讲一个你主导或深度参与的AI产品项目。你扮演什么角色？遇到了哪些挑战？结果如何？'},
-  {id:'q037',cat:'bq',text:'描述一次你在AI产品中遇到了"算法效果未达预期"的情况。你是如何推动团队找到根因并解决问题的？'},
-  {id:'q038',cat:'bq',text:'你的AI产品上线后出现了"幻觉"或产出不当内容，引发用户投诉。你第一时间如何响应？如何做事后复盘？'},
-  {id:'q039',cat:'bq',text:'给我一个例子：你需要在"加快上线速度"和"提高模型准确率"之间做权衡。你是如何决策的？'},
-  {id:'q040',cat:'bq',text:'描述一次与算法工程师或数据科学家发生意见分歧的经历。你是如何解决的？结果如何？'},
-  {id:'q041',cat:'bq',text:'描述一次你识别到了一个用AI解决用户问题的机会，但周围人没有注意到。你是如何推动这件事落地的？'},
-  {id:'q042',cat:'bq',text:'讲一个你利用数据分析说服团队改变产品方向的例子。数据是什么，结论是什么，遇到了哪些阻力？'},
-  {id:'q043',cat:'bq',text:'描述一次你需要向兴奋的高管或客户解释AI产品局限性或不确定性的经历。你是如何表达的？'},
-  {id:'q044',cat:'bq',text:'描述一次你在AI项目中需要协调数据科学、工程、业务多方优先级冲突的经历。你是如何处理的？'},
-  {id:'q045',cat:'bq',text:'讲一个你做过的最失败的AI产品决策。你从中学到了什么？如果重来你会怎么做？'},
-  {id:'q046',cat:'bq',text:'你如何平衡AI产品的短期商业KPI（如MAU、收入）和长期技术健康（如数据质量、模型债务）？'},
-  {id:'q047',cat:'bq',text:'你如何处理AI产品中的伦理或偏见问题？有没有亲历过即使有业务压力也坚持负责任AI原则的情况？'},
-  {id:'q048',cat:'bq',text:'你如何在竞争激烈的AI赛道保持产品差异化？有没有被竞品功能模仿的经历，你是如何应对的？'},
-  // ── 案例分析（17题）──
-  {id:'q049',cat:'case',text:'如何定义一个AI对话产品的北极星指标？请区分技术指标、用户体验指标和业务指标，并说明它们之间的关系。'},
-  {id:'q050',cat:'case',text:'假设你负责一款AI写作工具，DAU突然下降20%。你会如何排查原因？请给出完整的分析框架。'},
-  {id:'q051',cat:'case',text:'某AI产品的用户7日留存率只有30%，远低于预期。请给出你的诊断思路和至少3个可能的改进方向。'},
-  {id:'q052',cat:'case',text:'你被要求在6个月内让一款AI产品实现盈利。你会选择什么商业模式？为什么？（比较订阅制、按量计费、API授权等）'},
-  {id:'q053',cat:'case',text:'微信想在对话框中加入AI助手功能，作为PM你会如何规划第一个版本？MVP是什么，如何评估成功？'},
-  {id:'q054',cat:'case',text:'竞争对手在你计划发布前6个月发布了相似的AI功能，你如何制定应对策略？'},
-  {id:'q055',cat:'case',text:'分析国内AI对话产品竞争格局（豆包、Kimi、文心一言、通义千问等）。你认为谁会赢？核心竞争优势是什么？'},
-  {id:'q056',cat:'case',text:'如果你是某大厂AI助手的产品负责人，你会如何制定未来一年的产品路线图？依据是什么？'},
-  {id:'q057',cat:'case',text:'某企业级AI助手产品的NPS持续偏低（净推荐值-15分），你会如何诊断根本原因并制定改善计划？'},
-  {id:'q058',cat:'case',text:'如何为AI产品上线一个概率性功能（模型预测不总是准确）？你的灰度发布和风险控制策略是什么？'},
-  {id:'q059',cat:'case',text:'某K12教育平台想引入AI批改作文功能，如何评估这个功能的商业可行性和对学生学习的实际价值？'},
-  {id:'q060',cat:'case',text:'抖音的推荐算法被批评会导致"信息茧房"，作为负责该产品的PM你会如何应对这一挑战？'},
-  {id:'q061',cat:'case',text:'如何设计AI产品的数据飞轮（Data Flywheel）？什么阶段的产品最需要建立数据飞轮壁垒？'},
-  {id:'q062',cat:'case',text:'某AI图像生成工具遭遇版权纠纷（训练数据含版权内容），作为PM你会如何处理这场危机？'},
-  {id:'q063',cat:'case',text:'如何评估AI产品是否达到Product-Market Fit？传统的PMF评估框架需要哪些针对AI产品的调整？'},
-  {id:'q064',cat:'case',text:'一家传统SaaS公司要将现有产品「AI化」，你作为顾问会给出哪些关键建议？优先从哪里入手？'},
-  {id:'q065',cat:'case',text:'如果给你3个月时间和1个10人团队，你会为字节跳动设计什么样的AI新产品？请阐述你的完整思考过程。'},
-];
-
-// ═══════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════
 const STATE = {
-  currentFilter: 'all',
   interview: {
     active: false,
     question: '',
     messages: [],  // [{role,content,time}]
     turn: 0,
     maxTurns: 3,
-    source: 'bank',
+    source: 'random',
   },
   recognition: null,
   isRecording: false,
@@ -1486,10 +1390,6 @@ const getProvider    = () => LS.getStr('ai_provider') || 'anthropic'; // 'anthro
 const getDeepSeekKey = () => LS.getStr('deepseek_key');
 const getActiveKey   = () => getProvider() === 'deepseek' ? getDeepSeekKey() : getApiKey();
 const getPref = () => LS.get('pref') || { difficulty: 'strict', style: 'general' };
-const getAllQuestions = () => {
-  const custom = getCustomQuestions().map(q => ({ ...q, custom: true }));
-  return [...BUILTIN_QUESTIONS, ...custom];
-};
 
 // ═══════════════════════════════════════════════
 //  API
@@ -1500,47 +1400,91 @@ const API_QUEUE = (() => {
   let lastDone = 0;          // timestamp of last completed request
   const MIN_GAP = 2200;      // ms — enforced between ANY two requests
   const queue = [];
+  let _currentAbort = null;  // AbortController for the in-flight fetch
+
   async function drain() {
     if (running) return;
     running = true;
     while (queue.length) {
-      const { fn, resolve, reject } = queue.shift();
-      // Enforce minimum gap from the moment the previous request FINISHED
-      const wait = MIN_GAP - (Date.now() - lastDone);
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      try { resolve(await fn()); } catch (e) { reject(e); }
+      const { fn, resolve, reject, skipGap } = queue.shift();
+      if (!skipGap) {
+        const wait = MIN_GAP - (Date.now() - lastDone);
+        if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      }
+      const ctrl = new AbortController();
+      _currentAbort = ctrl;
+      try { resolve(await fn(ctrl.signal)); } catch (e) { reject(e); }
+      _currentAbort = null;
       lastDone = Date.now();
     }
     running = false;
   }
   return {
-    add(fn) {
+    add(fn, skipGap = false) {
       return new Promise((resolve, reject) => {
-        queue.push({ fn, resolve, reject });
+        queue.push({ fn, resolve, reject, skipGap });
         drain();
       });
+    },
+    // Drop all pending items and abort any in-flight request.
+    // Call before starting a user-initiated interview so background
+    // tasks (generateReferenceAnswer) don't block question generation.
+    abort() {
+      while (queue.length) {
+        const { reject } = queue.shift();
+        reject(Object.assign(new Error('ABORTED'), { aborted: true }));
+      }
+      if (_currentAbort) { _currentAbort.abort(); _currentAbort = null; }
+      lastDone = 0; // skip MIN_GAP for the next request
     }
   };
 })();
 
 // Robust JSON parser: handles trailing commas, smart quotes, unescaped newlines in strings
+function closeTruncatedJSON(s) {
+  // Walk string tracking depth; if truncated mid-string, roll back to
+  // last safe boundary and close all open brackets.
+  const stack = [];
+  let inStr = false, esc = false, lastSafePos = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\' && inStr) { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') { stack.pop(); if (stack.length <= 1) lastSafePos = i + 1; }
+    else if (ch === ',' && stack.length === 1) lastSafePos = i;
+  }
+  let result = inStr ? s.slice(0, lastSafePos) : s;
+  result = result.replace(/,\s*$/, '');
+  for (let i = stack.length - 1; i >= 0; i--) result += stack[i] === '{' ? '}' : ']';
+  return result;
+}
+
 function robustParseJSON(raw) {
-  // 1. Extract JSON block
-  let s = (raw.match(/\{[\s\S]*\}/) || [raw])[0];
+  // 1. Extract JSON block from first {
+  let s = (raw.match(/\{[\s\S]*/) || [raw])[0];
   // 2. Remove trailing commas before } or ]
   s = s.replace(/,\s*([\}\]])/g, '$1');
   // 3. Replace smart/curly quotes with straight quotes
   s = s.replace(/[\u201C\u201D\u300C\u300D]/g, '"').replace(/[\u2018\u2019]/g, "'");
   // 4. Replace literal newlines inside strings with \n
   s = s.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => '"' + inner.replace(/\n/g, '\\n').replace(/\r/g, '') + '"');
-  try { return JSON.parse(s); } catch (e) { throw new Error(`评分JSON解析失败：${e.message}\n原始内容：${raw.slice(0, 200)}`); }
+  // 5. Try direct parse
+  try { return JSON.parse(s); } catch (e) {
+    // 6. Repair truncated JSON (e.g. string cut off mid-array)
+    try { return JSON.parse(closeTruncatedJSON(s)); } catch (_) {
+      throw new Error(`评分JSON解析失败：${e.message}\n原始内容：${raw.slice(0, 200)}`);
+    }
+  }
 }
 
-async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false) {
-  return API_QUEUE.add(() => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode));
+async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, skipGap = false) {
+  return API_QUEUE.add((signal) => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode, signal), skipGap);
 }
 
-async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false) {
+async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, signal = null) {
   const provider = getProvider();
   const apiKey   = getActiveKey();
   if (!apiKey) throw new Error(`请先在设置页填写 ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} API Key`);
@@ -1567,8 +1511,9 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
 
   let res;
   try {
-    res = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: fetchBody });
-  } catch {
+    res = await fetch(fetchUrl, { method: 'POST', headers: fetchHeaders, body: fetchBody, signal });
+  } catch (err) {
+    if (err?.name === 'AbortError' || err?.aborted) throw Object.assign(new Error('ABORTED'), { aborted: true });
     throw new Error('网络请求失败，请确认服务器正在运行（node server.js）');
   }
 
@@ -1600,7 +1545,13 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
     const decoder = new TextDecoder();
     let full = '', buf = '';
     while (true) {
-      const { done, value } = await reader.read();
+      let done, value;
+      try { ({ done, value } = await reader.read()); }
+      catch (err) {
+        reader.cancel?.();
+        if (err?.name === 'AbortError') throw Object.assign(new Error('ABORTED'), { aborted: true });
+        throw err;
+      }
       if (done) break;
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n');
@@ -1645,12 +1596,16 @@ function navigate(page) {
   document.getElementById('page-' + page)?.classList.add('active');
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
 
-  if (page === 'questions') renderQuestions();
   if (page === 'history') renderHistory();
   if (page === 'settings') renderSettings();
   if (page === 'resume') renderResumePage();
   if (page === 'jd') renderJDPage();
   if (page === 'kb') renderKBPage();
+  if (page === 'resume-spec') renderResumeSpec();
+  if (page === 'product') renderSpecHistory('product', 'product-spec-history');
+  if (page === 'kb-spec') renderKBSpec();
+  // When navigating directly to interview page (not mid-interview), restore clean config state
+  if (page === 'interview' && !STATE.interview.active && !STATE.isGenerating) showInterviewConfig();
 }
 
 // ═══════════════════════════════════════════════
@@ -2136,18 +2091,7 @@ async function generateAndAddQuestions(mode, resume, jd) {
     const lines = result.split('\n').map(l => l.replace(/^[\d\.\)、]+\s*/, '').trim()).filter(l => l.length > 10);
     const catMap = { resume: 'custom', jd: 'custom', combined: 'custom' };
     const cat = catMap[mode] || 'custom';
-    const existing = getCustomQuestions();
-    const newQs = lines.map((text, i) => ({
-      id: `gen_${Date.now()}_${i}`,
-      cat,
-      text,
-      generated: true,
-      source: mode,
-    }));
-    LS.set('custom_questions', [...existing, ...newQs]);
-    updateBadges();
-    toast(`已生成 ${newQs.length} 道面试题并加入题库`, 'success');
-    navigate('questions');
+    toast(`已生成 ${lines.length} 道面试题`, 'success');
   } catch (e) {
     toast(e.message, 'error');
   } finally {
@@ -2156,185 +2100,42 @@ async function generateAndAddQuestions(mode, resume, jd) {
 }
 
 // ═══════════════════════════════════════════════
-//  QUESTION BANK
-// ═══════════════════════════════════════════════
-function setFilter(cat) {
-  STATE.currentFilter = cat;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
-  renderQuestions();
-}
-
-function renderQuestions() {
-  const filter = STATE.currentFilter;
-  const search = document.getElementById('q-search')?.value?.toLowerCase() || '';
-  const favs = getFavorites();
-  let qs = getAllQuestions();
-
-  if (filter === 'fav') qs = qs.filter(q => favs.includes(q.id));
-  else if (filter !== 'all') qs = qs.filter(q => q.cat === filter);
-  if (search) qs = qs.filter(q => q.text.toLowerCase().includes(search));
-
-  const listEl = document.getElementById('q-list');
-  if (!listEl) return;
-
-  if (qs.length === 0) {
-    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>${filter === 'fav' ? '还没有收藏的题目' : '暂无匹配题目'}</p></div>`;
-    return;
-  }
-
-  const catInfo = {
-    design: { label: '产品设计', cls: 'cat-design' },
-    ai:     { label: 'AI基础',  cls: 'cat-ai' },
-    bq:     { label: '行为问题', cls: 'cat-bq' },
-    case:   { label: '案例分析', cls: 'cat-case' },
-    custom: { label: '自定义',   cls: 'cat-custom' },
-  };
-
-  listEl.innerHTML = qs.map(q => {
-    const ci = catInfo[q.cat] || catInfo.custom;
-    const isFav = favs.includes(q.id);
-    return `<div class="q-card">
-      <div class="q-content">
-        <div class="q-text">${escHtml(q.text)}</div>
-        <div class="q-meta">
-          <span class="q-cat ${ci.cls}">${ci.label}</span>
-          ${q.generated ? `<span class="chip">AI生成</span>` : ''}
-        </div>
-      </div>
-      <div class="q-actions">
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav('${q.id}')" title="${isFav ? '取消收藏' : '收藏'}">
-          ${isFav ? '⭐' : '☆'}
-        </button>
-        <button class="btn btn-secondary btn-sm" onclick="useQuestion('${escHtml(q.text.replace(/'/g,"&#39;"))}')">练习</button>
-        ${q.custom || q.generated ? `<button class="btn btn-ghost btn-sm" onclick="deleteQuestion('${q.id}')">删</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleFav(id) {
-  const favs = getFavorites();
-  const idx = favs.indexOf(id);
-  if (idx >= 0) favs.splice(idx, 1);
-  else favs.push(id);
-  LS.set('favorites', favs);
-  renderQuestions();
-}
-
-function deleteQuestion(id) {
-  const qs = getCustomQuestions().filter(q => q.id !== id);
-  LS.set('custom_questions', qs);
-  renderQuestions();
-  updateBadges();
-}
-
-function useQuestion(text) {
-  navigate('interview');
-  setTimeout(() => {
-    document.getElementById('q-source').value = 'custom';
-    const grp = document.getElementById('custom-q-group');
-    if (grp) grp.style.display = 'block';
-    const cf = document.getElementById('cat-filter-group');
-    if (cf) cf.style.display = 'none';
-    const inp = document.getElementById('custom-q-input');
-    if (inp) inp.value = decodeHtml(text);
-  }, 100);
-}
-
-function openAddQuestionModal() {
-  document.getElementById('new-q-text').value = '';
-  openModal('add-q-modal');
-}
-
-function addCustomQuestion() {
-  const text = document.getElementById('new-q-text')?.value?.trim();
-  const cat = document.getElementById('new-q-cat')?.value || 'custom';
-  if (!text) { toast('请输入题目内容', 'error'); return; }
-  const qs = getCustomQuestions();
-  qs.push({ id: `custom_${Date.now()}`, cat, text, custom: true });
-  LS.set('custom_questions', qs);
-  updateBadges();
-  renderQuestions();
-  closeModal('add-q-modal');
-  toast('题目已添加', 'success');
-}
-
-// ═══════════════════════════════════════════════
 //  INTERVIEW
 // ═══════════════════════════════════════════════
-function showInterviewConfig() {
+
+// Safe clear: removes all chat messages but keeps #chat-empty intact (it lives inside #chat-messages)
+function clearChatMessages() {
+  const msgs = document.getElementById('chat-messages');
+  if (!msgs) return;
+  Array.from(msgs.children).forEach(child => {
+    if (child.id !== 'chat-empty') msgs.removeChild(child);
+  });
+}
+
+function showInterviewConfig(clearChat = false) {
   document.getElementById('interview-config').style.display = '';
   document.getElementById('active-q-bar').style.display = 'none';
-  document.getElementById('start-btn').style.display = '';
+  const startBtn = document.getElementById('start-btn');
+  startBtn.style.display = '';
+  startBtn.disabled = false; // always re-enable — handles recovery from stuck loading state
+  if (!clearChat) API_QUEUE.abort(); // cancel any hanging request when returning to config
   document.getElementById('end-btn').style.display = 'none';
   document.getElementById('reconfig-btn').style.display = 'none';
   document.getElementById('score-panel').style.display = 'none';
-}
-
-function selectCatPill(btn, val) {
-  const pills = document.getElementById('ai-cat-pills');
-  if (!pills) return;
-  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  pills.dataset.selected = val;
-}
-
-function selectKBPill(btn, val) {
-  const pills = document.getElementById('kb-module-pills');
-  if (!pills) return;
-  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  pills.dataset.selected = val;
-  // Projects module → show folder picker; others → show file picker
-  const projGrp = document.getElementById('proj-folder-group');
-  const projModeGrp = document.getElementById('proj-mode-group');
-  if (val === 'projects') {
-    if (projGrp) renderProjFolderPills();
-    document.getElementById('kb-file-group').style.display = 'none';
+  document.getElementById('chat-input-area').style.display = 'none';
+  document.getElementById('turn-indicator').style.display = 'none';
+  const emptyEl = document.getElementById('chat-empty');
+  if (clearChat) {
+    // Specialist launch: show loading, clear old chat
+    clearChatMessages();
+    if (emptyEl) { emptyEl.style.display = ''; emptyEl.innerHTML = '<div class="empty-icon">⏳</div><div>AI 出题中，请稍候…</div>'; }
   } else {
-    if (projGrp) projGrp.style.display = 'none';
-    if (projModeGrp) projModeGrp.style.display = 'none';
-    renderKBFilePills(val);
+    // Regular config view: restore default empty state
+    if (emptyEl) {
+      emptyEl.style.display = '';
+      emptyEl.innerHTML = '<div class="empty-icon">🎯</div><div>点击「开始面试」开始练习</div><div style="font-size:12px;color:var(--text-dim)">AI将扮演严格面试官，进行多轮追问</div>';
+    }
   }
-}
-
-function renderKBFilePills(sec) {
-  const group = document.getElementById('kb-file-group');
-  const pills = document.getElementById('kb-file-pills');
-  if (!group || !pills) return;
-  if (sec === 'random') { group.style.display = 'none'; return; }
-
-  const files = getKBFiles(sec).filter(f => f.content?.trim());
-  const hasManual = !!getKBText(sec)?.trim();
-  if (!files.length && !hasManual) { group.style.display = 'none'; return; }
-
-  let html = '<button class="cat-pill active" onclick="selectKBFilePill(this,\'random\')">🎲 随机</button>';
-  files.forEach((f, i) => {
-    html += `<button class="cat-pill" onclick="selectKBFilePill(this,'f${i}')">${escHtml(f.name)}</button>`;
-  });
-  if (hasManual) html += `<button class="cat-pill" onclick="selectKBFilePill(this,'manual')">✏️ 手动输入</button>`;
-
-  pills.innerHTML = html;
-  pills.dataset.selected = 'random';
-  group.style.display = 'block';
-}
-
-function selectKBFilePill(btn, val) {
-  const pills = document.getElementById('kb-file-pills');
-  if (!pills) return;
-  pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  pills.dataset.selected = val;
-}
-
-function getSelectedKBFile(sec) {
-  const pills = document.getElementById('kb-file-pills');
-  const sel = pills?.dataset.selected || 'random';
-  if (sel === 'random') return null;
-  if (sel === 'manual') return { name: '手动输入', content: getKBText(sec) || '' };
-  const idx = parseInt(sel.slice(1));
-  const files = getKBFiles(sec).filter(f => f.content?.trim());
-  return files[idx] || null;
 }
 
 function selectResumeSectionPill(btn, val) {
@@ -2349,49 +2150,15 @@ function getSelectedResumeSection() {
   return document.getElementById('resume-section-pills')?.dataset.selected || 'random';
 }
 
-function getSelectedCat() {
-  return document.getElementById('ai-cat-pills')?.dataset.selected || 'random';
-}
-
-function getSelectedKBModule() {
-  return document.getElementById('kb-module-pills')?.dataset.selected || 'random';
-}
-
 function onSourceChange() {
   const src = document.getElementById('q-source')?.value;
-  const catGrp = document.getElementById('cat-filter-group');
-  const aiCatGrp = document.getElementById('ai-cat-group');
-  const kbModGrp = document.getElementById('kb-module-group');
-  const customGrp = document.getElementById('custom-q-group');
-  if (catGrp) catGrp.style.display = src === 'bank' ? 'block' : 'none';
-  // Show direction pills for AI sources (except kb which has its own module picker)
-  const aiSrcs = ['random', 'resume', 'jd', 'combined'];
-  if (aiCatGrp) aiCatGrp.style.display = aiSrcs.includes(src) ? 'block' : 'none';
-  if (kbModGrp) kbModGrp.style.display = src === 'kb' ? 'block' : 'none';
-  const kbFileGrp = document.getElementById('kb-file-group');
-  if (kbFileGrp && src !== 'kb') kbFileGrp.style.display = 'none';
-  // Resume section selector: show for resume/combined
   const resumeSecGrp = document.getElementById('resume-section-group');
   if (resumeSecGrp) resumeSecGrp.style.display = (src === 'resume' || src === 'combined') ? 'block' : 'none';
-  // Reset selections when switching
-  if (aiSrcs.includes(src)) {
-    const pills = document.getElementById('ai-cat-pills');
-    if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
-  }
-  if (src === 'kb') {
-    const pills = document.getElementById('kb-module-pills');
-    if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
-    if (kbFileGrp) kbFileGrp.style.display = 'none';
-  }
+  const customGrp = document.getElementById('custom-q-group');
+  if (customGrp) customGrp.style.display = src === 'custom' ? 'block' : 'none';
   if (src === 'resume' || src === 'combined') {
     const pills = document.getElementById('resume-section-pills');
     if (pills) { pills.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active')); pills.querySelector('.cat-pill')?.classList.add('active'); pills.dataset.selected = 'random'; }
-  }
-  if (customGrp) customGrp.style.display = src === 'custom' ? 'block' : 'none';
-  // Show KB hint if kb source selected but KB is empty
-  if (src === 'kb') {
-    const kbCtx = getKBContext();
-    if (!kbCtx) toast('知识库为空，请先在「知识库」页面添加内容', 'info', 4000);
   }
 }
 
@@ -2406,7 +2173,13 @@ function parseQuestion(raw) {
 
 async function genQuestion(prompt) {
   const sys = '你是面试出题专家。直接输出题目本身，不加序号、前缀或任何解释。';
-  const result = await callClaude([{ role: 'user', content: prompt }], sys);
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('出题超时，请检查网络后重试')), 20000)
+  );
+  const result = await Promise.race([
+    callClaude([{ role: 'user', content: prompt }], sys, null, 0, false, true /* skipGap */),
+    timeout
+  ]);
   return parseQuestion(result);
 }
 
@@ -2415,6 +2188,13 @@ async function startInterview() {
   const startBtn = document.getElementById('start-btn');
   if (startBtn.disabled) return;
   startBtn.disabled = true;
+  API_QUEUE.abort(); // cancel any background tasks so this runs immediately
+
+  // Immediately show loading state so user knows something is happening
+  const emptyEl = document.getElementById('chat-empty');
+  if (emptyEl) { emptyEl.style.display = ''; emptyEl.innerHTML = '<div class="empty-icon">⏳</div><div>AI 出题中，请稍候…</div>'; }
+  clearChatMessages();
+  document.getElementById('score-panel').style.display = 'none';
 
   const src = document.getElementById('q-source')?.value;
   let question = '';
@@ -2425,209 +2205,50 @@ async function startInterview() {
   if (src === 'custom') {
     question = document.getElementById('custom-q-input')?.value?.trim();
     if (!question) { abort('请输入自定义题目'); return; }
-  } else if (src === 'bank') {
-    const cat = document.getElementById('bank-cat')?.value;
-    let pool = getAllQuestions();
-    if (cat !== 'all') pool = pool.filter(q => q.cat === cat);
-    if (pool.length === 0) { abort('当前分类没有题目'); return; }
-    question = pool[Math.floor(Math.random() * pool.length)].text;
-  } else if (src === 'kb') {
-    const kbCtx = getKBContext();
-    const selectedMod = getSelectedKBModule();
-    let focus;
-
-    // ── Projects module: use folder-based logic ──
-    if (selectedMod === 'projects' || (selectedMod === 'random' && getProjFolders().length)) {
-      const folders = getProjFolders();
-      const selFolderId = getSelectedProjFolder();
-      const projMode = getSelectedProjMode();
-
-      // Pick folder
-      let folder;
-      if (selFolderId !== 'random') {
-        folder = folders.find(f => f.id === selFolderId);
-      } else {
-        const lastId = STATE._kbLastProjId || '';
-        const remaining = folders.filter(f => f.id !== lastId);
-        folder = remaining.length ? remaining[Math.floor(Math.random() * remaining.length)] : folders[0];
-        STATE._kbLastProjId = folder?.id;
-      }
-
-      if (!folder) { abort('项目文件夹为空，请先在「知识库」页面新建项目文件夹', 'kb'); return; }
-
-      const ctx = buildProjFolderContext(folder, projMode);
-      if (!ctx) { abort(`「${folder.name}」还没有内容，请先添加简历描述或上传文件`, 'kb'); return; }
-
-      const modeLabel = projMode === 'resume' ? '简历描述' : '全部内容';
-      toast(`基于「${folder.name}」${modeLabel}生成题目…`, 'info');
-      subCategory = folder.id; // store folder id as subCategory
-      const instruction = projMode === 'resume'
-        ? `你是字节/腾讯的面试官，候选人刚介绍完这段经历，你要立刻"深挖"。参考真实面试官追问风格，随机选一种：
-- 追问具体数字："你说上线后效果不错，核心指标具体是多少？和上线前相比变化了多少？"
-- 追问决策过程："当时有几个方案，你是怎么做取舍的？拍板的依据是什么？"
-- 追问bad case："有没有遇到过效果不达预期的情况？你是怎么分析原因和改进的？"
-- 追问团队分工："当时团队几个人？你具体负责哪个部分？和技术是怎么配合的？"
-根据候选人简历描述出1道追问题，直接输出题目，不超过70字，不加前缀。`
-        : `你是字节/百度的面试官，结合候选人提供的项目资料（包含文档和简历描述），出1道深度考察题。参考真实出题规律随机选一种方向：
-- 技术判断："你们用了RAG/Agent，具体参数怎么设的？遇到幻觉问题如何处理？"
-- 指标深挖："你用什么指标衡量这个功能的效果？如果指标出现异常你会怎么排查？"
-- 产品决策："你提到XX功能，当时为什么选这个方案？有没有考虑过其他路径？"
-- 可量化贡献："你在这个项目中最重要的贡献是什么？能量化吗？"
-根据候选人资料出1道题，直接输出题目，不超过70字，不加前缀。`;
-      try {
-        question = await genQuestion(`${instruction}\n\n候选人资料：\n${ctx}`);
-      } catch(e) { abort(e.message); return; }
-      startBtn.disabled = false;
-      // Jump to interview launch
-      const pref2 = getPref();
-      const mt2 = pref2.difficulty === 'normal' ? 3 : pref2.difficulty === 'hell' ? 5 : 4;
-      STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns: mt2, source: 'kb', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
-      document.getElementById('chat-empty').style.display = 'none';
-      document.getElementById('chat-messages').innerHTML = '';
-      document.getElementById('start-btn').style.display = 'none';
-      document.getElementById('end-btn').style.display = '';
-      document.getElementById('chat-input-area').style.display = '';
-      document.getElementById('turn-indicator').style.display = '';
-      document.getElementById('score-panel').style.display = 'none';
-      document.getElementById('chat-input').value = '';
-      document.getElementById('reconfig-btn').style.display = 'none';
-      hideVoiceTip();
-      document.getElementById('interview-config').style.display = 'none';
-      document.getElementById('active-q-bar').style.display = 'block';
-      document.getElementById('active-q-text').textContent = question;
-      updateTurnIndicator();
-      await askQuestion();
-      return;
-    }
-
-    if (!kbCtx) { abort('知识库为空，请先在「知识库」页面添加内容', 'kb'); return; }
-    // Determine focus: user-selected module or auto-rotate
-    if (selectedMod !== 'random') {
-      focus = selectedMod;
-    } else {
-      const kbSections = [];
-      if (getProjFolders().length) kbSections.push('projects');
-      if (getKBFiles('qna').length || getKBText('qna')) kbSections.push('qna');
-      if (getKBFiles('notes').length || getKBText('notes')) kbSections.push('notes');
-      const lastFocus = STATE._kbLastFocus || '';
-      const remaining = kbSections.filter(s => s !== lastFocus);
-      focus = remaining.length ? remaining[Math.floor(Math.random() * remaining.length)] : kbSections[0];
-      STATE._kbLastFocus = focus;
-    }
-
-    const focusLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点' };
-
-    function pickOneDoc(sec) {
-      const files = getKBFiles(sec).filter(f => f.content?.trim());
-      const manualText = getKBText(sec)?.trim();
-      const pool = [];
-      files.forEach(f => pool.push({ name: f.name, content: f.content.trim() }));
-      if (manualText) pool.push({ name: '手动输入', content: manualText });
-      if (!pool.length) return null;
-      return pool[Math.floor(Math.random() * pool.length)];
-    }
-
-    let focusCtx = kbCtx;
-    let focusInstruction = '';
-    if (focus === 'projects') {
-      // folder-based random pick
-      const folders = getProjFolders();
-      if (folders.length) {
-        const folder = folders[Math.floor(Math.random() * folders.length)];
-        const ctx = buildProjFolderContext(folder, 'all');
-        if (ctx) { focusCtx = ctx; focusInstruction = `你是字节/腾讯的面试官，候选人刚介绍完这段经历，你要立刻深挖。参考真实面试官追问风格（随机选一种）：
-- 追问数据："你说效果不错，核心指标具体是多少？和之前相比变化了多少？"
-- 追问决策："当时有几个方案，取舍的依据是什么？"
-- 追问bad case："有没有遇到效果不好的情况？你是怎么分析和改进的？"
-- 追问AI技术（如有）："RAG/Prompt/Agent具体怎么做的？遇到过幻觉问题吗？"
-根据候选人资料出1道深挖追问题，直接输出题目，不超过70字，不加前缀。`; }
-      }
-    } else if (focus === 'qna') {
-      const doc = getSelectedKBFile('qna') || pickOneDoc('qna');
-      if (doc) {
-        focusCtx = `【本次考察的Q&A】\n[${doc.name}]\n${doc.content}`;
-        focusInstruction = `你是一位严格的AI产品面试官，候选人刚给出了这道题的答案，你要找到最值得深挖的薄弱点。参考真实面试官的追问风格：
-- 如果答案缺数据："你提到XX效果很好，具体指标是多少？怎么验证的？"
-- 如果答案太理论："你在实际项目里有没有做过类似的？当时是怎么解决的？"
-- 如果答案遗漏了某个关键环节："你提到了X，那Y呢？你是怎么考虑的？"
-- 如果答案有逻辑跳跃："你从A得出了B，中间的推导过程能说得更具体吗？"
-分析候选人Q&A答案的最大薄弱点，出1道追问题，直接输出题目，不超过70字，不加前缀。`;
-      }
-    } else if (focus === 'notes') {
-      const doc = getSelectedKBFile('notes') || pickOneDoc('notes');
-      if (doc) {
-        focusCtx = `【本次考察的知识点】\n[${doc.name}]\n${doc.content}`;
-        focusInstruction = `你是字节/百度/腾讯的AI产品面试官，根据候选人的这份知识点笔记，出1道考察真实理解深度的产品侧问题。参考真实出题规律：
-- 如果是AI/技术类知识点：不考原理，考"你会在什么场景用它、参数怎么设、遇到问题怎么处理"
-- 如果是产品方法论：不考背诵，考"你在实际项目里用过吗？举个具体例子"
-- 如果是指标/数据类：出一个场景题，让候选人用该知识点分析和决策
-避免让候选人直接背书，要测出"知其然更知其所以然"的能力。直接输出题目，不超过70字，不加前缀。`;
-      }
-    }
-    if (!focusInstruction) {
-      // fallback
-      focusInstruction = focus === 'projects'
-        ? `你是字节/腾讯的面试官，根据候选人的项目经历，随机选一种追问方向：追问核心指标和数据、追问关键决策的依据、追问bad case的处理、追问AI技术的具体实现。出1道深挖题，直接输出，不超过70字，不加前缀。`
-        : focus === 'qna'
-        ? `你是严格的AI产品面试官，分析候选人Q&A答案最明显的薄弱点（缺数据/太理论/逻辑跳跃），针对它出1道追问题。直接输出题目，不超过70字，不加前缀。`
-        : `你是字节/百度的AI产品面试官，根据候选人的知识点笔记，出1道考察真实应用能力的产品侧问题（考"怎么用"而非"是什么"）。直接输出题目，不超过70字，不加前缀。`;
-    }
-
-    subCategory = focus; // 'projects' | 'qna' | 'notes' | 'random'
-    const selFile = focus !== 'random' ? getSelectedKBFile(focus) : null;
-    const toastLabel = selFile ? `「${selFile.name}」` : `「${focusLabels[focus] || focus}」`;
-    toast(`基于 ${toastLabel} 生成题目…`, 'info');
-    try {
-      const prompt = `${focusInstruction}\n\n候选人资料：\n${focusCtx}`;
-      question = await genQuestion(prompt);
-    } catch (e) { abort(e.message); return; }
   } else if (src === 'random') {
-    const selCat = getSelectedCat();
-    const fallbackCats = ['产品思维', 'AI基础知识', '行为问题BQ'];
-    const cat = selCat === 'random' ? fallbackCats[Math.floor(Math.random() * fallbackCats.length)] : selCat;
-    toast(`生成「${cat}」方向题目…`, 'info');
-    try {
-      const catPrompts = {
-        '产品思维': `你是AI产品经理面试官。以下是真实面试中出现过的产品思维题（仅供参考，不要直接复制）：
-- "让你负责一个针对职场新人的AI生产力工具，你会从哪个细分场景切入？"
-- "如果外卖AI推荐点击率上周下降12%，同期搜索量稳定，你如何拆解原因？"
-- "AI内容生成存在信息茧房问题，如何设计一套方案在提升精准度的同时保持多元性？"
-- "你是美团小象超市的PM，如何用AI优化生鲜库存周转？"
-- "如何判断一个AI功能是'真需求'还是'伪需求'？"
-请参考以上风格，出1道新的产品思维题，要有具体产品名或数字约束，不超过70字，直接输出题目，不加前缀。`,
+    const kbCtx = getKBContext();
+    const kbSection = kbCtx ? `\n\n【候选人背景参考】\n${kbCtx}` : '';
+    const randomPrompts = [
+      `你是字节跳动/腾讯的AI产品面试官。出1道行为问题（BQ），要求候选人结合具体经历作答。方向随机选一种：
+- 描述一次你推动了一个其他人都不看好的项目，最终结果如何？
+- 你和技术团队产生过最大的分歧是什么？怎么解决的？
+- 有没有一次你做了一个错误的产品决策？你是怎么发现并纠正的？
+- 你在一个资源极度有限的情况下是如何完成目标的？
+只输出1道题，不超过60字，不加前缀。${kbSection}`,
 
-        'AI基础知识': `你是AI产品经理面试官。以下是真实面试中出现过的AI技术产品题（仅供参考，不要直接复制）：
-- "在对话流中，AI什么时候应该主动触发RAG，什么时候应该直接回复？"
-- "如何验证AI回答准确率的提升是来自RAG策略优化，而非模型本身的随机性波动？"
-- "当用户反馈Agent结果不准确，如何定位是Prompt问题、模型能力问题，还是工具调用问题？"
-- "哪些场景必须引入AI Agent而不是继续用传统RPA？两者核心边界是什么？"
-- "在设计Agent长期记忆模块时，如何权衡向量数据库检索的成本与召回精度？"
-- "你们什么时候用Prompt优化，什么时候才考虑上SFT？判断依据是什么？"
-- "Skill和MCP的区别是什么？"
-请参考以上风格，出1道新的AI技术产品题，要有具体技术场景，不超过80字，直接输出题目，不加前缀。`,
+      `你是百度/阿里的AI产品面试官。出1道AI基础知识考察题，考察候选人对AI技术的产品化理解。方向随机选一种：
+- RAG的召回策略与产品体验的权衡
+- Agent任务规划失败时的降级策略设计
+- Prompt工程在产品迭代中的管理方式
+- 大模型幻觉问题在具体产品场景的应对方案
+- 如何设计AI产品的人工兜底机制
+只输出1道题，不超过70字，不加前缀。`,
 
-        '个人动机': `你是AI产品经理面试官。以下是真实面试中出现过的个人动机/行业认知题（仅供参考，不要直接复制）：
-- "你平常常用哪些AI产品？你觉得哪个最好用，为什么？"
-- "讲一款你比较喜欢的AI产品，说三个吸引你继续使用的点，以及你认为最大的缺点，如果是你会怎么改进？"
-- "你用过Claude Code、Cursor类似的AI编程工具吗？"
-- "你平时从哪些渠道了解AI行业信息？"
-- "假如AI进化到可以自动写代码、设计产品原型，你作为PM的核心价值是什么？"
-- "你认为AI发展目前遇到的最大瓶颈是什么？"
-- "你认为AI产品好的交互是什么？"
-请参考以上风格，出1道新的个人认知题，不超过60字，直接输出题目，不加前缀。`,
+      `你是字节跳动的AI产品面试官。出1道个人动机/自我认知题，考察候选人的思考深度。方向随机选一种：
+- 为什么想做AI产品经理而不是其他方向？
+- 你认为AI PM和传统PM最核心的能力差距是什么？
+- 未来3年你认为AI产品会发生什么最重要的变化？你如何准备？
+- 你在哪些方面还明显不足？你打算怎么弥补？
+只输出1道题，不超过60字，不加前缀。`,
 
-        '行为问题BQ': `你是AI产品经理面试官。以下是真实面试中出现过的行为题（BQ）风格（仅供参考，不要直接复制）：
-- "介绍一个你做过的和大模型相关的项目，模型是自研的还是开源的？用了哪个模型，为什么选择它？"
-- "在这段实习中，你在产品开发和上线过程中负责了哪些部分？发现了哪些问题？如何解决？最终取得什么成果？"
-- "做AI产品常跟算法同学打交道，有没有闹过矛盾？比如算法说'准确率不够，做不了'，你怎么解决？"
-- "在跨部门协作中，技术团队认为某AI功能开发优先级不高，你如何说服他们？"
-- "对于进入一个全新的陌生项目，你会怎么快速入手？"
-- "分享一个你通过数据分析驱动产品决策的具体案例"
-请参考以上风格，出1道新的行为题，要引导候选人用STAR结构回答，不超过70字，直接输出题目，不加前缀。`,
-      };
-      const prompt = catPrompts[cat] || `直接输出1道「${cat}」方向的AI产品经理面试题，不超过70字，不加前缀。`;
-      question = await genQuestion(prompt);
-    } catch (e) { abort(e.message); return; }
+      `你是腾讯/美团的AI产品面试官。出1道产品直觉判断题，考察候选人的产品sense。方向随机选一种：
+- 为某个具体AI产品功能做取舍决策（用户体验 vs 商业变现）
+- 判断一个AI功能是否值得做的评估框架
+- 从竞品某个具体功能分析背后的产品逻辑
+- 如何定义一个AI功能的MVP边界
+只输出1道具体场景的题目（要有真实产品名或具体场景），不超过70字，不加前缀。`,
+
+      `你是字节跳动/百度的AI产品面试官。出1道情景判断题，给出具体场景让候选人解决问题。方向随机选一种：
+- AI功能上线后核心指标下降，如何排查和决策
+- 用户对AI输出结果大规模投诉，紧急应对方案
+- 竞品突然发布了你正在做的功能，如何调整策略
+- 老板要求两周内上线一个AI功能，如何在资源受限下做取舍
+只输出1道具体情景题（要有真实数字或具体情境），不超过80字，不加前缀。`,
+    ];
+    const prompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+    toast('AI 随机出题中…', 'info');
+    try { question = await genQuestion(prompt); } catch(e) { abort(e.message); return; }
+    subCategory = 'random';
   } else {
     const resume = getResume();
     const jd = getJD();
@@ -2640,20 +2261,18 @@ async function startInterview() {
     }
     toast('正在生成题目…', 'info');
     try {
-      const selCat = getSelectedCat();
-      const catHint = selCat !== 'random' ? `\n\n题目方向限定为「${selCat}」类问题。` : '';
-      question = await genQuestion(buildGenPrompt(src, resume, jd, subCategory) + catHint);
+      question = await genQuestion(buildGenPrompt(src, resume, jd, subCategory));
     } catch (e) { abort(e.message); return; }
   }
 
   // Reset state
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
+  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, hasVoiceInput: false, rewrites: [] };
 
   // Reset UI
   document.getElementById('chat-empty').style.display = 'none';
-  document.getElementById('chat-messages').innerHTML = '';
+  clearChatMessages();
   document.getElementById('start-btn').style.display = 'none';
   document.getElementById('end-btn').style.display = '';
   document.getElementById('chat-input-area').style.display = '';
@@ -2689,13 +2308,10 @@ const PRODUCT_BANK = {
     '新功能A/B测试结果：实验组点击率+10%但完单率-5%，你会选择发版还是回滚，为什么？',
     '你的产品MAU连续3个月停滞不增，如何通过数据诊断问题根源并制定增长策略？',
     '用户投诉"App越来越慢"，但技术说性能指标没变化，你作为PM如何推进这个问题？',
-  ],
-  strategy: [
-    '如果你是某AI写作助手的PM，如何规划未来6个月的产品路线图，优先级如何排序？',
-    '一个工具类产品有10万用户但营收为零，如何设计变现路径同时不损害用户体验？',
-    '面对大厂用相似功能抄袭你的产品，你作为创业公司PM应该如何应对？',
-    '微信视频号如何与抖音形成差异化竞争？从PM视角给出至少两个可执行的策略',
-    '你的产品要从C端免费工具转型为B端付费SaaS，面临哪些核心挑战，如何过渡？',
+    // AI产品数据分析
+    '你负责的AI助手周留存率（WAU）下滑了10%，你会如何系统性拆解原因？',
+    '如何定义和统计AI产品的"无效回复率"和"点踩率"？这两个指标有什么局限性？',
+    '模型推理成本过高导致亏损，但用户追求更长的上下文输入，你作为PM如何处理这个冲突？',
   ],
   competitive: [
     '对比ChatGPT和Claude的产品差异，从用户体验和产品定位角度分析各自优劣势',
@@ -2704,19 +2320,35 @@ const PRODUCT_BANK = {
     '分析Notion和飞书文档的产品差异，如果你要做第三款协作文档，差异化在哪里？',
     '对比国内外主流AI助手产品（如文心一言、通义千问 vs ChatGPT），从产品角度找出关键差距',
   ],
-  estimation: [
-    '请估算北京市每天产生多少份外卖订单，列出你的假设和计算推理过程',
-    '请估算微信每天新增多少条朋友圈动态，说明你的拆解逻辑',
-    '请估算中国当前AI产品经理相关岗位的市场规模有多大',
-    '请估算滴滴App每天处理多少次叫车请求，你会如何拆解这个问题？',
-    '请估算一线城市白领平均每天在手机App上花费多少时间，你的拆解思路是什么？',
-  ],
-  insight: [
-    '你要做一个帮助PM高效写PRD的AI工具，如何在两周内验证用户是否真的有这个需求？',
-    '用户调研中大家都说想要某功能，但上线后数据显示几乎没人用，如何解读这个现象？',
-    '如何快速深入了解一个你完全不熟悉行业（如农业或工业制造）的用户需求？',
-    '你发现核心用户在用一种"意外"的方式使用你的产品，你会怎么处理这个洞察？',
-    '如何区分用户的"想要"和"需要"？举一个你在真实项目中遇到这种情况的例子',
+  aiknowledge: [
+    // 技术认知
+    'Prompt调优时你认为最重要的一点是什么？用一个你实际遇到的场景说明',
+    '大模型"幻觉"产生的根本原因是什么？作为PM你会在产品里设计哪些机制应对？',
+    '什么场景下RAG比直接调用大模型更合适？你怎么向业务方解释这个选择？',
+    'Fine-tuning和Prompt Engineering各适合什么场景？作为PM你如何决策用哪个？',
+    '如何判断一个AI产品的回答质量？你会设计怎样的评估体系？',
+    'Context Window有限制，当用户的对话历史很长时，PM应该如何设计记忆策略？',
+    '在对话流中，AI什么时候应该主动触发RAG，什么时候应该直接回复？',
+    'Chatbot（LUI）交互相比传统GUI有哪些优缺点？什么场景下LUI反而不如GUI？',
+    '为什么用Multi-Agent而不是单一Agent？Multi-Agent的核心优势和挑战分别是什么？',
+    '选择基座模型时你会考虑哪些维度？仅看通用榜单够不够，为什么？',
+    // 产品观
+    '你认为AI产品好的交互是什么？和传统产品的交互设计有什么本质不同？',
+    '你认为什么是一款优秀的AI产品？用一个具体产品举例说明你的判断标准',
+    'AI产品经理应该更看重"回复的逻辑严密性"还是"回复的类人情感化"？为什么？',
+    '你认为现在大多数AI产品最大的问题是什么？你会怎么改进？',
+    'AI功能应该"主动出击"还是"等用户召唤"？你的判断依据是什么？',
+    '你认为AI产品的信任感是怎么建立的？哪些设计会破坏用户对AI的信任？',
+    'AI都能写代码、画图、做原型了，你作为PM的核心价值是什么？',
+    'AI功能做成独立App（如元宝）还是嵌入微信/QQ作为插件，各自的产品逻辑是什么？',
+    '生成式AI会终结内容创作者生态吗？你会如何设计激励机制应对这个变化？',
+    // 行业趋势
+    '你怎么看AI+多模态的发展趋势？它会对现有产品形态带来什么影响？',
+    '大模型产品的商业化路径你怎么看？哪种模式最有可能跑通，为什么？',
+    '你认为未来1-2年AI产品最大的机会在哪里？用具体方向说明',
+    '现在AI产品同质化严重，你认为真正的差异化核心在哪里？',
+    '你理解AI发展目前遇到的主要瓶颈是什么？对产品设计有什么影响？',
+    '行业大模型在哪些垂直领域最有机会跑通？你的判断标准是什么？',
   ],
   aipm: [
     // 产品设计
@@ -2740,99 +2372,121 @@ const PRODUCT_BANK = {
 const PRODUCT_CAT_LABELS = {
   design: '🎨 产品设计',
   metrics: '📊 数据分析',
-  strategy: '🚀 产品策略',
   competitive: '🔍 竞品分析',
-  estimation: '🧮 估算题',
-  insight: '👥 用户洞察',
   aipm: '🤖 AI产品专项',
+  aiknowledge: '🧠 AI产品认知',
 };
 
 const PRODUCT_CAT_PROMPTS = {
-  design: `你是AI产品经理面试官。以下是真实大厂面试中出现过的产品设计题风格（仅供参考，不要直接复制）：
-- "让你负责一个针对职场新人的AI生产力工具，你会从哪个细分场景切入？核心功能是什么？"
+  design: `你是AI产品经理面试官。以下是真实大厂面试中出现过的产品设计题（含取舍决策类，仅供参考，不要直接复制，要出新题）：
+- "让你负责一个针对职场新人的AI生产力工具，你会从哪个细分场景切入？"
+- "从零到一，设计一款面向海外用户的AI社交产品，说说整体思路"
 - "假设你要设计一个AI购物助手帮用户在淘宝找商品，从用户需求洞察、功能规划、技术路径三个维度输出方案"
 - "你是美团小象超市的PM，如何用AI优化生鲜库存周转？"
-- "设计一款面向电商客服的AI Agent，你会如何定义它的核心成功指标？"
 - "淘宝AI推荐存在信息茧房问题，如何在提升精准度的同时让用户发现更多元商品？"
-请参考以上风格，出1道新的产品设计题。要有具体产品名或场景约束，考察用户洞察+功能规划+指标验证。不超过80字，直接输出题目，不加前缀。`,
+- "社交产品体验和商业化容易冲突（广告、会员收费等），你怎么平衡两者？举一个合理案例"
+- "如果让你设计AI自动生成SQL代码的产品，核心业务问题是什么，主要用户是谁，核心优势是什么？"
+- "如果让你设计一款社交APP的新用户首日体验，你会关注哪些关键节点？"
+- "AIGC生成内容可能存在虚假宣传问题，从产品设计角度如何在'AI提效'和'内容真实性'之间找到平衡？"
+请参考以上风格，随机出1道新的产品设计题或取舍决策题。有具体产品/场景约束，不超过80字，直接输出题目，不加前缀。`,
 
-  metrics: `你是AI产品经理面试官。以下是真实大厂面试中出现过的数据分析题风格（仅供参考，不要直接复制）：
-- "假设AI助手的周留存率（WAU）下滑了10%，你将如何系统性拆解原因？"
+  metrics: `你是AI产品经理面试官。以下是真实大厂面试中出现过的数据分析题（仅供参考，不要直接复制，要出新题）：
+- "假设AI助手的周留存率下滑10%，你将如何系统性拆解原因？"
 - "如果外卖配送ETA的AI模型准确率从90%提升到95%，对业务的价值如何量化？"
+- "如果有一天活跃用户数比前一天骤降了10%，你会从哪几个方面去排查问题？"
 - "设计一个A/B测试方案，验证AI生成的商品文案对点击率和转化率的影响"
 - "如何定义和统计AI产品的无效回复率或点踩率？"
 - "你的AI功能满意度从75%降到60%，如何判断是模型问题还是产品设计问题？"
-- "A/B测试实验组AI文案点击率+8%但转化率-3%，你怎么决策发版还是回滚？"
+- "A/B测试实验组AI文案点击率+8%但转化率-3%，你怎么决策？"
+- "AI智能客服上线后，如何搭建一套数据监控体系来持续评估AI能力和定位问题？"
+- "对于一个AI产品，你认为North Star Metric应该是什么？如何设计指标体系？"
 请参考以上风格，出1道新的数据分析题。要有具体数字和场景，不超过80字，直接输出题目，不加前缀。`,
 
-  strategy: `你是AI产品经理面试官。以下是真实大厂面试中出现过的产品策略题风格（仅供参考，不要直接复制）：
-- "当模型推理成本过高导致亏损，与用户追求极致长文本产生冲突时，你如何处理？"
-- "美团'零售+科技'战略下，AI产品经理应该先做C端还是先做B端？为什么？"
-- "哪些具体场景下必须引入AI Agent，而不是继续使用传统RPA？两者核心边界是什么？"
-- "你认为生成式AI会终结传统内容创作者生态吗？你会如何设计激励机制？"
-- "在资源有限的情况下，如何平衡AI技术研发和商业化落地？"
-- "假如AI进化到可以自动写代码、设计产品原型，你作为PM的核心价值是什么？"
-请参考以上风格，出1道新的产品策略题。要有具体场景或冲突背景，不超过80字，直接输出题目，不加前缀。`,
-
-  competitive: `你是AI产品经理面试官。以下是真实大厂面试中出现过的竞品分析题风格（仅供参考，不要直接复制）：
-- "你用过业内哪些AI产品？你觉得哪些做得好，哪些不好？针对缺点你会怎么改进？"
+  competitive: `你是AI产品经理面试官。以下是真实大厂面试中出现过的竞品分析题（仅供参考，不要直接复制，要出新题）：
+- "你用过业内哪些AI产品？哪些做得好，哪些不好？针对缺点你会怎么改进？"
+- "对比豆包、文心一言、DeepSeek、ChatGPT的使用体验差异，各自定位是什么？"
 - "腾讯元宝与字节豆包的核心差异点在哪里？"
-- "你如何看待AI功能做成独立App（如元宝）还是嵌入微信/QQ作为功能插件？"
-- "你怎么看待Open Claw，你觉得它为什么会爆火？"
+- "你如何看待AI功能做成独立App还是嵌入微信/QQ作为功能插件？"
+- "你怎么看待Open Claw（Claude的网页版）为什么会爆火？"
 - "评价下Cursor难用的点？哪里能优化？"
-- "给没有技术背景的同事推荐一个AI产品制作工具（Dify/Coze/扣子），你会推荐哪个，为什么？"
-- "对比ChatGPT、Gemini、Claude的使用体验差异，各自产品定位是什么？"
+- "给没有技术背景的同事推荐一个AI工具（Dify/Coze/Cursor/Claude Code/Harness），你会推荐哪个，为什么？"
+- "讲一款你比较喜欢的产品，说三个吸引你继续使用的点，以及最大的缺点，如果是你会怎么改进？"
+- "TikTokShop和淘宝在产品策略上有什么核心异同？"
 请参考以上风格，出1道新的竞品分析题。必须指定真实产品名，不超过70字，直接输出题目，不加前缀。`,
 
-  estimation: `你是AI产品经理面试官。以下是真实大厂面试中出现过的估算题风格（仅供参考，不要直接复制）：
-- "请估算北京市每天产生多少份外卖订单"
-- "请估算微信每天新增多少条朋友圈动态"
-- "国内使用Cursor类AI编程工具的开发者有多少？"
-- "某AI客服产品的合理日活规模是多少？"
-- "若AI功能将用户平均处理任务时间从10分钟降到3分钟，一年为平台节省多少人力成本？"
-请参考以上风格，出1道新的估算题。考察结构化拆解和量级判断，不需精确答案。不超过50字，直接输出题目，不加前缀。`,
+  aipm: `你是AI产品经理面试官。以下是AI产品经理面试中考察产品思维的专项题示例（仅供参考，不要直接复制，要出新题）：
+- "你的AI客服幻觉率从2%升到8%，用户投诉翻倍，你接下来48小时怎么处理？"
+- "ChatGPT Memory和Claude Projects的记忆设计思路不同，你认为各自的产品逻辑是什么？你来做会怎么选？"
+- "你的AI功能DAU很高但次月留存只有20%，你怎么判断用户是真的获得了价值还是只是在'试玩'？"
+- "公司资源有限，两个AI方向：提升回答准确率 vs 提升响应速度，你怎么决策先做哪个？"
+- "一个电商AI推荐系统点击率提升了15%，但退货率也上升了10%，作为PM你怎么看这个结果？"
+- "用户说'AI给的建议感觉不靠谱'，你怎么把这个模糊反馈转化为可执行的产品优化方向？"
+- "你要向老板证明AI功能真的在帮用户而不只是在消耗算力，你会设计哪些指标？"
+- "竞品突然发布了一个效果比你们强很多的AI功能，你接下来怎么做？"
+- "你要给B端SaaS加一个AI写作助手，如何决定准入门槛和用量限制？"
+- "AI产品上线后发现不同用户群体的满意度差异很大，你怎么分析原因并决定下一步？"
+- "如果你的AI功能对某类用户群体产生了系统性偏差，你作为PM怎么处理？"
+- "产品要引入AI能力，你怎么判断这个场景适不适合用AI，门槛在哪里？"
 
-  insight: `你是AI产品经理面试官。以下是真实大厂面试中出现过的用户洞察题风格（仅供参考，不要直接复制）：
-- "你平常从哪些渠道了解AI行业信息？"
-- "用户调研中大家都说想要某功能，但上线后数据显示几乎没人用，你如何解读？"
-- "如何判断一个AI需求是'真需求'还是'伪需求'？"
-- "深度体验过哪款AI产品？说说核心玩法、用户群体，以及你觉得做得好和可以优化的地方"
-- "面对用户的负向反馈，你会怎么处理和复盘？"
-- "你认为AI在社交产品里目前最落地的应用场景是什么？未来还能怎么结合？"
-请参考以上风格，出1道新的用户洞察题。要有具体场景，不超过70字，直接输出题目，不加前缀。`,
+出题要求：
+- 考察PM的产品判断、用户洞察、数据思维和决策能力，不考察技术实现细节
+- 题目必须有具体场景或数据，不出泛泛而谈的概念题
+- 不超过80字，直接输出题目，不加前缀`,
 
-  aipm: `你是AI产品经理面试官。以下是真实大厂面试中出现过的AI专项题风格（仅供参考，不要直接复制）：
-- "在设计AI Agent长期记忆模块时，如何权衡向量数据库检索的成本与召回精度？短期记忆和长期记忆架构上的主要区别是什么？"
-- "当用户反馈Agent执行任务结果不准确，你如何定位问题根源：是Prompt问题、模型能力问题，还是工具调用问题？"
-- "哪些场景必须引入AI Agent而不是继续用传统RPA？两者的核心边界是什么？"
-- "在对话流中，AI什么时候应该主动触发RAG，什么时候应该直接回复？"
-- "如何验证AI回答准确率的提升是来自RAG策略优化，而非模型本身的随机性波动？"
-- "你们模型优化时如何决策什么时候用Prompt、什么情况进一步用SFT？"
-- "你有没有自己搭建过AI工作流的经历？用的是什么工具（Dify/Coze/LangChain等）？"
-- "Skill和MCP的区别是什么？"
-请参考以上风格，出1道新的AI专项题。要有具体技术场景约束，难度偏高，不超过80字，直接输出题目，不加前缀。`,
+  aiknowledge: `你是AI产品经理面试官，考察候选人对AI的认知深度和产品观。题目分三类，随机选一类出题：
+
+【技术认知类】考察候选人对AI技术概念的产品化理解：
+- "Prompt调优时你认为最关键的一步是什么？举个实际遇到的例子"
+- "RAG和直接调用模型的核心区别是什么？什么场景下你会选RAG？"
+- "AI Agent和普通对话产品的边界在哪里？什么时候该用Agent？"
+- "如何评估一个AI功能的输出质量？你会设计什么评估方式？"
+- "幻觉问题在产品层面你会怎么应对？"
+- "Chatbot（LUI）交互相比传统GUI有哪些优缺点？什么场景下LUI反而更差？"
+- "为什么要用Multi-Agent而不是单一Agent？核心优势和挑战分别是什么？"
+- "选基座模型时你会考虑哪些维度？只看通用榜单够不够？"
+
+【产品观类】考察候选人对AI产品的整体认知和价值判断：
+- "你认为AI产品好的交互是什么？和传统产品有什么本质不同？"
+- "什么是优秀的AI产品？用具体产品举例说明你的判断标准"
+- "AI PM更应该看重回复的逻辑严密性还是类人情感化？"
+- "你认为现在大多数AI产品最大的问题是什么？"
+- "AI都能写代码画图了，PM的核心价值是什么？"
+- "AI功能做独立App还是嵌入现有平台作为插件，各自的产品逻辑是什么？"
+- "生成式AI会终结内容创作者生态吗？"
+
+【行业趋势类】考察候选人对AI行业动态的跟进和独立判断：
+- "你怎么看AI+多模态的发展趋势？对产品设计有什么影响？"
+- "大模型产品的商业化路径你怎么看？哪种模式最有可能跑通？"
+- "你认为未来1-2年AI产品最大的机会在哪里？"
+- "现在AI产品同质化严重，你认为差异化的核心在哪？"
+- "AI发展目前遇到的主要瓶颈是什么？对产品落地有什么影响？"
+- "垂直行业大模型在哪些领域最有机会？你的判断标准是什么？"
+
+出题要求：
+- 不考察代码、数学公式或技术实现细节
+- 必须要求候选人结合自己的思考或经历回答，不接受纯背书
+- 题目简洁，不超过60字，直接输出题目，不加前缀`,
 };
 
 let _pCat = 'design';      // 当前选中的产品分类
 
 function selectPCat(el, cat) {
   _pCat = cat;
-  _pBankSelected = null;
   document.querySelectorAll('.pcat-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', strategy:'🚀 产品策略题', competitive:'🔍 竞品分析题', estimation:'🧮 估算题', insight:'👥 用户洞察题', aipm:'🤖 AI产品专项题' };
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', competitive:'🔍 竞品分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题' };
   document.getElementById('pcat-title').textContent = titles[cat] || cat;
-  if (_pMode === 'bank') renderProductBank();
 }
 
 
-const PRODUCT_ALL_CATS = ['design','metrics','strategy','competitive','estimation','insight','aipm'];
+const PRODUCT_ALL_CATS = ['design','metrics','competitive','aipm','aiknowledge'];
 
 async function startProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort(); // cancel any background tasks (e.g. generateReferenceAnswer)
   navigate('interview');
   await new Promise(r => setTimeout(r, 80));
-  showInterviewConfig();
+  showInterviewConfig(true);
 
   // Resolve random category
   const resolvedCat = _pCat === 'random'
@@ -2851,11 +2505,11 @@ async function startProductInterview() {
 
   // Launch interview directly
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
+  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
-  document.getElementById('chat-messages').innerHTML = '';
+  clearChatMessages();
   document.getElementById('start-btn').style.display = 'none';
   document.getElementById('end-btn').style.display = '';
   document.getElementById('chat-input-area').style.display = '';
@@ -2870,6 +2524,284 @@ async function startProductInterview() {
   updateTurnIndicator();
   await askQuestion();
 }
+// ────────────────────────────────────────────────────────────
+// 简历专项
+// ────────────────────────────────────────────────────────────
+
+let _rspecFolderId = 'random';
+
+function renderResumeSpec() {
+  const folders = getProjFolders();
+  const grid = document.getElementById('rspec-folders');
+  const emptyEl = document.getElementById('rspec-empty');
+  const startCard = document.getElementById('rspec-start-card');
+
+  if (!folders.length) {
+    emptyEl.style.display = '';
+    grid.innerHTML = '';
+    startCard.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  startCard.style.display = '';
+
+  // Reset selection to 'random' each time page is re-entered
+  _rspecFolderId = 'random';
+  document.getElementById('rspec-title').textContent = '🎲 随机抽取经历';
+
+  grid.innerHTML = [
+    `<div class="pcat-card active" onclick="selectRspec(this,'random')"><div class="pcat-icon">🎲</div><div class="pcat-label">随机经历</div></div>`,
+    ...folders.map(f => `<div class="pcat-card" onclick="selectRspec(this,'${escHtml(f.id)}')" title="${escHtml(f.name)}"><div class="pcat-icon">📁</div><div class="pcat-label" style="font-size:12px;word-break:break-all">${escHtml(f.name)}</div></div>`)
+  ].join('');
+
+  // Show history section
+  const histSec = document.getElementById('rspec-history-section');
+  if (histSec) histSec.style.display = '';
+  renderSpecHistory('resume-spec', 'rspec-history');
+}
+
+function selectRspec(el, id) {
+  _rspecFolderId = id;
+  document.querySelectorAll('#rspec-folders .pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const folders = getProjFolders();
+  let title = '🎲 随机抽取经历';
+  if (id !== 'random') {
+    const f = folders.find(x => x.id === id);
+    if (f) title = '📁 ' + f.name;
+  }
+  document.getElementById('rspec-title').textContent = title;
+}
+
+async function startResumeSpecInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort(); // cancel any background tasks (e.g. generateReferenceAnswer)
+
+  const folders = getProjFolders();
+  if (!folders.length) { toast('知识库中没有项目/实习经历', 'error'); return; }
+
+  // Resolve folder
+  let folder;
+  if (_rspecFolderId === 'random') {
+    folder = folders[Math.floor(Math.random() * folders.length)];
+  } else {
+    folder = folders.find(f => f.id === _rspecFolderId);
+    if (!folder) { toast('找不到该经历，请重新选择', 'error'); return; }
+  }
+
+  const mode = document.getElementById('rspec-mode').value || 'all';
+
+  navigate('interview');
+  await new Promise(r => setTimeout(r, 80));
+  showInterviewConfig(true);
+
+  toast(`AI 针对「${folder.name}」出题中…`, 'info');
+
+  // Build context from the selected folder
+  const ctx = buildProjFolderContext(folder, mode);
+  const prompt = `你是字节/腾讯/百度的AI产品面试官，请根据以下项目/实习经历，出1道深度面试题，针对该经历进行深挖追问。
+可选方向：
+- 核心指标与数据结果追问
+- 关键决策依据（为什么这样做而不是那样）
+- 遇到的最大挑战或 bad case 及处理过程
+- 跨团队协作或推动难点
+- 自我反思与复盘
+
+注意：候选人是AI产品经理，如项目使用了Claude Code或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果，不要问技术实现细节。
+要求：直接引用该经历中的项目名/公司名，让问题显得像真实面试追问。只输出题目本身，不超过80字，不加任何前缀。
+
+${ctx}`;
+
+  let question = '';
+  try {
+    question = await genQuestion(prompt);
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+
+  // Launch interview
+  const pref = getPref();
+  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'resume-spec', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
+
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
+
+// ────────────────────────────────────────────────────────────
+// 知识点专项
+// ────────────────────────────────────────────────────────────
+
+let _kbspecSelected = { type: 'random', src: null, fileIdx: null };
+
+function renderKBSpec() {
+  const emptyEl = document.getElementById('kbspec-empty');
+  const startCard = document.getElementById('kbspec-start-card');
+  const cardsEl = document.getElementById('kbspec-cards');
+  const histSec = document.getElementById('kbspec-history-section');
+
+  // Collect all Q&A and notes content
+  const qnaFiles = getKBFiles('qna').filter(f => f.content?.trim());
+  const qnaText = getKBText('qna')?.trim();
+  const notesFiles = getKBFiles('notes').filter(f => f.content?.trim());
+  const notesText = getKBText('notes')?.trim();
+
+  const hasContent = qnaFiles.length || qnaText || notesFiles.length || notesText;
+
+  if (!hasContent) {
+    emptyEl.style.display = '';
+    startCard.style.display = 'none';
+    cardsEl.innerHTML = '';
+    if (histSec) histSec.style.display = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  startCard.style.display = '';
+  if (histSec) histSec.style.display = '';
+
+  // Reset selection
+  _kbspecSelected = { type: 'random', src: null, fileIdx: null };
+  document.getElementById('kbspec-title').textContent = '🎲 随机抽取内容';
+
+  // Build cards: random + qna manual + qna files + notes manual + notes files
+  const cards = [`<div class="pcat-card active" onclick="selectKBSpec(this,'random',null,null)"><div class="pcat-icon">🎲</div><div class="pcat-label">随机</div></div>`];
+
+  if (qnaText) {
+    cards.push(`<div class="pcat-card" onclick="selectKBSpec(this,'qna','manual',null)"><div class="pcat-icon">📝</div><div class="pcat-label" style="font-size:12px">Q&A 手动输入</div></div>`);
+  }
+  qnaFiles.forEach((f, i) => {
+    cards.push(`<div class="pcat-card" onclick="selectKBSpec(this,'qna','file','${i}')"><div class="pcat-icon">📝</div><div class="pcat-label" style="font-size:11px;word-break:break-all">${escHtml(f.name)}</div></div>`);
+  });
+  if (notesText) {
+    cards.push(`<div class="pcat-card" onclick="selectKBSpec(this,'notes','manual',null)"><div class="pcat-icon">📚</div><div class="pcat-label" style="font-size:12px">知识点 手动输入</div></div>`);
+  }
+  notesFiles.forEach((f, i) => {
+    cards.push(`<div class="pcat-card" onclick="selectKBSpec(this,'notes','file','${i}')"><div class="pcat-icon">📚</div><div class="pcat-label" style="font-size:11px;word-break:break-all">${escHtml(f.name)}</div></div>`);
+  });
+
+  cardsEl.innerHTML = cards.join('');
+  renderSpecHistory('kb-spec', 'kbspec-history');
+}
+
+function selectKBSpec(el, type, src, fileIdx) {
+  _kbspecSelected = { type, src, fileIdx: fileIdx !== null ? parseInt(fileIdx) : null };
+  document.querySelectorAll('#kbspec-cards .pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const titles = { random: '🎲 随机抽取内容', qna: '📝 Q&A 追问', notes: '📚 知识点考察' };
+  document.getElementById('kbspec-title').textContent = titles[type] || '📝 开始练习';
+}
+
+async function startKBSpecInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort();
+
+  // Resolve content
+  const { type, src, fileIdx } = _kbspecSelected;
+  let content = '';
+  let label = '';
+
+  if (type === 'random') {
+    // Pick randomly from all available content
+    const pool = [];
+    const qnaText = getKBText('qna')?.trim();
+    const notesText = getKBText('notes')?.trim();
+    const qnaFiles = getKBFiles('qna').filter(f => f.content?.trim());
+    const notesFiles = getKBFiles('notes').filter(f => f.content?.trim());
+    if (qnaText) pool.push({ sec: 'qna', name: 'Q&A手动输入', content: qnaText });
+    qnaFiles.forEach(f => pool.push({ sec: 'qna', name: f.name, content: f.content.trim() }));
+    if (notesText) pool.push({ sec: 'notes', name: '知识点手动输入', content: notesText });
+    notesFiles.forEach(f => pool.push({ sec: 'notes', name: f.name, content: f.content.trim() }));
+    if (!pool.length) { toast('知识库 Q&A/知识点为空', 'error'); return; }
+    const picked = pool[Math.floor(Math.random() * pool.length)];
+    content = picked.content;
+    label = picked.name;
+    _kbspecSelected = { type: picked.sec, src: 'file', fileIdx: null, _resolvedLabel: label };
+  } else if (src === 'manual') {
+    content = getKBText(type)?.trim() || '';
+    label = type === 'qna' ? 'Q&A' : '知识点';
+  } else {
+    const files = getKBFiles(type).filter(f => f.content?.trim());
+    const file = files[fileIdx];
+    content = file?.content?.trim() || '';
+    label = file?.name || '';
+  }
+
+  if (!content) { toast('所选内容为空，请先在知识库添加内容', 'error'); return; }
+
+  navigate('interview');
+  await new Promise(r => setTimeout(r, 80));
+  showInterviewConfig(true);
+
+  toast(`AI 基于「${label}」出题中…`, 'info');
+
+  const prompt = type === 'qna'
+    ? `你是一位严格的AI产品面试官。候选人准备了以下这道面试题的答案，请找到最值得深挖的薄弱点，出1道追问题。
+追问方向参考：
+- 答案缺数据："你提到XX效果很好，具体指标是多少？怎么验证的？"
+- 答案太理论："你在实际项目里有没有做过类似的？当时是怎么解决的？"
+- 答案有逻辑跳跃："你从A得出B，中间的推导过程能更具体吗？"
+- 答案遗漏关键环节："你提到了X，那Y呢？你是怎么考虑的？"
+只输出1道追问题，不超过70字，不加前缀。
+
+候选人Q&A内容：
+${content}`
+    : `你是一位严格的AI产品面试官。候选人整理了以下知识点笔记，请基于这些内容出1道考察题，检验候选人对知识点的真实理解深度。
+出题方向：
+- 原理理解："你笔记里提到XX，能解释一下为什么这样设计吗？"
+- 实际应用："如果在真实产品里用这个知识点，你会怎么落地？"
+- 边界判断："这个方案在什么情况下会失效？有没有替代方案？"
+- 数据验证："如何验证这个知识点在产品中真的起效了？"
+只输出1道题，不超过70字，不加前缀。
+
+候选人知识点笔记：
+${content}`;
+
+  let question = '';
+  try {
+    question = await genQuestion(prompt);
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+
+  const pref = getPref();
+  // 知识点专项：考察记忆与理解，2-3轮即可，不需要深度追问
+  const maxTurns = pref.difficulty === 'hell' ? 4 : 3;
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'kb-spec', subCategory: label, hasVoiceInput: false, rewrites: [] };
+
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
+
 // ────────────────────────────────────────────────────────────
 
 function buildGenPrompt(src, resume, jd, forcedSection) {
@@ -2910,15 +2842,20 @@ async function askQuestion() {
 
   const styleDesc = {
     general: '面试风格：通用，综合考察各维度能力，追问要覆盖数据/决策/执行/团队协作。',
-    bytedance: '面试风格：字节跳动风格。听完经历立刻追问数据（"核心指标具体是多少？和之前相比变化了多少？"），不接受模糊表述，challenge逻辑跳跃，深挖bad case处理。',
-    baidu: '面试风格：百度风格。注重AI技术理解深度，追问Prompt调优细节、模型选型依据（"为什么选这个模型不选那个？"）、A/B测试方案设计，考察对AI产品边界的认知。',
-    alibaba: '面试风格：阿里/美团风格。注重业务价值量化（"这个改进对GMV/留存的影响怎么量化？"），追问AI需求真伪判断、ROI框架、C端vs B端策略差异。',
+    bytedance: '面试风格：字节跳动风格，注重数据驱动，不接受模糊表述，会深挖bad case，challenge逻辑漏洞。',
+    baidu: '面试风格：百度风格，注重AI技术理解深度，追问具体实现方案和模型选型依据，考察对AI产品边界的认知。',
+    alibaba: '面试风格：阿里/美团风格，注重业务价值量化，追问ROI框架和数据验证，关注C端vs B端策略差异。',
   };
   const diffDesc = {
     normal: '难度：普通。态度友好，追问有引导性，给候选人思考空间，接受思路正确但数据模糊的回答。',
     strict: '难度：严格。听完回答立刻找最大的漏洞追问，不接受模糊表述，要求具体数据和真实案例，会说"你说效果不错，具体数字是多少？"',
     hell: '难度：地狱。极度严苛，模拟真实大厂senior面试官风格：答案太理论就逼实际案例，有数据就追问如何验证，跨团队经历就追问矛盾如何解决，不接受任何模糊或表面答案。',
   };
+  const endInstruction = {
+    normal: `- 结束时机：第4~5轮之间自行判断——候选人已充分回答核心问题则第4轮后结束；还有关键薄弱点未考察则延至第5轮，最多不超过第6轮`,
+    strict: `- 结束时机：第4~5轮之间自行判断——若核心漏洞已逼出则第4轮后结束，未到位则追到第5轮`,
+    hell: `- 结束时机：第5~6轮之间自行判断——候选人明显已无法深入则第5轮后结束，仍有关键点未逼出则延至第6轮，最多不超过第7轮`,
+  }[pref.difficulty] || '';
 
   const lastAnswerWasVoice = STATE.interview.lastTurnVoice || false;
   const voiceNote = lastAnswerWasVoice
@@ -2938,35 +2875,135 @@ async function askQuestion() {
 
 ${kbCtx}` : '';
 
+  // ── 知识点专项：独立 prompt，考察记忆与理解，不追问深度 ──
+  if (STATE.interview.source === 'kb-spec') {
+    const kbTurnNote = turn === 0 ? '' : turn < 2
+      ? `\n【当前进度】已完成第 ${turn} 轮，继续检验。`
+      : turn === 2
+      ? `\n【结束判断】已完成第 ${turn} 轮。候选人基本掌握则直接输出"[INTERVIEW_END]"+1句简短点评；有明显记忆盲点则最多再问1轮。`
+      : `\n【⚠️ 必须结束】已超目标轮数。本轮必须先输出"[INTERVIEW_END]"，再用1句话点评，禁止再提问题。`;
+
+    const kbSystem = `你是知识点记忆检验官，任务是检验候选人是否记住并理解了给定知识点。${kbTurnNote ? kbTurnNote + '\n' : ''}
+严格遵守：
+- 第1轮：把题目原文直接提出，等候选人回答
+- 第2轮起：根据候选人回答，问1个简短的补充确认——如果答对了就确认并问一个相关延伸点，如果答错/答不出就给一个提示性追问帮助候选人想起来
+- 每次只问1个问题，不超过40字
+- 语气友好，像老师检查学生笔记，不是严肃面试
+- 结束时必须输出"[INTERVIEW_END]"，然后用1句话点评候选人对这个知识点的掌握程度
+
+禁止：
+- 深度追问应用场景、数据验证、跨团队决策等面试类问题
+- 多问题列举
+- "好的""我来考你"等废话前缀
+
+- 知识点题目：${question}`;
+
+    const kbApiMessages = turn === 0
+      ? [{ role: 'user', content: '开始' }]
+      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+    addMessage('ai', '');
+    const kbLastEl = document.getElementById('chat-messages').lastElementChild;
+    const kbBubble = kbLastEl?.querySelector('.msg-bubble');
+    if (kbBubble) kbBubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+    STATE.isGenerating = true;
+    document.getElementById('send-btn').disabled = true;
+
+    try {
+      const rawKb = await callClaude(kbApiMessages, kbSystem, text => {
+        const display = text.replace(/\[INTERVIEW_END\]/g, '').trim();
+        if (kbBubble) kbBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
+        scrollChat();
+      });
+      const displayKb = rawKb.replace(/\[INTERVIEW_END\]/g, '').trim();
+      if (kbBubble) kbBubble.innerHTML = formatMsg(displayKb);
+      // Update stored message content (addMessage stored empty string initially)
+      const msgs = STATE.interview.messages;
+      if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
+        msgs[msgs.length - 1].content = displayKb;
+      }
+      if (rawKb.includes('[INTERVIEW_END]') || STATE.interview.turn >= STATE.interview.maxTurns) {
+        endInterviewFlow();
+      }
+    } catch (e) {
+      if (kbBubble) kbBubble.innerHTML = `<span style="color:var(--danger)">⚠️ ${e.message}</span>`;
+      toast(e.message, 'error');
+    } finally {
+      STATE.isGenerating = false;
+      document.getElementById('send-btn').disabled = false;
+    }
+    return;
+  }
+
+  // Tell AI exactly which turn it's on so it can decide naturally when to end
+  const softEnd = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+  const turnNote = turn === 0 ? '' : turn < softEnd
+    ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖。`
+    : turn === softEnd
+    ? `\n【结束判断】已完成第 ${turn} 轮追问（目标区间）。请评估：
+- 核心考察点已覆盖 → 本轮直接输出"[INTERVIEW_END]"+1句点评，不再提问
+- 还有1个关键薄弱点未深挖 → 可再追最后1轮，之后必须结束`
+    : `\n【⚠️ 必须结束】已完成第 ${turn} 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评候选人表现。禁止再提任何问题。`;
+
   const system = `你是AI产品经理面试官。你只提问，绝对不回答问题，不分析题目，不给出解题框架或答案思路。
-${styleDesc[pref.style] || styleDesc.general}
+${turnNote ? turnNote + '\n' : ''}${styleDesc[pref.style] || styleDesc.general}
 ${diffDesc[pref.difficulty] || diffDesc.strict}
 
 严格遵守：
 - 第1轮：只把面试题原文提出来，等待候选人回答，绝对不能自己分析或作答
-- 第2~${maxTurns}轮：只问1个追问，不超过40字，不拆分成多个子问题，不用"第一…第二…"列举
-- 第${maxTurns}轮回答后：先输出"[INTERVIEW_END]"，再用1句话点评
+- 第2轮起：只问1个追问，不超过40字，不拆分成多个子问题，不用"第一…第二…"列举
+${endInstruction}
+- 决定结束时：必须立即输出"[INTERVIEW_END]"（强制结束信号，不能省略），然后用1句话点评，之后不再提问
 - 禁止：自己回答题目、给出分析框架、多问题列举、"好的""我来问你""别急着说""先把…讲透"等废话前缀
 - 每次回复必须只含1个问号
 ${voiceNote}
 ${kbSection}
 
 追问方向（从以下方向选最切中要害的1个深挖，追问要像真实面试官一样直接、具体）：
-- 数据/指标追问："你说效果不错，核心指标具体是多少？和上线前相比变化了多少？这个提升是怎么验证的，有没有排除随机波动？"
+- 数据/指标追问："你说效果不错，核心指标具体是多少？和上线前相比变化了多少？"
 - 决策过程追问："当时有哪几个方案？你是怎么做取舍的？有没有方案你否掉了，为什么？"
 - bad case / 失败经历追问："有没有遇到过效果不达预期的情况？你是怎么分析根因的？最后改进结果如何？"
 - AI技术细节追问（回答涉及RAG/Agent/Prompt时）："具体怎么做的？参数怎么设的？遇到过幻觉或准确率问题怎么处理？"
-- 量化业务价值追问："这个改进对业务价值怎么量化？有没有做A/B测试？实验组和对照组结果分别是什么？"
-- 团队推动追问："算法/技术团队有没有说做不了或优先级不高？你是怎么说服他们推进的？"
 - 竞品/行业认知追问："你有没有深度用过类似的竞品？它是怎么解决这个问题的？你的方案和它比优势在哪？"
-- 真伪需求追问："你怎么判断这是真需求？有没有做过用研或数据验证？用户说想要和他们实际使用之间有没有出入？"
 
 严禁追问以下内容（这是PM面试，不是算法岗）：
 - 算法原理、数学公式、模型架构细节
 - 代码实现、时间复杂度、具体工程方案
 - 纯技术实现细节（问"你们用了什么技术"可以，但不追问具体怎么实现）
 
-- 面试题：${question}`;
+【候选人反问的处理规则】
+当候选人对题目中的概念不理解时（如"什么叫XX""这个词是什么意思"）：
+- 用1-2句话简短解释该概念，帮助候选人理解题目
+- 解释完后立刻衔接，继续推动候选人作答原题
+- 示范："数字遗产指用户在网络上留下的账号、数据、内容等资产。好，那你会如何设计这款产品的核心功能？"
+- 禁止：解释完就停下来等，或者给出解题思路和答案框架
+
+- 面试题：${question}
+${STATE.interview.source === 'resume-spec' ? `
+【简历专项特别说明 — 严格遵守】
+候选人是AI产品经理，不是工程师。项目中出现"Claude Code"、"AI工具"等，说明候选人用AI辅助开发，其职责是产品决策和验收。
+
+追问只能停留在以下两个层次：
+▶ 第一层（必须能答）：产品决策
+  - 为什么做这个功能/方向
+  - 为什么这样设计而不是那样
+  - 发现了什么用户问题，做了什么决策
+  - 有哪些权衡取舍，最终选择的依据是什么
+
+▶ 第二层（说清楚即可）：系统大致怎么工作
+  - 数据从哪来、大致流转路径
+  - 用户怎么用、核心流程是什么
+  - AI/Agent 在哪里体现价值
+  不需要说出每个函数或具体参数
+
+✗ 第三层（绝对不追问）：实现细节
+  - 具体算法逻辑、排序规则、优先级判断逻辑
+  - JSON解析、token计算、API调用方式
+  - Prompt具体怎么写的、参数怎么设的
+  - "如果出现X情况系统具体怎么处理" 这类机制细节
+
+判断标准：如果一个问题需要候选人写过代码才能答，就不要问。` : ''}`;
 
   const apiMessages = turn === 0
     ? [{ role: 'user', content: '开始' }]
@@ -3006,7 +3043,7 @@ ${kbSection}
       msgs[msgs.length - 1].content = displayText;
     }
 
-    if (displayText.includes('[INTERVIEW_END]')) {
+    if (displayText.includes('[INTERVIEW_END]') || STATE.interview.turn >= STATE.interview.maxTurns) {
       endInterviewFlow();
     }
   } catch (e) {
@@ -3127,17 +3164,18 @@ async function generateScore() {
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
 - score: 整体综合分（整数1-10）
-- structural_thinking: 结构化思维分（整数1-10）
-- product_sense: 产品感分（整数1-10）
-- ai_depth: AI理解深度分（整数1-10）
-- communication: 表达能力分（整数1-10）
-- highlights: 亮点字符串数组（2-3条）
-- weaknesses: 不足字符串数组（1-2条）
-- suggestions: 改进建议字符串数组（2-3条）
-- summary: 总结性点评字符串（100字内）
+- relevance: 切题程度分（整数1-10，回答是否直接回应问题核心，有无跑偏）
+- logical_structure: 逻辑结构分（整数1-10，论点是否清晰有层次）
+- product_depth: 产品深度分（整数1-10，有无产品洞察、数据意识、决策依据）
+- ai_depth: AI理解深度分（整数1-10，对AI概念的产品化理解，若题目无关AI可给中等分7）
+- persuasiveness: 表达说服力分（整数1-10，观点是否有说服力，论据是否支撑论点）
+- highlights: 亮点字符串数组（2-3条，每条不超过25字）
+- weaknesses: 不足字符串数组（1-2条，每条不超过25字）
+- suggestions: 改进建议字符串数组（2-3条，每条不超过25字）
+- summary: 总结性点评字符串（50字内）
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"structural_thinking":7,"product_sense":6,"ai_depth":8,"communication":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}`;
+{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}`;
 
   const prompt = `面试题目：${question}\n\n面试对话：\n${dialog}`;
 
@@ -3170,6 +3208,12 @@ async function generateScore() {
     LS.set('history', history.slice(0, 50));
     updateBadges();
 
+    // Refresh inline history on the source page if visible
+    const src = STATE.interview.source;
+    if (src === 'product') renderSpecHistory('product', 'product-spec-history');
+    if (src === 'resume-spec') renderSpecHistory('resume-spec', 'rspec-history');
+    if (src === 'kb-spec') renderSpecHistory('kb-spec', 'kbspec-history');
+
     // Auto-generate reference answers in background and save to history
     generateReferenceAnswer(STATE.interview.messages, question, hId);
   } catch (e) {
@@ -3179,6 +3223,10 @@ async function generateScore() {
       <div style="font-size:12px;opacity:.85;word-break:break-all">${escHtml(e.message)}</div>
       <button class="btn btn-ghost btn-sm" style="margin-top:12px;font-size:12px" onclick="retryScore()">🔄 重新评分</button>
     </div>`;
+  } finally {
+    // Re-enable start-btn so "再来一题" can call startInterview() again
+    const sb = document.getElementById('start-btn');
+    if (sb) sb.disabled = false;
   }
 }
 
@@ -3203,7 +3251,8 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   }
   if (pairs.length === 0) return;
 
-  // Render skeleton — 改写 + 参考答案 per round
+  // Render skeleton — 答题思路 + 改写 + 参考答案 per round
+  const showFw = STATE.interview?.source !== 'kb-spec';
   section.innerHTML = `
     <div class="score-section-title" style="color:var(--accent);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:20px 0 12px;display:flex;align-items:center;gap:6px">
       ✨ 各轮改写 &amp; 参考答案
@@ -3212,7 +3261,9 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
       <div style="margin-bottom:22px">
         <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px">第${i + 1}轮问题</div>
         <div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.6">${escHtml(p.question)}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:6px">📝 改写版本</div>
+        ${showFw ? `<div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px">🧭 答题思路</div>
+        <div class="rewrite-box" id="ref-fw-${i}" style="white-space:pre-wrap;line-height:1.75;min-height:40px"><span style="color:var(--text-muted)">生成中…</span></div>` : ''}
+        <div style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:6px;margin-top:10px">📝 改写版本</div>
         <div class="rewrite-box" id="ref-imp-${i}" style="white-space:pre-wrap;line-height:1.75;min-height:40px"><span style="color:var(--text-muted)">生成中…</span></div>
         <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px;margin-top:10px">⭐ 参考答案</div>
         <div class="rewrite-box" id="ref-ans-${i}" style="white-space:pre-wrap;line-height:1.75;min-height:40px"><span style="color:var(--text-muted)">生成中…</span></div>
@@ -3222,10 +3273,11 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const kbCtx = getKBContext();
   const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
-  // Single API call: improved rewrite + standard reference per round
-  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出两部分内容：
-1. 改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
-2. 参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
+  // Single API call: framework + improved rewrite + standard reference per round
+  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
+${showFw ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
+2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
+${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
 
 重要规则：
 - 若题目涉及候选人自身经历（"你做过什么""你负责了什么"等），改写版本必须严格基于【候选人真实背景资料】中的真实信息，不得虚构项目名称、数据或职责
@@ -3236,16 +3288,24 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
     `【第${i+1}轮问题】${p.question}\n【第${i+1}轮候选人回答】${p.userAnswer}`
   ).join('\n\n');
 
-  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的两部分内容。${kbBlock}
+  const fwFormatExample = showFw ? `【第1轮答题思路】
+...
+
+` : '';
+  const fwFormatExample2 = showFw ? `【第2轮答题思路】
+...
+
+` : '';
+  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的${showFw ? '三' : '两'}部分内容。${kbBlock}
 格式严格如下（不加任何多余文字）：
 
-【第1轮改写版本】
+${fwFormatExample}【第1轮改写版本】
 ...
 
 【第1轮参考答案】
 ...
 
-【第2轮改写版本】
+${fwFormatExample2}【第2轮改写版本】
 ...
 
 【第2轮参考答案】
@@ -3258,7 +3318,10 @@ ${questionsText}`;
   const allMarkers = [];
   const markerToEl = {};
   pairs.forEach((_, i) => {
-    const impM = `【第${i+1}轮改写版本】`, ansM = `【第${i+1}轮参考答案】`;
+    const fwM  = `【第${i+1}轮答题思路】`;
+    const impM = `【第${i+1}轮改写版本】`;
+    const ansM = `【第${i+1}轮参考答案】`;
+    if (showFw) { allMarkers.push(fwM); markerToEl[fwM] = `ref-fw-${i}`; }
     allMarkers.push(impM, ansM);
     markerToEl[impM] = `ref-imp-${i}`;
     markerToEl[ansM] = `ref-ans-${i}`;
@@ -3292,13 +3355,16 @@ ${questionsText}`;
 
     // Final pass: trim and save
     const parsedAnswers = pairs.map((p, i) => {
-      const improved = (extractSection(result, `【第${i+1}轮改写版本】`) || '').trim();
-      const answer   = (extractSection(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const framework = showFw ? (extractSection(result, `【第${i+1}轮答题思路】`) || '').trim() : '';
+      const improved  = (extractSection(result, `【第${i+1}轮改写版本】`) || '').trim();
+      const answer    = (extractSection(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const fwEl  = document.getElementById(`ref-fw-${i}`);
       const impEl = document.getElementById(`ref-imp-${i}`);
       const ansEl = document.getElementById(`ref-ans-${i}`);
-      if (impEl) impEl.textContent = improved || '–';
-      if (ansEl) ansEl.textContent = answer   || '–';
-      return { question: p.question, userAnswer: p.userAnswer, improved, answer };
+      if (fwEl)  fwEl.textContent  = framework || '–';
+      if (impEl) impEl.textContent = improved  || '–';
+      if (ansEl) ansEl.textContent = answer    || '–';
+      return { question: p.question, userAnswer: p.userAnswer, framework, improved, answer };
     });
 
     if (hId && parsedAnswers.length) {
@@ -3307,6 +3373,7 @@ ${questionsText}`;
       if (rec) { rec.refAnswers = parsedAnswers; LS.set('history', hist.slice(0, 50)); }
     }
   } catch (e) {
+    if (e?.aborted || e?.message === 'ABORTED') return; // user started a new interview — silently stop
     pairs.forEach((_, i) => {
       [document.getElementById(`ref-imp-${i}`), document.getElementById(`ref-ans-${i}`)].forEach(el => {
         if (el) { el.textContent = '生成失败：' + e.message; el.style.color = 'var(--danger)'; }
@@ -3319,10 +3386,11 @@ function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
   const dims = [
-    { name: '结构化思维', val: data.structural_thinking },
-    { name: '产品感', val: data.product_sense },
+    { name: '切题程度', val: data.relevance },
+    { name: '逻辑结构', val: data.logical_structure },
+    { name: '产品深度', val: data.product_depth },
     { name: 'AI理解深度', val: data.ai_depth },
-    { name: '表达能力', val: data.communication },
+    { name: '表达说服力', val: data.persuasiveness },
   ];
   document.getElementById('score-content').innerHTML = `
     <div class="score-header">
@@ -3387,6 +3455,12 @@ async function showRewrite() {
   // Show "使用此版本" buttons (live interview mode)
   document.querySelectorAll('.rewrite-use-btn').forEach(b => b.style.display = '');
 
+  // 答题思路：知识点专项是记忆题不需要框架，其他题型都显示
+  const frameworkSection = document.getElementById('rewrite-framework-section');
+  const showFramework = STATE.interview.source !== 'kb-spec';
+  if (frameworkSection) frameworkSection.style.display = showFramework ? '' : 'none';
+  if (showFramework) document.getElementById('rewrite-framework').textContent = '生成中…';
+
   const isVoice = STATE.interview.hasVoiceInput || STATE.isRecording;
   const systemImproved = `你是一位资深AI产品经理面试辅导专家。
 任务：对候选人的面试回答进行语言和结构优化，保留其核心观点，使表达更清晰、逻辑更严密、更有说服力。
@@ -3406,6 +3480,27 @@ async function showRewrite() {
 
   const userMsgImproved = `面试题：${question}\n\n候选人的回答：${userAnswer}\n\n请对候选人的回答进行改写优化。`;
   const userMsgStandard = `面试题：${question}\n\n请给出这道题的标准参考答案。`;
+
+  // 答题思路：先生成，快速给候选人参考框架
+  if (showFramework) {
+    const systemFramework = `你是AI产品经理面试辅导专家。
+任务：针对这道面试题，给出简洁的答题思路与框架，帮助候选人理清如何组织回答。
+要求：
+- 识别题目类型（产品设计/数据分析/竞品分析/策略/BQ等），给出适合该题型的核心框架
+- 列出2-4个关键维度或答题步骤，每条不超过30字
+- 指出这类题的考察重点和容易踩的坑
+- 用简洁的条目格式，不要写完整答案
+- 直接输出，不加"答题思路如下"等废话前缀`;
+    try {
+      await callClaude([{ role: 'user', content: `面试题：${question}\n\n请给出答题思路与框架。` }], systemFramework, text => {
+        const el = document.getElementById('rewrite-framework');
+        if (el) el.textContent = text;
+      });
+    } catch (e) {
+      const el = document.getElementById('rewrite-framework');
+      if (el) el.textContent = '生成失败：' + e.message;
+    }
+  }
 
   // Run sequentially via the API queue — parallel calls trigger rate limits
   try {
@@ -3543,10 +3638,7 @@ const HF_SUB_CATS = {
     { val: 'all', label: '全部' },
     { val: 'design', label: '🎨 产品设计' },
     { val: 'metrics', label: '📊 数据分析' },
-    { val: 'strategy', label: '🚀 产品策略' },
     { val: 'competitive', label: '🔍 竞品分析' },
-    { val: 'estimation', label: '🧮 估算题' },
-    { val: 'insight', label: '👥 用户洞察' },
     { val: 'aipm', label: '🤖 AI产品专项' },
   ],
 };
@@ -3610,6 +3702,8 @@ function buildHistoryDialog(h) {
     var refHtml = '';
     if (ref) {
       refHtml = '<div style="margin-left:32px;margin-top:6px;border-left:2px solid var(--primary);padding-left:10px">'
+        + (ref.framework ? '<div style="font-size:11px;font-weight:600;color:#a78bfa;margin-bottom:3px">🧭 答题思路</div>'
+          + '<div style="font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap;margin-bottom:8px">' + escHtml(ref.framework) + '</div>' : '')
         + '<div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:3px">📝 改写版本</div>'
         + '<div style="font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap;margin-bottom:8px">' + escHtml(ref.improved || '–') + '</div>'
         + '<div style="font-size:11px;font-weight:600;color:var(--accent);margin-bottom:3px">⭐ 参考答案</div>'
@@ -3622,6 +3716,107 @@ function buildHistoryDialog(h) {
     return row;
   }).join('');
 }
+
+// ────────────────────────────────────────────────────────────
+// 专项内嵌历史记录
+// ────────────────────────────────────────────────────────────
+
+function setSpecHistFilter(listElId, source, filter) {
+  const listEl = document.getElementById(listElId);
+  if (listEl) listEl.dataset.filter = filter;
+  renderSpecHistory(source, listElId);
+}
+
+function renderSpecHistory(source, listElId) {
+  const listEl = document.getElementById(listElId);
+  if (!listEl) return;
+
+  const allHistory = getHistory().filter(h => h.source === source);
+  const favCount = allHistory.filter(h => h.starred).length;
+
+  // Persist filter state on the element itself
+  const filter = listEl.dataset.filter || 'all';
+  const history = filter === 'fav' ? allHistory.filter(h => h.starred) : allHistory;
+
+  // Filter bar — always render so user can switch even when list is empty
+  const filterBar = `<div style="display:flex;gap:6px;margin-bottom:12px">
+    <button onclick="setSpecHistFilter('${listElId}','${source}','all')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='all'?'var(--primary-dim)':'transparent'};color:${filter==='all'?'var(--primary)':'var(--text-muted)'}">全部 ${allHistory.length}</button>
+    <button onclick="setSpecHistFilter('${listElId}','${source}','fav')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='fav'?'var(--primary-dim)':'transparent'};color:${filter==='fav'?'var(--primary)':'var(--text-muted)'}">⭐ 收藏 ${favCount}</button>
+  </div>`;
+
+  if (history.length === 0) {
+    listEl.innerHTML = filterBar + `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px">${filter === 'fav' ? '⭐ 还没有收藏记录' : '📭 暂无练习记录，完成一次练习后将在此显示'}</div>`;
+    return;
+  }
+
+  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知' };
+  const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
+  const prefix = 'sh' + source.replace(/[^a-z0-9]/gi, '');
+
+  listEl.innerHTML = filterBar + history.map((h, i) => {
+    const score = h.score?.score || 0;
+    const scoreColor = score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--primary)' : score >= 4 ? 'var(--warning)' : 'var(--danger)';
+    const starIcon = h.starred ? '⭐' : '☆';
+    const subLabel = h.subCategory ? (subCatLabels[h.subCategory] || h.subCategory) : '';
+    const detailId = `${prefix}-detail-${i}`;
+    const arrowId = `${prefix}-arrow-${i}`;
+
+    return `<div class="history-card">
+      <div class="history-head" onclick="toggleSpecDetail('${detailId}','${arrowId}')">
+        <div class="history-score-circle" style="background:${scoreColor}22;color:${scoreColor}">${score || '–'}</div>
+        <div class="history-meta">
+          <div class="history-title">${escHtml(h.question)}…</div>
+          <div class="history-info">
+            <span>🕐 ${h.time}</span>
+            ${subLabel ? `<span>📌 ${subLabel}</span>` : ''}
+            <span>🔄 ${h.turns}轮</span>
+            <span>⚡ ${diffLabels[h.difficulty] || h.difficulty || '-'}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${h.starred ? '取消收藏' : '收藏'}" onclick="specToggleFav('${h.id}','${source}','${listElId}')">${starIcon}</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="删除" onclick="specDeleteHist('${h.id}','${source}','${listElId}')">🗑</button>
+          <span class="history-expand" id="${arrowId}" onclick="toggleSpecDetail('${detailId}','${arrowId}')">▼</span>
+        </div>
+      </div>
+      <div class="history-detail" id="${detailId}">
+        ${h.score ? `<div style="margin-bottom:12px;font-size:13px">
+          <strong>评分：</strong>${h.score.score}/10 &nbsp;
+          <strong>亮点：</strong>${(h.score.highlights || []).join('；')}
+        </div>` : ''}
+        <div class="history-dialog">${buildHistoryDialog(h)}</div>
+        ${!(h.refAnswers && h.refAnswers.length) ? `
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ 生成各轮改写 &amp; 参考答案</button>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSpecDetail(detailId, arrowId) {
+  const detail = document.getElementById(detailId);
+  const arrow = document.getElementById(arrowId);
+  if (detail) detail.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open');
+}
+
+function specToggleFav(id, source, listElId) {
+  const history = getHistory();
+  const h = history.find(x => x.id === id);
+  if (h) { h.starred = !h.starred; LS.set('history', history); renderSpecHistory(source, listElId); updateBadges(); }
+}
+
+function specDeleteHist(id, source, listElId) {
+  if (!confirm('删除这条记录？')) return;
+  const history = getHistory().filter(x => x.id !== id);
+  LS.set('history', history);
+  renderSpecHistory(source, listElId);
+  updateBadges();
+  toast('已删除', 'info');
+}
+
+// ────────────────────────────────────────────────────────────
 
 function renderHistory() {
   let history = getHistory();
@@ -3650,7 +3845,7 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { bank: '题库', random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项' };
+  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项' };
   const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 
@@ -3706,9 +3901,12 @@ async function genHistoryRefAnswers(hId) {
   const kbCtx = getKBContext();
   const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
-  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出两部分内容：
-1. 改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
-2. 参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
+  const showFwH = rec.source !== 'kb-spec';
+
+  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出${showFwH ? '三' : '两'}部分内容：
+${showFwH ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
+2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
+${showFwH ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
 
 重要规则：
 - 若题目涉及候选人自身经历（"你做过什么""你负责了什么"等），改写版本必须严格基于【候选人真实背景资料】中的真实信息，不得虚构项目名称、数据或职责
@@ -3730,7 +3928,9 @@ async function genHistoryRefAnswers(hId) {
     <div style="margin-bottom:18px">
       <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px">第${i+1}轮问题</div>
       <div style="font-size:12px;background:var(--surface3);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px;line-height:1.6">${escHtml(p.question)}</div>
-      <div style="font-size:11px;font-weight:600;color:var(--primary);margin-bottom:3px">📝 改写版本</div>
+      ${showFwH ? `<div style="font-size:11px;font-weight:600;color:#a78bfa;margin-bottom:3px">🧭 答题思路</div>
+      <div id="${pfx}-fw-${i}" style="font-size:12px;white-space:pre-wrap;line-height:1.7;min-height:24px;color:var(--text-muted)">生成中…</div>` : ''}
+      <div style="font-size:11px;font-weight:600;color:var(--primary);margin-top:8px;margin-bottom:3px">📝 改写版本</div>
       <div id="${pfx}-imp-${i}" style="font-size:12px;white-space:pre-wrap;line-height:1.7;min-height:24px;color:var(--text-muted)">生成中…</div>
       <div style="font-size:11px;font-weight:600;color:var(--accent);margin-top:8px;margin-bottom:3px">⭐ 参考答案</div>
       <div id="${pfx}-ans-${i}" style="font-size:12px;white-space:pre-wrap;line-height:1.7;min-height:24px;color:var(--text-muted)">生成中…</div>
@@ -3739,16 +3939,19 @@ async function genHistoryRefAnswers(hId) {
   const questionsText = pairs.map((p, i) =>
     `【第${i+1}轮问题】${p.question}\n【第${i+1}轮候选人回答】${p.userAnswer}`
   ).join('\n\n');
-  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的两部分内容。${kbBlock}
+
+  const fwFmt = showFwH ? `【第1轮答题思路】\n...\n\n` : '';
+  const fwFmt2 = showFwH ? `【第2轮答题思路】\n...\n\n` : '';
+  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的${showFwH ? '三' : '两'}部分内容。${kbBlock}
 格式严格如下：
 
-【第1轮改写版本】
+${fwFmt}【第1轮改写版本】
 ...
 
 【第1轮参考答案】
 ...
 
-【第2轮改写版本】
+${fwFmt2}【第2轮改写版本】
 ...
 
 【第2轮参考答案】
@@ -3760,10 +3963,10 @@ ${questionsText}`;
   const allMarkers2 = [];
   const markerToEl2 = {};
   pairs.forEach((_, i) => {
-    const impM = `【第${i+1}轮改写版本】`, ansM = `【第${i+1}轮参考答案】`;
-    allMarkers2.push(impM, ansM);
-    markerToEl2[impM] = `${pfx}-imp-${i}`;
-    markerToEl2[ansM] = `${pfx}-ans-${i}`;
+    if (showFwH) { allMarkers2.push(`【第${i+1}轮答题思路】`); markerToEl2[`【第${i+1}轮答题思路】`] = `${pfx}-fw-${i}`; }
+    allMarkers2.push(`【第${i+1}轮改写版本】`, `【第${i+1}轮参考答案】`);
+    markerToEl2[`【第${i+1}轮改写版本】`] = `${pfx}-imp-${i}`;
+    markerToEl2[`【第${i+1}轮参考答案】`] = `${pfx}-ans-${i}`;
   });
 
   function extractSec2(text, marker) {
@@ -3789,13 +3992,16 @@ ${questionsText}`;
     });
 
     const parsedAnswers = pairs.map((p, i) => {
-      const improved = (extractSec2(result, `【第${i+1}轮改写版本】`) || '').trim();
-      const answer   = (extractSec2(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const framework = showFwH ? (extractSec2(result, `【第${i+1}轮答题思路】`) || '').trim() : '';
+      const improved  = (extractSec2(result, `【第${i+1}轮改写版本】`) || '').trim();
+      const answer    = (extractSec2(result, `【第${i+1}轮参考答案】`) || '').trim();
+      const fwEl  = document.getElementById(`${pfx}-fw-${i}`);
       const impEl = document.getElementById(`${pfx}-imp-${i}`);
       const ansEl = document.getElementById(`${pfx}-ans-${i}`);
-      if (impEl) { impEl.textContent = improved || '–'; impEl.style.color = 'var(--text)'; }
-      if (ansEl) { ansEl.textContent = answer   || '–'; ansEl.style.color = 'var(--text)'; }
-      return { question: p.question, userAnswer: p.userAnswer, improved, answer };
+      if (fwEl)  { fwEl.textContent  = framework || '–'; fwEl.style.color  = 'var(--text)'; }
+      if (impEl) { impEl.textContent = improved  || '–'; impEl.style.color = 'var(--text)'; }
+      if (ansEl) { ansEl.textContent = answer    || '–'; ansEl.style.color = 'var(--text)'; }
+      return { question: p.question, userAnswer: p.userAnswer, framework, improved, answer };
     });
     rec.refAnswers = parsedAnswers;
     LS.set('history', hist.slice(0, 50));
@@ -3943,8 +4149,6 @@ function exportData() {
   const data = {
     resume: getResume(),
     jd: getJD(),
-    customQuestions: getCustomQuestions(),
-    favorites: getFavorites(),
     history: getHistory(),
     pref: getPref(),
   };
@@ -3976,9 +4180,6 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 function updateBadges() {
-  const qCount = getAllQuestions().length;
-  const badge = document.getElementById('q-count-badge');
-  if (badge) badge.textContent = qCount;
   const hBadge = document.getElementById('history-badge');
   if (hBadge) hBadge.textContent = getHistory().length;
 }

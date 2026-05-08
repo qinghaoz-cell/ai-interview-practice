@@ -3043,7 +3043,8 @@ ${STATE.interview.source === 'resume-spec' ? `
       msgs[msgs.length - 1].content = displayText;
     }
 
-    if (displayText.includes('[INTERVIEW_END]') || STATE.interview.turn >= STATE.interview.maxTurns) {
+    const minTurns = STATE.interview.source === 'kb-spec' ? 1 : 3;
+    if ((displayText.includes('[INTERVIEW_END]') && STATE.interview.turn >= minTurns) || STATE.interview.turn >= STATE.interview.maxTurns) {
       endInterviewFlow();
     }
   } catch (e) {

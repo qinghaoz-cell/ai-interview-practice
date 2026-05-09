@@ -1487,7 +1487,7 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
   // Build request depending on provider
   let fetchUrl, fetchHeaders, fetchBody;
   if (provider === 'deepseek') {
-    fetchUrl = '/proxy/deepseek/v1/chat/completions';
+    fetchUrl = 'https://api.deepseek.com/v1/chat/completions';
     fetchHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
     const dsMessages = [];
     if (systemPrompt) dsMessages.push({ role: 'system', content: systemPrompt });
@@ -1496,7 +1496,7 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
     if (jsonMode) dsBody.response_format = { type: 'json_object' }; // force valid JSON output
     fetchBody = JSON.stringify(dsBody);
   } else {
-    fetchUrl = '/proxy/anthropic/v1/messages';
+    fetchUrl = 'https://api.anthropic.com/v1/messages';
     fetchHeaders = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
     // In JSON mode, add an assistant prefill "{" so Claude is forced to output a JSON object
     const anthropicMsgs = messages.map(m => ({ role: m.role, content: m.content }));
@@ -4082,13 +4082,13 @@ async function testApiConnection() {
   try {
     let res;
     if (provider === 'deepseek') {
-      res = await fetch('/proxy/deepseek/v1/chat/completions', {
+      res = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
         body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] }),
       });
     } else {
-      res = await fetch('/proxy/anthropic/v1/messages', {
+      res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] }),

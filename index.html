@@ -803,12 +803,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <div class="pcat-name">数据分析</div>
           <div class="pcat-desc">指标诊断、增长留存分析、A/B测试决策，考察数据驱动思维</div>
         </div>
-        <div class="pcat-card" data-cat="competitive" onclick="selectPCat(this,'competitive')">
-          <div class="pcat-icon">🔍</div>
-          <div class="pcat-name">竞品分析</div>
-          <div class="pcat-desc">对比真实AI产品，找出差异化机会点与优化方向</div>
-        </div>
-        <div class="pcat-card" data-cat="aipm" onclick="selectPCat(this,'aipm')" style="border-color:var(--accent);background:var(--accent-dim)">
+<div class="pcat-card" data-cat="aipm" onclick="selectPCat(this,'aipm')" style="border-color:var(--accent);background:var(--accent-dim)">
           <div class="pcat-icon">🤖</div>
           <div class="pcat-name">AI产品专项</div>
           <div class="pcat-desc">RAG/Agent/Prompt/模型评估，AI PM必考硬核题</div>
@@ -2313,13 +2308,6 @@ const PRODUCT_BANK = {
     '如何定义和统计AI产品的"无效回复率"和"点踩率"？这两个指标有什么局限性？',
     '模型推理成本过高导致亏损，但用户追求更长的上下文输入，你作为PM如何处理这个冲突？',
   ],
-  competitive: [
-    '对比ChatGPT和Claude的产品差异，从用户体验和产品定位角度分析各自优劣势',
-    '分析飞书和钉钉的产品定位差异，各自核心用户群和护城河是什么？',
-    '对比小红书和抖音的内容推荐逻辑有何不同，这对产品设计有什么启示？',
-    '分析Notion和飞书文档的产品差异，如果你要做第三款协作文档，差异化在哪里？',
-    '对比国内外主流AI助手产品（如文心一言、通义千问 vs ChatGPT），从产品角度找出关键差距',
-  ],
   aiknowledge: [
     // 技术认知
     'Prompt调优时你认为最重要的一点是什么？用一个你实际遇到的场景说明',
@@ -2333,6 +2321,8 @@ const PRODUCT_BANK = {
     '为什么用Multi-Agent而不是单一Agent？Multi-Agent的核心优势和挑战分别是什么？',
     '选择基座模型时你会考虑哪些维度？仅看通用榜单够不够，为什么？',
     // 产品观
+    '讲一款你常用的AI产品，说三个吸引你持续使用的点和最大的缺点，你会如何改进？',
+    '你日常用过哪些AI工具？哪个体验最好，为什么？哪个让你失望，原因是什么？',
     '你认为AI产品好的交互是什么？和传统产品的交互设计有什么本质不同？',
     '你认为什么是一款优秀的AI产品？用一个具体产品举例说明你的判断标准',
     'AI产品经理应该更看重"回复的逻辑严密性"还是"回复的类人情感化"？为什么？',
@@ -2372,7 +2362,6 @@ const PRODUCT_BANK = {
 const PRODUCT_CAT_LABELS = {
   design: '🎨 产品设计',
   metrics: '📊 数据分析',
-  competitive: '🔍 竞品分析',
   aipm: '🤖 AI产品专项',
   aiknowledge: '🧠 AI产品认知',
 };
@@ -2402,19 +2391,7 @@ const PRODUCT_CAT_PROMPTS = {
 - "对于一个AI产品，你认为North Star Metric应该是什么？如何设计指标体系？"
 请参考以上风格，出1道新的数据分析题。要有具体数字和场景，不超过80字，直接输出题目，不加前缀。`,
 
-  competitive: `你是AI产品经理面试官。以下是真实大厂面试中出现过的竞品分析题（仅供参考，不要直接复制，要出新题）：
-- "你用过业内哪些AI产品？哪些做得好，哪些不好？针对缺点你会怎么改进？"
-- "对比豆包、文心一言、DeepSeek、ChatGPT的使用体验差异，各自定位是什么？"
-- "腾讯元宝与字节豆包的核心差异点在哪里？"
-- "你如何看待AI功能做成独立App还是嵌入微信/QQ作为功能插件？"
-- "你怎么看待Open Claw（Claude的网页版）为什么会爆火？"
-- "评价下Cursor难用的点？哪里能优化？"
-- "给没有技术背景的同事推荐一个AI工具（Dify/Coze/Cursor/Claude Code/Harness），你会推荐哪个，为什么？"
-- "讲一款你比较喜欢的产品，说三个吸引你继续使用的点，以及最大的缺点，如果是你会怎么改进？"
-- "TikTokShop和淘宝在产品策略上有什么核心异同？"
-请参考以上风格，出1道新的竞品分析题。必须指定真实产品名，不超过70字，直接输出题目，不加前缀。`,
-
-  aipm: `你是AI产品经理面试官。以下是AI产品经理面试中考察产品思维的专项题示例（仅供参考，不要直接复制，要出新题）：
+    aipm: `你是AI产品经理面试官。以下是AI产品经理面试中考察产品思维的专项题示例（仅供参考，不要直接复制，要出新题）：
 - "你的AI客服幻觉率从2%升到8%，用户投诉翻倍，你接下来48小时怎么处理？"
 - "ChatGPT Memory和Claude Projects的记忆设计思路不同，你认为各自的产品逻辑是什么？你来做会怎么选？"
 - "你的AI功能DAU很高但次月留存只有20%，你怎么判断用户是真的获得了价值还是只是在'试玩'？"
@@ -2474,12 +2451,12 @@ function selectPCat(el, cat) {
   _pCat = cat;
   document.querySelectorAll('.pcat-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', competitive:'🔍 竞品分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题' };
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题' };
   document.getElementById('pcat-title').textContent = titles[cat] || cat;
 }
 
 
-const PRODUCT_ALL_CATS = ['design','metrics','competitive','aipm','aiknowledge'];
+const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge'];
 
 async function startProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }

@@ -1475,11 +1475,11 @@ function robustParseJSON(raw) {
   }
 }
 
-async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, skipGap = false) {
-  return API_QUEUE.add((signal) => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode, signal), skipGap);
+async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, skipGap = false, maxTokens = 2048) {
+  return API_QUEUE.add((signal) => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode, signal, maxTokens), skipGap);
 }
 
-async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, signal = null) {
+async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, signal = null, maxTokens = 2048) {
   const provider = getProvider();
   const apiKey   = getActiveKey();
   if (!apiKey) throw new Error(`请先在设置页填写 ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} API Key`);
@@ -1492,7 +1492,7 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
     const dsMessages = [];
     if (systemPrompt) dsMessages.push({ role: 'system', content: systemPrompt });
     dsMessages.push(...messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : m.role, content: m.content })));
-    const dsBody = { model: 'deepseek-chat', max_tokens: 2048, messages: dsMessages, stream: !!onStream };
+    const dsBody = { model: 'deepseek-chat', max_tokens: maxTokens, messages: dsMessages, stream: !!onStream };
     if (jsonMode) dsBody.response_format = { type: 'json_object' }; // force valid JSON output
     fetchBody = JSON.stringify(dsBody);
   } else {
@@ -1501,7 +1501,7 @@ async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, json
     // In JSON mode, add an assistant prefill "{" so Claude is forced to output a JSON object
     const anthropicMsgs = messages.map(m => ({ role: m.role, content: m.content }));
     if (jsonMode) anthropicMsgs.push({ role: 'assistant', content: '{' });
-    fetchBody = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2048, system: systemPrompt, messages: anthropicMsgs, stream: !!onStream });
+    fetchBody = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: maxTokens, system: systemPrompt, messages: anthropicMsgs, stream: !!onStream });
   }
 
   let res;
@@ -3170,7 +3170,7 @@ async function generateScore() {
   scorePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   try {
-    const raw = await callClaude([{ role: 'user', content: prompt }], system, null, 0, true /* jsonMode */);
+    const raw = await callClaude([{ role: 'user', content: prompt }], system, null, 0, true /* jsonMode */, false, 4096);
     const data = robustParseJSON(raw);
     renderScore(data);
     // Save to history

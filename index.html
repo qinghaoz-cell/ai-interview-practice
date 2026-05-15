@@ -774,9 +774,10 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="score-panel" id="score-panel" style="display:none">
         <div class="card-title">📊 面试评分报告</div>
         <div id="score-content"></div>
-        <div class="mt-16 flex gap-8">
-          <button class="btn btn-primary" onclick="startInterview()">🔄 再来一题</button>
-          <button class="btn btn-secondary" onclick="showInterviewConfig()">⚙ 换题重配</button>
+        <div class="mt-16 flex gap-8" style="flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="repeatInterview()">🔁 再来一次</button>
+          <button class="btn btn-secondary" onclick="startInterview()">🔄 换题练习</button>
+          <button class="btn btn-ghost" onclick="showInterviewConfig()">⚙ 重新配置</button>
           <button class="btn btn-ghost" onclick="navigate('history')">📊 查看历史</button>
         </div>
       </div>
@@ -3915,15 +3916,19 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
   try {
     const raw = await callClaude([{ role: 'user', content: prompt }], system, null, 0, true /* jsonMode */, false, 4096);
     const data = robustParseJSON(raw);
-    renderScore(data);
     // Save to history
     const history = getHistory();
     const pref = getPref();
     const hId = `h_${Date.now()}`;
+    // Count previous attempts on the same question
+    const qShort = question.slice(0, 80);
+    const attemptNo = history.filter(h => h.question === qShort).length + 1;
+    data._attemptNo = attemptNo; // attach to score data for renderScore
+    renderScore(data);
     history.unshift({
       id: hId,
       time: new Date().toLocaleString('zh-CN'),
-      question: question.slice(0, 80),
+      question: qShort,
       source: STATE.interview.source,
       subCategory: STATE.interview.subCategory || '',
       turns: STATE.interview.turn,
@@ -3931,8 +3936,9 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
       score: data,
       difficulty: pref.difficulty,
       style: pref.style,
+      attemptNo,
     });
-    LS.set('history', history.slice(0, 50));
+    LS.set('history', history.slice(0, 100));
     updateBadges();
 
     // Refresh inline history on the source page if visible
@@ -3963,6 +3969,35 @@ async function retryScore() {
   const { messages } = STATE.interview;
   if (!messages || messages.length < 2) { toast('无法重新评分：对话记录已丢失', 'error'); return; }
   await generateScore();
+}
+
+// Repeat the same question from scratch
+async function repeatInterview() {
+  const { question, source, subCategory } = STATE.interview;
+  if (!question) { toast('没有可重复的题目', 'error'); return; }
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort();
+  const pref = getPref();
+  const maxTurns = source === 'kb-spec'
+    ? (pref.difficulty === 'hell' ? 4 : 3)
+    : (pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5);
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source, subCategory, hasVoiceInput: false, rewrites: [] };
+  // Reset UI (same as specialist start)
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
 }
 
 async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
@@ -4157,13 +4192,16 @@ function renderScore(data) {
     ...(aiDepthNA ? [] : [{ name: 'AI理解深度', val: data.ai_depth }]),
     { name: '表达说服力', val: data.persuasiveness },
   ];
+  const attemptBadge = (data._attemptNo && data._attemptNo > 1)
+    ? `<span style="display:inline-block;margin-left:8px;padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:20px;font-size:11px;font-weight:600">第 ${data._attemptNo} 次练习此题</span>`
+    : '';
   document.getElementById('score-content').innerHTML = `
     <div class="score-header">
       <div class="score-big" style="--pct:${pct}%;background:conic-gradient(${color} ${pct}%,var(--surface2) 0%)">
         <div class="score-big-num" style="color:${color}">${data.score}</div>
       </div>
       <div>
-        <div class="score-title">综合评分 ${data.score}/10</div>
+        <div class="score-title">综合评分 ${data.score}/10${attemptBadge}</div>
         <div class="score-summary">${escHtml(data.summary || '')}</div>
       </div>
     </div>
@@ -4637,6 +4675,7 @@ function renderHistory() {
             <span>📌 ${srcTag}</span>
             <span>🔄 ${h.turns}轮</span>
             <span>⚡ ${diffLabels[h.difficulty] || h.difficulty || '-'}</span>
+            ${h.attemptNo > 1 ? `<span style="color:var(--accent);font-weight:600">第${h.attemptNo}次练习</span>` : ''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">

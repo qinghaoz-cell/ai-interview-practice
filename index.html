@@ -587,6 +587,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-item" data-page="kb-spec" onclick="navigate('kb-spec')">
         <span class="nav-icon">🧠</span>知识点专项
       </div>
+      <div class="nav-item" data-page="aiproduct" onclick="navigate('aiproduct')" style="border-left:2px solid var(--accent);margin-left:6px;padding-left:16px">
+        <span class="nav-icon">🤖</span>AI能力产品化
+      </div>
       <div class="nav-item" data-page="history" onclick="navigate('history')">
         <span class="nav-icon">📊</span>历史记录
         <span class="nav-badge" id="history-badge">0</span>
@@ -813,6 +816,11 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <div class="pcat-name">AI产品认知</div>
           <div class="pcat-desc">Prompt调优、幻觉处理、AI边界判断等认知理解题</div>
         </div>
+        <div class="pcat-card" data-cat="functradeoff" onclick="selectPCat(this,'functradeoff')" style="border-color:#f59e0b;background:#f59e0b18">
+          <div class="pcat-icon">⚖️</div>
+          <div class="pcat-name">功能价值与取舍</div>
+          <div class="pcat-desc">功能价值判断、方案取舍决策、产品差异化，考察PM核心决策力</div>
+        </div>
       </div>
 
       <!-- Mode & Start -->
@@ -832,6 +840,65 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div style="margin-top:4px">
         <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
         <div id="product-spec-history"></div>
+      </div>
+    </section>
+
+    <!-- ── Page: AI能力产品化专项 ── -->
+    <section class="page" id="page-aiproduct">
+      <div class="page-header">
+        <div class="page-title">🤖 AI能力产品化专项</div>
+        <div class="page-sub">按AI系统类型练习：把AI技术能力转化为真实产品方案的核心能力</div>
+      </div>
+
+      <!-- System Type Cards -->
+      <div class="product-cat-grid" id="apcat-grid">
+        <div class="pcat-card" data-cat="aprandom" onclick="selectAPCat(this,'aprandom')">
+          <div class="pcat-icon">🎲</div>
+          <div class="pcat-name">随机系统类型</div>
+          <div class="pcat-desc">从5类AI系统中随机抽一题，综合考察产品化能力</div>
+        </div>
+        <div class="pcat-card active" data-cat="task" onclick="selectAPCat(this,'task')" style="border-color:var(--accent);background:var(--accent-dim)">
+          <div class="pcat-icon">⚡</div>
+          <div class="pcat-name">任务型系统</div>
+          <div class="pcat-desc">单一意图、明确输出，如AI客服、智能表单、自动填写</div>
+        </div>
+        <div class="pcat-card" data-cat="knowledge" onclick="selectAPCat(this,'knowledge')" style="border-color:#60a5fa;background:#60a5fa18">
+          <div class="pcat-icon">📚</div>
+          <div class="pcat-name">知识型系统</div>
+          <div class="pcat-desc">RAG+检索，知识问答、企业内部搜索、FAQ机器人</div>
+        </div>
+        <div class="pcat-card" data-cat="workflow" onclick="selectAPCat(this,'workflow')" style="border-color:#f59e0b;background:#f59e0b18">
+          <div class="pcat-icon">🔄</div>
+          <div class="pcat-name">流程型系统</div>
+          <div class="pcat-desc">多步骤自动化，内容生产流水线、审批工作流、Agent编排</div>
+        </div>
+        <div class="pcat-card" data-cat="interactive" onclick="selectAPCat(this,'interactive')" style="border-color:#a78bfa;background:#a78bfa18">
+          <div class="pcat-icon">💬</div>
+          <div class="pcat-name">交互型系统</div>
+          <div class="pcat-desc">多轮对话、个性化记忆、AI助手，考察LUI产品设计</div>
+        </div>
+        <div class="pcat-card" data-cat="trustworthy" onclick="selectAPCat(this,'trustworthy')" style="border-color:#f87171;background:#f8717118">
+          <div class="pcat-icon">🛡️</div>
+          <div class="pcat-name">可信型系统</div>
+          <div class="pcat-desc">高风险决策、合规审计，金融/医疗/法律AI的风险治理</div>
+        </div>
+      </div>
+
+      <!-- Mode & Start -->
+      <div class="card">
+        <div class="card-title" id="apcat-title">⚡ 任务型系统 — 产品落地题</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+          🤖 AI出题：给定业务场景，要求你把AI能力转化为完整产品方案（北极星：业务目标→用户任务→AI介入→产品机制→指标→风险）
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" onclick="startAIProductInterview()">▶ 开始练习</button>
+        </div>
+      </div>
+
+      <!-- 历史记录 -->
+      <div style="margin-top:4px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="aiproduct-spec-history"></div>
       </div>
     </section>
 
@@ -929,6 +996,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <button class="cat-pill" onclick="setHfSrc(this,'jd')">📋 JD</button>
         <button class="cat-pill" onclick="setHfSrc(this,'combined')">🔗 联合</button>
         <button class="cat-pill" onclick="setHfSrc(this,'product')">🧩 产品专项</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'aiproduct')">🤖 AI产品化</button>
         <button class="cat-pill" onclick="setHfSrc(this,'resume-spec')">💼 简历专项</button>
         <button class="cat-pill" onclick="setHfSrc(this,'kb-spec')">🧠 知识点专项</button>
       </div>
@@ -1598,6 +1666,7 @@ function navigate(page) {
   if (page === 'kb') renderKBPage();
   if (page === 'resume-spec') renderResumeSpec();
   if (page === 'product') renderSpecHistory('product', 'product-spec-history');
+  if (page === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
   if (page === 'kb-spec') renderKBSpec();
   // When navigating directly to interview page (not mid-interview), restore clean config state
   if (page === 'interview' && !STATE.interview.active && !STATE.isGenerating) showInterviewConfig();
@@ -2387,6 +2456,7 @@ const PRODUCT_CAT_LABELS = {
   metrics: '📊 数据分析',
   aipm: '🤖 AI产品专项',
   aiknowledge: '🧠 AI产品认知',
+  functradeoff: '⚖️ 功能价值与取舍',
 };
 
 const PRODUCT_CAT_PROMPTS = {
@@ -2493,20 +2563,47 @@ const PRODUCT_CAT_PROMPTS = {
 - 不考察代码、数学公式或技术实现细节
 - 必须要求候选人结合自己的思考或经历回答，不接受纯背书
 - 题目简洁，不超过60字，直接输出题目，不加前缀`,
+
+  functradeoff: `你是AI产品经理面试官。从以下三类题型中随机选一类出题，各约33%概率：
+
+【功能价值判断题】判断一个功能/方案的真实价值和优先级：
+- "你们产品有10个需求等待排期，老板想做AI总结功能，你认为这个功能的优先级怎么判断？"
+- "有个功能用户反馈很好但数据显示使用率极低，你作为PM怎么看待它的价值？"
+- "一个AI写作功能用户很喜欢，但它显著提升了使用时长却没有带来收入，你会继续迭代吗？"
+- "用户调研说想要一键生成报告功能，你会直接做吗？你怎么判断这个需求背后的真实价值？"
+- "你的产品有一个功能日活很高，但它让用户依赖AI而不提升自身能力，你怎么看这个价值取舍？"
+
+【方案取舍决策题】在有约束的情况下做方案选择：
+- "你要给B端企业客户做AI知识库，有三种路径：自建、采购SaaS、接入大模型API。给出你的取舍框架"
+- "产品要做AI客服，效果验证期只有3个月，你会选择深度定制还是低代码快速上线？说明理由"
+- "公司AI模型效果不如GPT-4，但成本是GPT的1/10，你作为PM如何判断用哪个？"
+- "AI功能要面向两类用户：重度用户想要复杂控制，新用户只想一键搞定，你怎么设计？"
+- "竞品AI功能刚上线且效果不错，你们手头有两个方向：跟进or差异化，你怎么决策？"
+
+【产品差异化题】分析产品差异化策略和竞争壁垒：
+- "Kimi和豆包都做AI对话，你认为它们的差异化核心在哪里？谁的路径更可持续？"
+- "同样是AI写作工具，Notion AI vs 飞书AI vs WPS AI，你认为差异化的核心逻辑是什么？"
+- "你要在一个竞争激烈的AI赛道里做新产品，你会从哪里切差异化？你的判断标准是什么？"
+- "一个AI产品如果只靠模型本身领先，护城河够不够？你认为AI产品真正的差异化来自哪里？"
+
+出题要求：
+- 必须有具体场景或约束条件，不出泛泛而谈的概念题
+- 考察PM做决策的思路和判断依据，不考察技术细节
+- 题目不超过75字，直接输出题目，不加前缀`,
 };
 
 let _pCat = 'design';      // 当前选中的产品分类
 
 function selectPCat(el, cat) {
   _pCat = cat;
-  document.querySelectorAll('.pcat-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#pcat-grid .pcat-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题' };
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题', functradeoff:'⚖️ 功能价值与取舍题' };
   document.getElementById('pcat-title').textContent = titles[cat] || cat;
 }
 
 
-const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge'];
+const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge','functradeoff'];
 
 async function startProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
@@ -2551,6 +2648,189 @@ async function startProductInterview() {
   updateTurnIndicator();
   await askQuestion();
 }
+// ────────────────────────────────────────────────────────────
+// AI能力产品化专项
+// ────────────────────────────────────────────────────────────
+
+const AIPRODUCT_CAT_LABELS = {
+  task:        '⚡ 任务型系统',
+  knowledge:   '📚 知识型系统',
+  workflow:    '🔄 流程型系统',
+  interactive: '💬 交互型系统',
+  trustworthy: '🛡️ 可信型系统',
+};
+
+const AIPRODUCT_ALL_CATS = ['task','knowledge','workflow','interactive','trustworthy'];
+
+const AIPRODUCT_CAT_PROMPTS = {
+  task: `你是AI产品经理面试官，出一道「任务型AI系统」落地题。
+
+任务型系统特征：单次请求→明确输出，用户意图清晰，不需多轮。典型产品：AI客服自动回复、智能表单填写、合同关键信息提取、邮件分类处理。
+
+从以下场景中随机出一题：
+- "某电商平台日均10万条售后咨询，80%是退换货/物流查询。你作为PM，如何用任务型AI设计一套自动处理方案？"
+- "一家招聘公司要用AI自动解析候选人简历并匹配JD，你会如何设计这个任务型AI产品？"
+- "某SaaS公司要用AI帮销售自动生成客户跟进邮件，你如何设计这个功能的产品方案？"
+- "银行每天收到大量贷款申请材料，要用AI做初步信息提取和完整性校验，你怎么设计？"
+- "某物流公司要用AI自动处理货损理赔申请，判断是否符合理赔条件，你怎么设计产品方案？"
+- "保险公司要用AI自动审核报销单据，识别关键字段并初判是否合规，你的产品设计思路是什么？"
+
+出题要求：
+- 有明确业务场景和数量级，不超过80字
+- 直接输出题目，不加前缀`,
+
+  knowledge: `你是AI产品经理面试官，出一道「知识型AI系统」落地题。
+
+知识型系统特征：基于RAG或向量检索，从结构化/非结构化知识库中精准检索并生成答案。典型产品：企业内部知识库问答、产品手册助手、合规政策查询、技术文档搜索。
+
+从以下场景中随机出一题：
+- "某咨询公司有3000份项目报告沉淀在内部系统，员工每天要花2小时翻文档找答案。你作为PM如何设计一个知识型AI系统？"
+- "某律所要给客户做AI合同问答助手，用户可以上传合同后直接提问。你的产品设计思路是什么？"
+- "某大型制造企业有数千页设备操作手册，维修工人在现场经常需要快速查找。如何用知识型AI解决？"
+- "某医院要为医生提供AI辅助查询系统，涵盖诊疗规范、药品说明书和病例库。你会如何设计？"
+- "某科技公司内部有大量技术文档、API文档、故障处理手册，工程师经常花时间重复找相同信息。如何用知识型AI系统解决？"
+- "某电商平台商家反馈找不到运营规则，投诉量大。平台要建立AI知识问答系统，你怎么设计？"
+
+出题要求：
+- 有具体业务背景和用户痛点，不超过80字
+- 直接输出题目，不加前缀`,
+
+  workflow: `你是AI产品经理面试官，出一道「流程型AI系统」落地题。
+
+流程型系统特征：多步骤串联，每步有判断/分支/人工节点，典型是Agent工作流或自动化流水线。典型产品：内容生产流水线、多步骤审批自动化、销售线索培育工作流、供应链异常处理。
+
+从以下场景中随机出一题：
+- "某媒体公司要用AI搭建内容生产流水线：选题→写作→审核→发布，你如何设计这个多步骤AI工作流？"
+- "某B2B公司销售线索从获取到成单需要7个步骤，每步都有人工判断。你怎么用AI优化这个流程？"
+- "某跨境电商要用AI自动处理供应商询价：接收邮件→解析需求→比价→起草回复，你的产品方案是什么？"
+- "某人力资源公司要用AI辅助招聘流程：简历筛选→面试安排→背调跟进→offer发送，你如何设计？"
+- "某金融机构每天有数百份报告需要：数据抓取→清洗→分析→生成报告→审核→分发，你的AI产品化方案？"
+- "某法律科技公司要用AI处理合同审查流程：上传→关键条款识别→风险提示→审改意见→出具报告，你怎么设计？"
+
+出题要求：
+- 有明确流程步骤和业务场景，不超过85字
+- 直接输出题目，不加前缀`,
+
+  interactive: `你是AI产品经理面试官，出一道「交互型AI系统」落地题。
+
+交互型系统特征：多轮对话、上下文记忆、个性化适应，用户通过自然语言与AI持续互动完成任务。典型产品：AI智能助手、企业内部Copilot、个性化学习伴侣、AI销售助手。
+
+从以下场景中随机出一题：
+- "某教育公司要为K12学生做AI学习伴侣，需要记住学生的知识弱点并持续自适应练习，你如何设计？"
+- "某企业要为员工做内部AI助手，可以查数据、写文档、回答公司政策问题，你的产品设计思路是什么？"
+- "某保险公司要为客户做AI理财顾问助手，通过多轮对话了解需求并推荐保险方案，你怎么设计？"
+- "某ToB SaaS产品要内置AI Copilot，帮助用户在复杂操作流程中获得上下文感知的智能引导，你的方案？"
+- "某医美机构要为客户提供AI咨询助手，通过多轮问诊了解需求、科普项目并预约到店，你怎么设计？"
+- "某职场平台要为求职者打造AI面试教练，能记住用户简历和历次练习表现，持续给出个性化建议，你的设计思路？"
+
+出题要求：
+- 强调多轮对话和个性化记忆场景，不超过80字
+- 直接输出题目，不加前缀`,
+
+  trustworthy: `你是AI产品经理面试官，出一道「可信型AI系统」落地题。
+
+可信型系统特征：高风险决策场景，需要可解释性、审计追踪、人工兜底和监管合规。典型产品：金融AI信贷决策、医疗AI辅助诊断、法律AI合规审查、政务AI。
+
+从以下场景中随机出一题：
+- "某银行要用AI辅助信贷审批，判断是否批贷。你作为PM，如何设计可信、合规且有兜底的产品方案？"
+- "某三甲医院要上线AI辅助诊断系统，辅助医生判断影像结果，你如何设计风险可控的产品落地方案？"
+- "某互联网法院要引入AI进行案件分类和辅助裁判，你作为PM如何设计确保公正性和可解释性的产品？"
+- "某大型险企要用AI识别骗保行为，涉及用户权益。你如何在提升识别率的同时保证误判率在合规范围内？"
+- "某政务平台要用AI自动处理市民投诉分类和初步答复，如何确保AI输出的准确性和问责可追溯？"
+- "某招聘平台要用AI做简历初筛，存在性别/学历歧视风险。你作为PM如何在效率和公平性之间设计兜底机制？"
+
+出题要求：
+- 强调高风险、合规、可信场景，不超过80字
+- 直接输出题目，不加前缀`,
+};
+
+// 8步AI落地框架（用于系统提示）
+const AIPRODUCT_INTERVIEW_SYSTEM = `你是资深AI产品经理面试官，专注考察「AI能力产品化」核心能力：把AI技术转化为真实产品方案。
+
+【考察框架】（8步落地思路）：
+1. 业务目标 — 这个AI系统要解决什么业务问题？
+2. 用户角色 — 谁在用？核心用户任务是什么？
+3. 任务链路 — 完整的用户/业务流程是什么？
+4. AI介入点 — 哪几个节点AI可以介入？为什么这里？
+5. 数据/系统 — 需要哪些数据、接入哪些系统？
+6. 产品机制 — AI能力如何转化为产品功能（界面/交互/触发机制）？
+7. 指标与验证 — 如何度量这个AI系统的效果？
+8. 风险兜底 — 哪些风险需要设计兜底？人工介入逻辑是什么？
+
+【追问方向】（根据候选人回答选择适合的追问）：
+- 如果候选人选了Agent工作流：追问为什么用Agent而不是更简单的规则判断或Workflow？
+- 如果候选人提到RAG：追问如何保证检索准确率？召回不准怎么处理？
+- 如果候选人方案较理想化：追问有哪些风险是你没考虑到的？
+- 如果候选人没提指标：追问如何证明这个AI系统上线后有效果？
+- 如果候选人没提用户体验：追问AI出错时用户侧的体验是什么？
+
+【严格禁止】：
+- 不问代码实现、算法参数、模型训练细节
+- 不问候选人能否自己实现功能，只问产品决策和设计
+- 每轮只问一个核心问题，不要一次列5个问题
+
+面试进行2-3轮追问后，用[INTERVIEW_END]结束。`;
+
+let _apCat = 'task';   // 当前选中的AI产品化分类
+
+function selectAPCat(el, cat) {
+  _apCat = cat;
+  document.querySelectorAll('#apcat-grid .pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const titles = {
+    aprandom: '🎲 随机系统类型 — 产品落地题',
+    task:        '⚡ 任务型系统 — 产品落地题',
+    knowledge:   '📚 知识型系统 — 产品落地题',
+    workflow:    '🔄 流程型系统 — 产品落地题',
+    interactive: '💬 交互型系统 — 产品落地题',
+    trustworthy: '🛡️ 可信型系统 — 产品落地题',
+  };
+  document.getElementById('apcat-title').textContent = titles[cat] || cat;
+}
+
+async function startAIProductInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort();
+  navigate('interview');
+  await new Promise(r => setTimeout(r, 80));
+  showInterviewConfig(true);
+
+  // Resolve random
+  const resolvedCat = _apCat === 'aprandom'
+    ? AIPRODUCT_ALL_CATS[Math.floor(Math.random() * AIPRODUCT_ALL_CATS.length)]
+    : _apCat;
+  const catLabel = AIPRODUCT_CAT_LABELS[resolvedCat] || resolvedCat;
+
+  toast(`AI 生成「${catLabel}」落地题中…`, 'info');
+  let question = '';
+  try {
+    question = await genQuestion(AIPRODUCT_CAT_PROMPTS[resolvedCat]);
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+
+  const pref = getPref();
+  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
+
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
+
 // ────────────────────────────────────────────────────────────
 // 简历专项
 // ────────────────────────────────────────────────────────────
@@ -2963,6 +3243,74 @@ ${kbCtx}` : '';
     return;
   }
 
+  // ── AI能力产品化专项：独立 prompt ──
+  if (STATE.interview.source === 'aiproduct') {
+    const softEndAP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+    const turnNoteAP = turn === 0 ? '' : turn < softEndAP
+      ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖产品化方案。`
+      : turn === softEndAP
+      ? `\n【结束判断】已完成第 ${turn} 轮追问。请评估：
+- 8步框架核心要素已覆盖 → 本轮直接输出"[INTERVIEW_END]"+1句点评，不再提问
+- 还有1个关键盲点（如风险/指标/产品机制）未深挖 → 可再追最后1轮，之后必须结束`
+      : `\n【⚠️ 必须结束】已完成第 ${turn} 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评候选人表现。禁止再提任何问题。`;
+
+    const catName = AIPRODUCT_CAT_LABELS[STATE.interview.subCategory] || '';
+    const apSystem = AIPRODUCT_INTERVIEW_SYSTEM + `${turnNoteAP ? '\n' + turnNoteAP : ''}
+
+${diffDesc[pref.difficulty] || diffDesc.strict}
+
+严格遵守：
+- 第1轮：只把面试题原文提出来，等待候选人回答
+- 第2轮起：只问1个追问（不超过45字），从【追问方向】中选最切中要害的
+- 结束时必须立即输出"[INTERVIEW_END]"，然后用1句话点评
+- 禁止：自己回答题目、给出完整框架、多问题列举
+${voiceNote}
+
+- 系统类型：${catName}
+- 面试题：${question}`;
+
+    const apApiMessages = turn === 0
+      ? [{ role: 'user', content: '开始' }]
+      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+    addMessage('ai', '');
+    const apLastEl = document.getElementById('chat-messages').lastElementChild;
+    const apBubble = apLastEl?.querySelector('.msg-bubble');
+    if (apBubble) apBubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+    STATE.isGenerating = true;
+    document.getElementById('send-btn').disabled = true;
+
+    try {
+      const rawAP = await callClaude(apApiMessages, apSystem, text => {
+        const display = text.replace(/\[INTERVIEW_END\]/g, '').trim();
+        if (apBubble) apBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
+        scrollChat();
+      });
+      const displayAP = rawAP.replace(/\[INTERVIEW_END\]/g, '').trim();
+      if (apBubble) apBubble.innerHTML = formatMsg(displayAP);
+      const msgs = STATE.interview.messages;
+      if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
+        msgs[msgs.length - 1].content = displayAP;
+      }
+      const hasEndSignal = rawAP.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
+      const hitHardCap = STATE.interview.turn >= STATE.interview.maxTurns;
+      if (hasEndSignal || hitHardCap) {
+        if (hitHardCap && !hasEndSignal) {
+          addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+        }
+        endInterviewFlow();
+      }
+    } catch (e) {
+      if (apBubble) apBubble.innerHTML = `<span style="color:var(--danger)">⚠️ ${e.message}</span>`;
+      toast(e.message, 'error');
+    } finally {
+      STATE.isGenerating = false;
+      document.getElementById('send-btn').disabled = false;
+    }
+    return;
+  }
+
   // Tell AI exactly which turn it's on so it can decide naturally when to end
   const softEnd = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
   const turnNote = turn === 0 ? '' : turn < softEnd
@@ -3182,7 +3530,7 @@ async function endInterviewFlow() {
 }
 
 async function generateScore() {
-  const { messages, question, hasVoiceInput } = STATE.interview;
+  const { messages, question, hasVoiceInput, source } = STATE.interview;
   if (messages.length < 2) return;
 
   const dialog = messages.map(m => `${m.role === 'ai' ? '[面试官]' : '[候选人]'} ${m.content}`).join('\n\n');
@@ -3194,7 +3542,26 @@ async function generateScore() {
 - "表达能力"维度只评估思路清晰度和论点组织，不评估书面语规范性`
     : '';
 
-  const system = `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
+  // AI能力产品化专项：独立评分维度
+  const isAIProduct = source === 'aiproduct';
+  const system = isAIProduct
+    ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
+
+你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明（6个专项维度）：
+- score: 整体综合分（整数1-10）
+- system_type: 系统类型识别分（整数1-10，是否正确识别了AI系统类型和适用场景）
+- biz_scenario: 业务场景与用户任务分（整数1-10，是否说清楚了业务目标和用户核心任务）
+- ai_capability: AI能力匹配分（整数1-10，选择的AI能力是否匹配该场景，有无用错方向）
+- product_mechanism: 产品机制转化分（整数1-10，AI能力是否转化为了具体产品功能和交互机制）
+- metrics_risk: 指标与风险兜底分（整数1-10，是否提出了可量化指标和风险处理方案）
+- highlights: 亮点字符串数组（2-3条，每条不超过25字）
+- weaknesses: 不足字符串数组（1-2条，每条不超过25字）
+- suggestions: 改进建议字符串数组（2-3条，每条不超过25字）
+- summary: 总结性点评字符串（50字内）
+
+示例格式（请填入真实评分，不要照抄示例）：
+{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_risk":5,"highlights":["系统类型判断准确"],"weaknesses":["缺乏风险兜底设计"],"suggestions":["加入人工介入机制"],"summary":"产品化思路清晰，需补强指标与风险维度"}`
+    : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
 - score: 整体综合分（整数1-10）
@@ -3245,6 +3612,7 @@ async function generateScore() {
     // Refresh inline history on the source page if visible
     const src = STATE.interview.source;
     if (src === 'product') renderSpecHistory('product', 'product-spec-history');
+    if (src === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
     if (src === 'resume-spec') renderSpecHistory('resume-spec', 'rspec-history');
     if (src === 'kb-spec') renderSpecHistory('kb-spec', 'kbspec-history');
 
@@ -3286,6 +3654,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   if (pairs.length === 0) return;
 
   // Render skeleton — 答题思路 + 改写 + 参考答案 per round
+  const isAIProductRef = STATE.interview?.source === 'aiproduct';
   const showFw = STATE.interview?.source !== 'kb-spec';
   section.innerHTML = `
     <div class="score-section-title" style="color:var(--accent);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:20px 0 12px;display:flex;align-items:center;gap:6px">
@@ -3308,7 +3677,18 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
   // Single API call: framework + improved rewrite + standard reference per round
-  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
+  const system = isAIProductRef
+    ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。针对每道面试题，给出三部分内容：
+
+1. 答题思路：识别AI系统类型，用8步落地框架点出核心答题维度（简洁条目，每条不超过35字，共5-7条；指出考察重点和候选人常见盲点）
+   8步框架：业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底
+
+2. 改写版本：优化候选人原有回答，保留其思路，使产品化表达更清晰完整（第一人称，120-200字，按8步框架补全缺失维度）
+
+3. 参考答案：满分级别答案，完整覆盖8步框架核心要素（结构清晰，200-280字，按"业务目标→用户任务→AI介入→产品机制→指标→风险"顺序输出）
+
+规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例`
+    : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
 ${showFw ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
 ${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）
@@ -3419,7 +3799,14 @@ ${questionsText}`;
 function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
-  const dims = [
+  const isAIProduct = STATE.interview?.source === 'aiproduct';
+  const dims = isAIProduct ? [
+    { name: '系统类型识别', val: data.system_type },
+    { name: '业务场景与用户任务', val: data.biz_scenario },
+    { name: 'AI能力匹配', val: data.ai_capability },
+    { name: '产品机制转化', val: data.product_mechanism },
+    { name: '指标与风险兜底', val: data.metrics_risk },
+  ] : [
     { name: '切题程度', val: data.relevance },
     { name: '逻辑结构', val: data.logical_structure },
     { name: '产品深度', val: data.product_depth },
@@ -3879,7 +4266,7 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项' };
+  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项' };
   const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 
@@ -3936,8 +4323,20 @@ async function genHistoryRefAnswers(hId) {
   const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
   const showFwH = rec.source !== 'kb-spec';
+  const isAIProductH = rec.source === 'aiproduct';
 
-  const system = `你是资深AI产品经理面试教练。针对每道面试题，给出${showFwH ? '三' : '两'}部分内容：
+  const system = isAIProductH
+    ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。针对每道面试题，给出三部分内容：
+
+1. 答题思路：识别AI系统类型，用8步落地框架点出核心答题维度（简洁条目，每条不超过35字，共5-7条；指出考察重点和候选人常见盲点）
+   8步框架：业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底
+
+2. 改写版本：优化候选人原有回答，保留其思路，使产品化表达更清晰完整（第一人称，120-200字，按8步框架补全缺失维度）
+
+3. 参考答案：满分级别答案，完整覆盖8步框架核心要素（结构清晰，200-280字，按"业务目标→用户任务→AI介入→产品机制→指标→风险"顺序输出）
+
+规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例`
+    : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFwH ? '三' : '两'}部分内容：
 ${showFwH ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
 ${showFwH ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI PM核心能力（结构清晰，150-250字）

@@ -3845,14 +3845,15 @@ async function generateScore() {
   // AI能力产品化专项：独立评分维度
   const isAIProduct = source === 'aiproduct';
   const isResumeSpec = source === 'resume-spec';
-  const resumeSpecNote = isResumeSpec ? `
 
-【简历专项专属评估要点】在 suggestions 和 summary 中，请额外关注以下5个维度并点明不足（如已表现良好则不必单独列出）：
-① 角色边界是否清晰——候选人具体负责了哪部分，哪些是AI工具辅助完成的，有无混淆或夸大
-② 项目价值是否讲成了产品判断——是否超越功能描述，说清楚了"为什么这样做"和"解决了什么用户问题"
-③ 是否有关键取舍和指标验证——是否提到了做A不做B的理由，以及如何用数据证明项目有效
-④ 是否讲清楚了bad case / 风险 / 复盘——AI项目是否提到了异常case处理和效果不达预期时的应对
-⑤ 是否有岗位能力迁移——这段经历是否体现出了面试岗位所需的AI PM核心能力` : '';
+  // Module-specific improvement dimensions
+  const _impDims = isAIProduct
+    ? '系统类型识别、业务目标与用户任务、任务链路、AI能力匹配、数据/系统接入、产品机制/功能形态、指标/评测、风险兜底、方案取舍、口语表达'
+    : isResumeSpec
+    ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
+    : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
+  const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数`;
+
   const system = isAIProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -3865,13 +3866,28 @@ async function generateScore() {
 - metrics_validation: 指标与验证分（整数1-10，是否提出了可量化的AI效果指标和业务指标）
 - risk_control: 风险兜底分（整数1-10，是否识别了关键风险并设计了兜底机制和人工介入逻辑）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字）
-- weaknesses: 不足字符串数组（1-2条，每条不超过25字）
-- suggestions: 改进建议字符串数组（2-3条，每条不超过25字）
 - summary: 总结性点评字符串（50字内）
+${_impFieldSpec}
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["系统类型判断准确"],"weaknesses":["风险兜底缺失"],"suggestions":["加入人工介入机制"],"summary":"产品化思路清晰，指标与风险需补强"}`
-    : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}${resumeSpecNote}
+{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["系统类型判断准确"],"summary":"产品化思路清晰，指标与风险需补强","improvements":[{"dimension":"风险兜底","issue":"没有提到AI输出错误时的处理逻辑和人工介入机制","why":"高风险场景无兜底无法真正落地","how":"补充低置信度阈值+人工确认+审计日志三层机制"},{"dimension":"指标/评测","issue":"只提到'提升效率'，未给出可量化的AI效果指标","why":"指标是验证AI产品价值的唯一依据","how":"设计任务完成率、采纳率、幻觉率等可量化指标"}]}`
+    : isResumeSpec
+    ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的简历项目经历深挖考察。请对以下面试对话进行客观评分。${voiceScoreNote}
+
+你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
+- score: 整体综合分（整数1-10，综合以下4个维度）
+- relevance: 切题程度分（整数1-10，回答是否直接回应问题核心，有无跑偏）
+- logical_structure: 逻辑结构分（整数1-10，论点是否清晰有层次）
+- product_depth: 产品深度分（整数1-10，有无产品判断、取舍依据、指标意识）
+- ai_depth: AI理解深度分（整数1-10 或 null）——只有项目明确涉及AI能力（AI功能设计/风险/评测等）时才评分，否则返回 null
+- persuasiveness: 表达说服力分（整数1-10，观点是否有说服力，论据是否支撑论点）
+- highlights: 亮点字符串数组（2-3条，每条不超过25字）
+- summary: 总结性点评字符串（50字内）
+${_impFieldSpec}
+
+示例格式：
+{"score":6,"relevance":7,"logical_structure":6,"product_depth":5,"ai_depth":null,"persuasiveness":6,"highlights":["角色边界清晰"],"summary":"项目描述偏功能，缺产品判断和指标验证","improvements":[{"dimension":"关键决策","issue":"只描述了做了什么功能，没有说明当时为什么这样设计而不是其他方案","why":"决策依据体现产品判断力，是面试核心考察点","how":"补充'当时我们考虑了A/B两个方案，选A的原因是…'"},{"dimension":"指标/结果","issue":"没有任何数据或验证方式说明项目是否有效","why":"AI PM需要数据意识，结果是项目价值的证明","how":"哪怕是定性反馈或AB测试结论都可以，说明验证逻辑"}]}`
+    : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
 - score: 整体综合分（整数1-10，不参考ai_depth，只综合其余4个维度）
@@ -3881,13 +3897,12 @@ async function generateScore() {
 - ai_depth: AI理解深度分（整数1-10 或 null）——判断规则：题目本身是AI产品相关题（含AI功能设计、AI能力选择、AI决策取舍、AI风险、AI产品认知等），才评分并给整数；如果题目与AI无关（纯产品设计、指标、用户研究等），必须返回 null，不要给中间值
 - persuasiveness: 表达说服力分（整数1-10，观点是否有说服力，论据是否支撑论点）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字）
-- weaknesses: 不足字符串数组（1-2条，每条不超过25字）
-- suggestions: 改进建议字符串数组（2-3条，每条不超过25字）
 - summary: 总结性点评字符串（50字内）
+${_impFieldSpec}
 
 示例格式（请填入真实评分，不要照抄示例）：
-AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}
-非AI题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":null,"persuasiveness":7,"highlights":["场景清晰"],"weaknesses":["缺乏指标验证"],"suggestions":["补充数据验证方案"],"summary":"产品思维扎实"}`;
+AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["思路清晰"],"summary":"整体表现良好，指标维度需补强","improvements":[{"dimension":"指标验证","issue":"只提到'提高转化率'，没有指标体系和验证方法","why":"指标是方案是否有效的唯一量化依据","how":"设计北极星指标+3-4个行为指标+1个风险指标"}]}
+非AI题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":null,"persuasiveness":7,"highlights":["场景清晰"],"summary":"产品思维扎实，缺取舍依据","improvements":[{"dimension":"方案取舍","issue":"给出了方案A但没有说明为什么不选B或C","why":"取舍依据是产品判断力的直接体现","how":"补充'考虑过X方案，因为Y原因放弃，最终选A因为Z'"}]}`;
 
   const prompt = `面试题目：${question}\n\n面试对话：\n${dialog}`;
 
@@ -4166,18 +4181,16 @@ function renderScore(data) {
         ${(data.highlights || []).map(h => `<div class="score-list-item"><span class="icon">💡</span><span>${escHtml(h)}</span></div>`).join('')}
       </div>
     </div>
-    <div class="score-section">
-      <div class="score-section-title">⚠️ 不足</div>
-      <div class="score-list">
-        ${(data.weaknesses || []).map(w => `<div class="score-list-item"><span class="icon">❗</span><span>${escHtml(w)}</span></div>`).join('')}
-      </div>
-    </div>
-    <div class="score-section">
-      <div class="score-section-title">🎯 改进建议</div>
-      <div class="score-list">
-        ${(data.suggestions || []).map(s => `<div class="score-list-item"><span class="icon">→</span><span>${escHtml(s)}</span></div>`).join('')}
-      </div>
-    </div>
+    ${(data.improvements && data.improvements.length) ? `
+    <div class="score-section" style="background:var(--surface2);border-radius:var(--radius);padding:14px 16px;margin-top:8px">
+      <div class="score-section-title" style="color:var(--warning);margin-bottom:12px">🔧 需要改进的地方</div>
+      ${data.improvements.map((imp, idx) => `
+        <div style="margin-bottom:${idx < data.improvements.length - 1 ? '16px' : '0'};padding-bottom:${idx < data.improvements.length - 1 ? '16px' : '0'};border-bottom:${idx < data.improvements.length - 1 ? '1px solid var(--border)' : 'none'}">
+          <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:6px">${idx + 1}. ${escHtml(imp.dimension || '')}：<span style="font-weight:400">${escHtml(imp.issue || '')}</span></div>
+          ${imp.why ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;padding-left:14px"><span style="color:var(--warning);font-weight:500">为什么重要：</span>${escHtml(imp.why)}</div>` : ''}
+          ${imp.how ? `<div style="font-size:12px;color:var(--primary);padding-left:14px"><span style="font-weight:500">下一次怎么补：</span>${escHtml(imp.how)}</div>` : ''}
+        </div>`).join('')}
+    </div>` : ''}
     <div id="score-ref-section"></div>`;
 }
 
@@ -4530,10 +4543,17 @@ function renderSpecHistory(source, listElId) {
         </div>
       </div>
       <div class="history-detail" id="${detailId}">
-        ${h.score ? `<div style="margin-bottom:12px;font-size:13px">
+        ${h.score ? `<div style="margin-bottom:10px;font-size:13px">
           <strong>评分：</strong>${h.score.score}/10 &nbsp;
           <strong>亮点：</strong>${(h.score.highlights || []).join('；')}
-        </div>` : ''}
+        </div>
+        ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
+          <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
+          ${h.score.improvements.map((imp, idx) => `<div style="margin-bottom:${idx < h.score.improvements.length-1?'8px':'0'}">
+            <span style="font-weight:600;color:var(--text)">${idx+1}. ${escHtml(imp.dimension||'')}：</span><span style="color:var(--text-muted)">${escHtml(imp.issue||'')}</span>
+            ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
+          </div>`).join('')}
+        </div>` : ''}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
@@ -4626,10 +4646,17 @@ function renderHistory() {
         </div>
       </div>
       <div class="history-detail" id="h-detail-${i}">
-        ${h.score ? `<div style="margin-bottom:12px;font-size:13px">
+        ${h.score ? `<div style="margin-bottom:10px;font-size:13px">
           <strong>评分：</strong>${h.score.score}/10 &nbsp;
           <strong>亮点：</strong>${(h.score.highlights||[]).join('；')}
-        </div>` : ''}
+        </div>
+        ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
+          <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
+          ${h.score.improvements.map((imp, idx) => `<div style="margin-bottom:${idx < h.score.improvements.length-1?'8px':'0'}">
+            <span style="font-weight:600;color:var(--text)">${idx+1}. ${escHtml(imp.dimension||'')}：</span><span style="color:var(--text-muted)">${escHtml(imp.issue||'')}</span>
+            ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
+          </div>`).join('')}
+        </div>` : ''}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">

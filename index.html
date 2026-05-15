@@ -3725,28 +3725,29 @@ async function generateScore() {
   const system = isAIProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
-你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明（6个专项维度）：
+你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明（7个专项维度）：
 - score: 整体综合分（整数1-10）
 - system_type: 系统类型识别分（整数1-10，是否正确识别了AI系统类型和适用场景）
 - biz_scenario: 业务场景与用户任务分（整数1-10，是否说清楚了业务目标和用户核心任务）
 - ai_capability: AI能力匹配分（整数1-10，选择的AI能力是否匹配该场景，有无用错方向）
 - product_mechanism: 产品机制转化分（整数1-10，AI能力是否转化为了具体产品功能和交互机制）
-- metrics_risk: 指标与风险兜底分（整数1-10，是否提出了可量化指标和风险处理方案）
+- metrics_validation: 指标与验证分（整数1-10，是否提出了可量化的AI效果指标和业务指标）
+- risk_control: 风险兜底分（整数1-10，是否识别了关键风险并设计了兜底机制和人工介入逻辑）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字）
 - weaknesses: 不足字符串数组（1-2条，每条不超过25字）
 - suggestions: 改进建议字符串数组（2-3条，每条不超过25字）
 - summary: 总结性点评字符串（50字内）
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_risk":5,"highlights":["系统类型判断准确"],"weaknesses":["缺乏风险兜底设计"],"suggestions":["加入人工介入机制"],"summary":"产品化思路清晰，需补强指标与风险维度"}`
+{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["系统类型判断准确"],"weaknesses":["风险兜底缺失"],"suggestions":["加入人工介入机制"],"summary":"产品化思路清晰，指标与风险需补强"}`
     : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
-- score: 整体综合分（整数1-10）
+- score: 整体综合分（整数1-10，不参考ai_depth，只综合其余4个维度）
 - relevance: 切题程度分（整数1-10，回答是否直接回应问题核心，有无跑偏）
 - logical_structure: 逻辑结构分（整数1-10，论点是否清晰有层次）
 - product_depth: 产品深度分（整数1-10，有无产品洞察、数据意识、决策依据）
-- ai_depth: AI理解深度分（整数1-10，对AI概念的产品化理解，若题目无关AI可给中等分7）
+- ai_depth: AI理解深度分（整数1-10 或 null）——判断规则：题目本身是AI产品相关题（含AI功能设计、AI能力选择、AI决策取舍、AI风险、AI产品认知等），才评分并给整数；如果题目与AI无关（纯产品设计、指标、用户研究等），必须返回 null，不要给中间值
 - persuasiveness: 表达说服力分（整数1-10，观点是否有说服力，论据是否支撑论点）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字）
 - weaknesses: 不足字符串数组（1-2条，每条不超过25字）
@@ -3754,7 +3755,8 @@ async function generateScore() {
 - summary: 总结性点评字符串（50字内）
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}`;
+AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["思路清晰"],"weaknesses":["缺乏数据支撑"],"suggestions":["多用数据量化"],"summary":"整体表现良好"}
+非AI题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":null,"persuasiveness":7,"highlights":["场景清晰"],"weaknesses":["缺乏指标验证"],"suggestions":["补充数据验证方案"],"summary":"产品思维扎实"}`;
 
   const prompt = `面试题目：${question}\n\n面试对话：\n${dialog}`;
 
@@ -3861,11 +3863,11 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 1. 答题思路：识别AI系统类型，用8步落地框架点出核心答题维度（简洁条目，每条不超过35字，共5-7条；指出考察重点和候选人常见盲点）
    8步框架：业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底
 
-2. 改写版本：优化候选人原有回答，保留其思路，使产品化表达更清晰完整（第一人称，120-200字，按8步框架补全缺失维度）
+2. 改写版本：优化候选人原有回答，保留其核心思路，按8步框架补全缺失维度（第一人称口语，120-200字，用"我会先……然后……"这种表达，不要论文式说明）
 
-3. 参考答案：满分级别答案，完整覆盖8步框架核心要素（结构清晰，200-280字，按"业务目标→用户任务→AI介入→产品机制→指标→风险"顺序输出）
+3. 参考答案：满分级别的面试口语版答案，覆盖"业务目标→用户任务→AI介入→产品机制→指标→风险"6个要素（200-280字，用第一人称口语表达，如"我会先明确……然后……最后……"，不要写成说明文或功能列表）
 
-规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例`
+规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例，但必须保持口语节奏`
     : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
 ${showFw ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
@@ -3978,17 +3980,19 @@ function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
   const isAIProduct = STATE.interview?.source === 'aiproduct';
+  const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
   const dims = isAIProduct ? [
     { name: '系统类型识别', val: data.system_type },
     { name: '业务场景与用户任务', val: data.biz_scenario },
     { name: 'AI能力匹配', val: data.ai_capability },
     { name: '产品机制转化', val: data.product_mechanism },
-    { name: '指标与风险兜底', val: data.metrics_risk },
+    { name: '指标与验证', val: data.metrics_validation },
+    { name: '风险兜底', val: data.risk_control },
   ] : [
     { name: '切题程度', val: data.relevance },
     { name: '逻辑结构', val: data.logical_structure },
     { name: '产品深度', val: data.product_depth },
-    { name: 'AI理解深度', val: data.ai_depth },
+    ...(aiDepthNA ? [] : [{ name: 'AI理解深度', val: data.ai_depth }]),
     { name: '表达说服力', val: data.persuasiveness },
   ];
   document.getElementById('score-content').innerHTML = `
@@ -4509,11 +4513,11 @@ async function genHistoryRefAnswers(hId) {
 1. 答题思路：识别AI系统类型，用8步落地框架点出核心答题维度（简洁条目，每条不超过35字，共5-7条；指出考察重点和候选人常见盲点）
    8步框架：业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底
 
-2. 改写版本：优化候选人原有回答，保留其思路，使产品化表达更清晰完整（第一人称，120-200字，按8步框架补全缺失维度）
+2. 改写版本：优化候选人原有回答，保留其核心思路，按8步框架补全缺失维度（第一人称口语，120-200字，用"我会先……然后……"这种表达，不要论文式说明）
 
-3. 参考答案：满分级别答案，完整覆盖8步框架核心要素（结构清晰，200-280字，按"业务目标→用户任务→AI介入→产品机制→指标→风险"顺序输出）
+3. 参考答案：满分级别的面试口语版答案，覆盖"业务目标→用户任务→AI介入→产品机制→指标→风险"6个要素（200-280字，用第一人称口语表达，如"我会先明确……然后……最后……"，不要写成说明文或功能列表）
 
-规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例`
+规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例，但必须保持口语节奏`
     : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFwH ? '三' : '两'}部分内容：
 ${showFwH ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）

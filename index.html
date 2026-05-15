@@ -2869,6 +2869,58 @@ const PRODUCT_CAT_FOLLOWUP = {
 严禁追问：要求候选人背诵技术定义、算法原理`,
 };
 
+// ── 简历专项：基于项目产品思维复盘维度的专项追问逻辑 ──
+const RESUME_SPEC_FOLLOWUP = `【简历专项追问方向】每轮根据候选人回答中最明显的缺失项选1个追问，优先级从高到低：
+
+▸ 优先级1 — 角色边界不清（最先追）
+  "在这个项目里你具体负责哪部分？哪些是AI工具/技术同学/现成平台完成的？"
+  "工程实现是怎么分工的？你做了哪些产品判断和验收？"
+  "如果重做一次，你会优化哪些产品决策？"
+
+▸ 优先级2 — 项目价值/一句话说不清
+  "你能不能用一句话概括这个项目：面向谁、解决什么问题、产出什么价值？"
+  "这个项目最核心的价值是什么？给非技术面试官听你会怎么说？"
+
+▸ 优先级3 — 用户/场景不清
+  "这个项目的核心用户是谁？他在什么场景下会需要这个产品？"
+  "这个场景是高频、强痛，还是偏探索？为什么值得做？"
+  "用户没有这个产品时，是怎么解决这个问题的？"
+
+▸ 优先级4 — 只讲功能，没讲产品机制
+  "这个功能背后的产品机制是什么？"
+  "它是反馈机制、决策辅助机制、任务执行机制，还是风险兜底机制？"
+  "这个机制如何改变了用户行为？"
+
+▸ 优先级5 — 没有关键取舍
+  "你当时有没有放弃过某个方案或功能？"
+  "为什么做A不做B？取舍依据是用户价值、实现成本、风险还是验证难度？"
+  "MVP第一版为什么做这几个功能，而不是其他的？"
+
+▸ 优先级6 — 没有指标验证
+  "你怎么证明这个项目真的有效？"
+  "核心指标是什么？辅助指标是什么？"
+  "如果没有线上数据，你用什么替代指标或用户反馈来验证？"
+
+▸ 优先级7 — AI项目没有讲风险/bad case
+  "AI输出错了怎么办？有没有出现过幻觉或错误建议？"
+  "你怎么降低幻觉风险？有没有bad case？你怎么归因和迭代？"
+  "这个项目最大的挑战是什么？你是怎么处理的？"
+
+▸ 优先级8 — 没有和岗位连接
+  "这段经历体现了你什么AI PM能力？"
+  "如果把这个项目经验迁移到你申请的岗位，你觉得最相关的是哪部分？"
+  "这个项目相比课程作业/个人项目，最能证明你哪项能力？"
+
+▸ 替代方案差异（当回答中出现"为什么不用Claude/ChatGPT"相关逻辑时追问）
+  "用户为什么不用通用AI自己解决？"
+  "你的产品相比ChatGPT/Claude，降低了用户什么成本？"
+  "差异是场景、流程、数据、交互还是评测机制？"
+
+【严格禁止】：
+- 不问算法细节、JSON解析、API调用、Prompt参数、具体代码逻辑
+- 判断标准：如果问题需要候选人写过代码才能答，就不要问
+- 可以问：系统大致怎么工作、数据来源、用户流程、AI价值体现、如何验收效果`;
+
 let _apCat = 'task';   // 当前选中的AI产品化分类
 
 function selectAPCat(el, cat) {
@@ -3006,15 +3058,17 @@ async function startResumeSpecInterview() {
   // Build context from the selected folder
   const ctx = buildProjFolderContext(folder, mode);
   const prompt = `你是字节/腾讯/百度的AI产品面试官，请根据以下项目/实习经历，出1道深度面试题，针对该经历进行深挖追问。
-可选方向：
-- 核心指标与数据结果追问
-- 关键决策依据（为什么这样做而不是那样）
-- 遇到的最大挑战或 bad case 及处理过程
-- 跨团队协作或推动难点
-- 自我反思与复盘
 
-注意：候选人是AI产品经理，如项目使用了Claude Code或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果，不要问技术实现细节。
-要求：直接引用该经历中的项目名/公司名，让问题显得像真实面试追问。只输出题目本身，不超过80字，不加任何前缀。
+从以下6个方向中随机选1个出题：
+1. 关键产品决策——为什么这样设计/取舍，而不是另一个方案
+2. 核心指标与验证——如何证明项目有效，指标体系是什么
+3. 挑战 / bad case——遇到的最大难点，以及如何处理和复盘
+4. 角色边界——在这个项目里具体负责什么，哪些是AI工具或技术同学完成的
+5. 用户价值与产品机制——这个项目解决了用户哪个核心痛点，背后的产品机制是什么
+6. 岗位能力迁移——这段经历体现了你什么AI PM能力，和申请岗位有什么关系
+
+注意：候选人是AI产品经理，如项目使用了Claude Code、Dify或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果和角色边界，不要问代码实现和技术细节。
+要求：直接引用该经历中的项目名/公司名，让问题像真实面试追问。只输出题目本身，不超过80字，不加任何前缀。
 
 ${ctx}`;
 
@@ -3489,6 +3543,74 @@ ${catFollowup}
     return;
   }
 
+  // ── 简历专项：独立 prompt，围绕项目产品思维复盘维度追问 ──
+  if (STATE.interview.source === 'resume-spec') {
+    const softEndRS = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+    const turnNoteRS = turn === 0 ? '' : turn < softEndRS
+      ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖项目产品思维。`
+      : turn === softEndRS
+      ? `\n【结束判断】已完成第 ${turn} 轮追问。请评估：
+- 角色边界/项目价值/核心取舍/指标验证/岗位迁移主要维度已覆盖 → 本轮直接输出"[INTERVIEW_END]"+1句点评，不再提问
+- 还有1个关键维度未深挖（尤其是角色边界或指标验证） → 可再追最后1轮，之后必须结束`
+      : `\n【⚠️ 必须结束】已完成第 ${turn} 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评候选人对这段项目经历的表达。禁止再提问。`;
+
+    const rsSystem = `你是一名资深AI产品经理面试官，正在深挖候选人的项目/实习经历。
+${turnNoteRS ? turnNoteRS + '\n' : ''}
+${diffDesc[pref.difficulty] || diffDesc.strict}
+
+【面试目标】训练候选人把项目讲成：用户问题 → 产品判断 → 关键取舍 → 指标验证 → 风险复盘 → 真实角色边界 → 岗位能力迁移。不是讲"我实现了什么功能"。
+
+严格遵守：
+- 第1轮：只把面试题原文提出来，等待候选人回答，不做任何分析
+- 第2轮起：根据候选人回答中最明显的缺失项，只问1个追问，不超过45字
+- 结束时必须立即输出"[INTERVIEW_END]"，然后用1句话点评
+- 禁止：追问代码实现细节 / 追问算法参数 / 多问题列举 / 废话前缀
+${voiceNote}
+
+${RESUME_SPEC_FOLLOWUP}
+
+- 面试题：${question}`;
+
+    const rsApiMessages = turn === 0
+      ? [{ role: 'user', content: '开始' }]
+      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+
+    addMessage('ai', '');
+    const rsLastEl = document.getElementById('chat-messages').lastElementChild;
+    const rsBubble = rsLastEl?.querySelector('.msg-bubble');
+    if (rsBubble) rsBubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+    STATE.isGenerating = true;
+    document.getElementById('send-btn').disabled = true;
+
+    try {
+      const rawRS = await callClaude(rsApiMessages, rsSystem, text => {
+        const display = text.replace(/\[INTERVIEW_END\]/g, '').trim();
+        if (rsBubble) rsBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
+        scrollChat();
+      });
+      const displayRS = rawRS.replace(/\[INTERVIEW_END\]/g, '').trim();
+      if (rsBubble) rsBubble.innerHTML = formatMsg(displayRS);
+      const msgs = STATE.interview.messages;
+      if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
+        msgs[msgs.length - 1].content = displayRS;
+      }
+      const hasEndSignalRS = rawRS.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
+      const hitHardCapRS = STATE.interview.turn >= STATE.interview.maxTurns;
+      if (hasEndSignalRS || hitHardCapRS) {
+        if (hitHardCapRS && !hasEndSignalRS) addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+        endInterviewFlow();
+      }
+    } catch (e) {
+      if (rsBubble) rsBubble.innerHTML = `<span style="color:var(--danger)">⚠️ ${e.message}</span>`;
+      toast(e.message, 'error');
+    } finally {
+      STATE.isGenerating = false;
+      document.getElementById('send-btn').disabled = false;
+    }
+    return;
+  }
+
   // Tell AI exactly which turn it's on so it can decide naturally when to end
   const softEnd = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
   const turnNote = turn === 0 ? '' : turn < softEnd
@@ -3722,6 +3844,15 @@ async function generateScore() {
 
   // AI能力产品化专项：独立评分维度
   const isAIProduct = source === 'aiproduct';
+  const isResumeSpec = source === 'resume-spec';
+  const resumeSpecNote = isResumeSpec ? `
+
+【简历专项专属评估要点】在 suggestions 和 summary 中，请额外关注以下5个维度并点明不足（如已表现良好则不必单独列出）：
+① 角色边界是否清晰——候选人具体负责了哪部分，哪些是AI工具辅助完成的，有无混淆或夸大
+② 项目价值是否讲成了产品判断——是否超越功能描述，说清楚了"为什么这样做"和"解决了什么用户问题"
+③ 是否有关键取舍和指标验证——是否提到了做A不做B的理由，以及如何用数据证明项目有效
+④ 是否讲清楚了bad case / 风险 / 复盘——AI项目是否提到了异常case处理和效果不达预期时的应对
+⑤ 是否有岗位能力迁移——这段经历是否体现出了面试岗位所需的AI PM核心能力` : '';
   const system = isAIProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -3740,7 +3871,7 @@ async function generateScore() {
 
 示例格式（请填入真实评分，不要照抄示例）：
 {"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["系统类型判断准确"],"weaknesses":["风险兜底缺失"],"suggestions":["加入人工介入机制"],"summary":"产品化思路清晰，指标与风险需补强"}`
-    : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
+    : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}${resumeSpecNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
 - score: 整体综合分（整数1-10，不参考ai_depth，只综合其余4个维度）
@@ -3857,6 +3988,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
   // Single API call: framework + improved rewrite + standard reference per round
+  const isResumeSpecRef = STATE.interview?.source === 'resume-spec';
   const system = isAIProductRef
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。针对每道面试题，给出三部分内容：
 
@@ -3868,6 +4000,21 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 3. 参考答案：满分级别的面试口语版答案，覆盖"业务目标→用户任务→AI介入→产品机制→指标→风险"6个要素（200-280字，用第一人称口语表达，如"我会先明确……然后……最后……"，不要写成说明文或功能列表）
 
 规则：不要虚构数据，参考答案允许举具体产品设计方案作为示例，但必须保持口语节奏`
+    : isResumeSpecRef
+    ? `你是资深AI产品经理面试教练，专注简历项目经历深挖练习。针对每道面试题，给出三部分内容：
+
+1. 答题思路：识别追问方向（角色边界/项目价值/取舍/指标/bad case/岗位迁移），给出核心答题维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和候选人常见坑）
+
+2. 改写版本：优化候选人原有回答，保留其核心思路，补全缺失的产品判断层（第一人称口语，100-180字），严格规则见下
+
+3. 参考答案：满分级别的面试口语版（160-240字，第一人称，用"这个项目里我主要负责……当时的判断是……验证方式是……"这种口语节奏），严格规则见下
+
+【严格规则 — 必须遵守】：
+- 改写版本和参考答案必须严格基于【候选人真实背景资料】中的真实信息，包括项目名称、数据指标、职责范围
+- 背景资料中没有的数据（如具体数字、效果指标、用户量）一律不得编造，可写"[待补充：具体数据]"
+- 背景资料中没有明确说明候选人负责的工作，不得代为声明是"我做的"
+- 若背景资料信息不足以支撑某个问题的回答，在改写版本中写明"这部分信息需要候选人补充：[具体补充方向]"，不要凭空构造
+- 禁止出现任何虚构的项目经历、伪造的成果数据或夸大的职责描述`
     : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
 ${showFw ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）

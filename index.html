@@ -3958,20 +3958,22 @@ async function generateScore() {
 
   // Module-specific improvement dimensions
   // Product: per-category dimensions so scoring feedback matches the actual question type
+  // metrics / aiknowledge / design have internal sub-types; give the model a labeled pool to pick from
   const _productImpDimsMap = {
-    design:       '主动收敛场景、用户痛点、产品机制、MVP优先级、指标验证、风险兜底',
+    design:       '若产品分析题，从[产品定位/目标用户/核心场景/核心价值/关键机制/竞争差异/指标验证]中选；若设计/改进/取舍题，从[主动收敛场景/用户痛点/产品机制/MVP优先级/指标验证/风险兜底]中选',
     functradeoff: '目标清晰度、替代方案、用户价值、业务价值、成本风险、取舍理由、验证指标',
-    metrics:      '指标口径、指标拆解、用户分层、链路定位、原因假设、验证方法、优化动作',
+    metrics:      '根据题目子类型选维度——异常诊断[口径确认/影响范围/分层拆解/原因假设/验证方法/修复动作]；留存增长[留存目标/用户分层/关键行为/激活链路/增长实验/留存验证]；指标体系[产品目标/北极星指标/行为指标/体验指标/AI质量指标/风险指标/优先级]',
     aipm:         '业务场景、AI介入点、AI能力边界、产品机制、指标验证、风险兜底、替代方案差异',
-    aiknowledge:  '概念准确性、适用场景、具体案例、边界风险、产品判断',
+    aiknowledge:  '根据题目子类型选维度——技术认知[概念准确性/适用场景/具体案例/边界风险/产品选型]；产品观[观点清晰度/用户视角/业务视角/例子支撑/边界条件]；行业趋势[趋势判断/驱动因素/场景落地/商业化路径/风险约束/PM启示]',
   };
   // Product: per-category Round-1 framework for scoring evaluation
+  // For multi-subtype categories the value is a full instruction the model should follow
   const _productR1FrameworkMap = {
-    design:       '收敛场景 → 切入理由 → 用户痛点 → 产品机制 → MVP → 指标/风险',
-    functradeoff: '目标 → 候选方案 → 用户价值 → 业务价值 → 成本/风险 → 取舍结论 → 验证指标',
-    metrics:      '确认口径 → 拆指标 → 分用户/场景/渠道 → 找异常环节 → 原因假设 → 验证方法 → 优化动作',
-    aipm:         '业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异',
-    aiknowledge:  '概念理解 → 适用场景 → 具体例子 → 局限风险 → 产品判断',
+    design:       '按实际题目类型选框架：若为产品分析题（分析某款产品的核心价值/关键决策）→「产品定位 → 目标用户 → 核心场景 → 核心价值 → 关键机制 → 竞争差异 → 指标验证 → 风险/不足」；若为设计/改进/取舍题 →「收敛场景 → 切入理由 → 用户痛点 → 产品机制 → MVP → 指标/风险」',
+    functradeoff: '框架为「目标 → 候选方案 → 用户价值 → 业务价值 → 成本/风险 → 取舍结论 → 验证指标」',
+    metrics:      '按实际题目子类型选框架：\n· 数据异常诊断 →「确认口径 → 定位影响范围 → 分用户/渠道/版本/场景 → 拆核心链路 → 提出原因假设 → 验证数据 → 修复动作 → 复盘监控」\n· 留存与增长 →「定义留存目标 → 用户分层 → 找关键行为 → 拆新手/激活/复访链路 → 提出增长抓手 → 设计实验 → 观察留存与质量指标」\n· 指标体系与优先级 →「明确产品目标 → 北极星/目标指标 → 行为指标 → 体验指标 → AI质量指标（如适用）→ 风险指标 → 优先级判断」',
+    aipm:         '框架为「业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异」',
+    aiknowledge:  '按实际题目子类型选框架：\n· 技术认知类 →「概念理解 → 适用场景 → 产品例子 → 局限风险 → 选型判断」\n· 产品观类 →「观点判断 → 背后原因 → 用户/业务视角 → 具体例子 → 边界条件 → 面试表达」\n· 行业趋势类 →「趋势判断 → 驱动因素 → 典型场景 → 商业化路径 → 风险约束 → 对AI PM的启示」',
   };
   const _productR1Framework = _productR1FrameworkMap[subCategory] || _productR1FrameworkMap.design;
   const _impDims = isAIProduct
@@ -4016,7 +4018,7 @@ ${_impFieldSpec}
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
-- 第1轮（主问题/开放题）：按本题题型评估，框架为「${_productR1Framework}」。第1轮如果只讲功能点而没有覆盖该框架主要步骤，需在对应维度扣分。
+- 第1轮（主问题/开放题）：${_productR1Framework}。第1轮如果未覆盖对应框架的主要步骤，需在对应维度扣分。
 - 第2轮起（追问）：不要求候选人重复完整框架，只考察当轮追问主题的单点深度。追问轮次不因"没有完整链路"而扣分。
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：

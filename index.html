@@ -217,7 +217,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
   display:none;
 }
 .active-q-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.active-q-text{font-size:13.5px;line-height:1.55;color:var(--text)}
+.active-q-text{font-size:13.5px;line-height:1.55;color:var(--text);white-space:pre-wrap}
 .config-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
 .config-row .input-group{margin-bottom:0;flex:1;min-width:150px}
 .chat-area{
@@ -250,7 +250,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
 .msg.user .msg-avatar{background:linear-gradient(135deg,var(--accent),#22d3ee)}
 .msg-bubble{
   padding:10px 14px;border-radius:10px;line-height:1.65;font-size:13.5px;
-  max-width:100%;word-break:break-word;
+  max-width:100%;word-break:break-word;white-space:pre-wrap;
 }
 .msg.ai .msg-bubble{background:var(--surface2);border:1px solid var(--border);border-top-left-radius:3px}
 .msg.user .msg-bubble{background:var(--primary-dim);border:1px solid var(--primary);border-top-right-radius:3px;color:var(--text)}
@@ -2233,7 +2233,7 @@ function parseQuestion(raw) {
     .map(l => l.replace(/^[\d\.\)、\-\*]+\s*/, '').trim())
     .filter(l => l.length > 8 && !/[：:]$/.test(l) && !/^(面试题|问题|题目|以下是|这是|下面是)/.test(l));
   if (!lines.length) throw new Error('未能生成题目，请重试');
-  return lines[0];
+  return lines.join('\n');
 }
 
 async function genQuestion(prompt) {

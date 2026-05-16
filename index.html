@@ -2341,7 +2341,7 @@ async function startInterview() {
     : src === 'resume-spec'
     ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : src === 'product'
-    ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4)
+    ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : src === 'aiproduct'
     ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
@@ -2496,7 +2496,10 @@ const PRODUCT_CAT_PROMPTS = {
 - "分析Dify或Coze这类AI应用搭建平台，它解决了什么问题，产品边界在哪里？"
 - "你怎么看Cursor这款产品？核心价值是什么，和Copilot差异在哪里？"
 
-出题要求：有具体产品或场景约束，不超过80字，直接输出题目，不加前缀。`,
+出题要求：
+- 产品设计题可二选一出题：①开放收敛题（给方向不给场景，候选人需主动收敛用户/场景，如"设计一款AI生产力工具"）；②业务背景题（给定具体场景约束，考察落地判断，如"你是X产品PM，当前有Y约束，如何设计Z"）
+- 产品分析题必须明确点名具体产品，如 Cursor、Kimi、豆包、小红书、Tolan、Dify、Coze、Notion AI 等，不出泛指"某AI产品"
+- 题目不超过80字，直接输出题目，不加前缀`,
 
   metrics: `你是AI产品经理面试官。从以下三类题型中随机选一类出题：
 
@@ -2516,7 +2519,7 @@ const PRODUCT_CAT_PROMPTS = {
 - "你有三个需求同时在排期，老板/业务方都说很急，你作为PM如何主导优先级决策？"
 - "AI产品上线后如何设计监控体系，同时覆盖产品质量、AI质量和风险三个维度？"
 
-出题要求：必须有具体数字或场景，不超过80字，直接输出题目，不加前缀。`,
+出题要求：每题必须包含产品场景 + 指标名称 + 变化幅度 + 时间范围（参考格式："某[产品][时间段][指标名称]从[A]变化到[B]，你会如何..."；例：某AI写作工具近一周次日留存从35%降到25%）。题目不超过80字，直接输出题目，不加前缀。`,
 
     aipm: `你是AI产品经理面试官。从以下两类题型中随机选一类出题，各50%概率：
 
@@ -2530,13 +2533,13 @@ const PRODUCT_CAT_PROMPTS = {
 - "竞品突然发布了一个效果比你们强很多的AI功能，你接下来怎么做？"
 - "面对大模型幻觉，你作为PM在产品层面会设计哪三层防护机制？"
 
-【AI场景落地题】考察B端Agent或AI能力在具体业务中的落地判断：
-- "给一家电商平台设计智能客服Agent，哪些问题适合AI自动回复，哪些必须转人工？"
-- "某企业要用AI搭建内部知识库问答系统，你作为PM会如何规划工作流和权限控制？"
-- "一家银行要上线AI客服，你会如何设计Agent工作流、评估指标和高风险兜底机制？"
-- "给B端HR SaaS产品加一个AI功能，帮HR快速起草岗位JD，你会怎么设计产品方案？"
-- "某制造业客户希望用AI处理供应商询价邮件，你作为PM如何评估可行性并设计MVP？"
-- "医疗问诊场景要引入AI辅助，哪些环节适合AI介入，风险如何控制？"
+【AI场景落地题】使用三段式出题：业务背景 + 当前问题/痛点 + 你的任务。考察B端Agent或AI能力在具体业务中的落地判断：
+- "某电商平台客服日均15000条工单，70%是退换货和物流查询，人工成本高且峰值排队严重。你作为PM，如何设计智能客服Agent，决定哪些问题自动处理、哪些转人工？"
+- "某中型企业有200+内部文档散落在飞书、邮件和本地，员工查文档平均花20分钟。你作为PM，如何规划AI知识库问答系统的MVP方案和上线路径？"
+- "某城商行要上线AI客服，当前投诉率8%，合规要求高风险操作必须人工审批。你作为PM，如何设计Agent工作流、评估指标和高风险兜底机制？"
+- "某HR SaaS产品月活3000家企业，HR平均每月写20份JD，质量参差不齐。你作为PM，如何设计AI起草JD功能，从需求定义到上线验证？"
+- "某制造业客户每天收到50+供应商询价邮件，人工筛选回复耗时3-4小时。你作为PM，如何评估AI处理询价邮件的可行性并设计MVP？"
+- "某在线医疗平台接入AI辅助问诊，当前误导性回答投诉率2%，监管要求诊断建议必须医生确认。你作为PM，哪些环节适合AI介入，如何控制风险？"
 
 出题要求：
 - 考察PM的产品判断和决策能力，不考察技术实现细节
@@ -2600,9 +2603,10 @@ const PRODUCT_CAT_PROMPTS = {
 - "一个AI产品如果只靠模型本身领先，护城河够不够？你认为AI产品真正的差异化来自哪里？"
 
 出题要求：
+- 每题必须包含基础业务背景：产品类型 + 当前资源/排期约束 + 提出需求的人或目标（参考格式："[产品] 现有 [约束]，[某人/目标] 希望做 [需求]，你如何判断优先级/取舍"；例：企业协作文档产品有10个需求排期，老板想插入AI总结功能）
 - 必须有具体场景或约束条件，不出泛泛而谈的概念题
 - 考察PM做决策的思路和判断依据，不考察技术细节
-- 题目不超过75字，直接输出题目，不加前缀`,
+- 题目不超过80字，直接输出题目，不加前缀`,
 };
 
 let _pCat = 'design';      // 当前选中的产品分类
@@ -2646,7 +2650,7 @@ async function startProductInterview() {
   const _isMetricsCat = resolvedCat === 'metrics' || resolvedCat === 'aiknowledge';
   const maxTurns = _isMetricsCat
     ? (pref.difficulty === 'hell' ? 4 : 3)
-    : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
+    : (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5);
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -3550,7 +3554,7 @@ ${voiceNote}
     }
     if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
 
-    const softEndP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+    const softEndP = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
     const turnNoteP = turn < softEndP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖。`
       : turn === softEndP

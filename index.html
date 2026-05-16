@@ -3440,6 +3440,9 @@ ${kbCtx}` : '';
       STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
+    // Hard cap: user already answered the last question — end without another API call
+    if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
+
     const softEndAP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
     const turnNoteAP = turn < softEndAP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖产品化方案。`
@@ -3482,17 +3485,24 @@ ${voiceNote}
         if (apBubble) apBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
         scrollChat();
       });
-      const displayAP = rawAP.replace(/\[INTERVIEW_END\]/g, '').trim();
+      const hasEndSignal = rawAP.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
+      const hitHardCap = STATE.interview.turn >= STATE.interview.maxTurns;
+      // When ending, show only the closing comment AFTER [INTERVIEW_END], discard any spurious follow-up before it
+      let displayAP;
+      if (hasEndSignal) {
+        const afterEnd = rawAP.slice(rawAP.indexOf('[INTERVIEW_END]') + '[INTERVIEW_END]'.length).trim();
+        displayAP = afterEnd || '好的，本次面试到这里结束，感谢你的回答。';
+      } else {
+        displayAP = rawAP.trim();
+      }
       if (apBubble) apBubble.innerHTML = formatMsg(displayAP);
       const msgs = STATE.interview.messages;
       if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
         msgs[msgs.length - 1].content = displayAP;
       }
-      const hasEndSignal = rawAP.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
-      const hitHardCap = STATE.interview.turn >= STATE.interview.maxTurns;
       if (hasEndSignal || hitHardCap) {
         if (hitHardCap && !hasEndSignal) {
-          addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+          if (apBubble) apBubble.innerHTML = formatMsg('好的，本次面试到这里结束，感谢你的回答。');
         }
         endInterviewFlow();
       }
@@ -3513,6 +3523,8 @@ ${voiceNote}
       STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
+    if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
+
     const softEndP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
     const turnNoteP = turn < softEndP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖。`
@@ -3564,18 +3576,24 @@ ${catFollowup}
         if (prodBubble) prodBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
         scrollChat();
       });
-      const displayP = rawP.replace(/\[INTERVIEW_END\]/g, '').trim();
+      const minTurnsP = 3;
+      const hasEndSignalP = rawP.includes('[INTERVIEW_END]') && STATE.interview.turn >= minTurnsP;
+      const hitHardCapP = rawP && STATE.interview.turn >= STATE.interview.maxTurns;
+      let displayP;
+      if (hasEndSignalP) {
+        const afterEnd = rawP.slice(rawP.indexOf('[INTERVIEW_END]') + '[INTERVIEW_END]'.length).trim();
+        displayP = afterEnd || '好的，本次面试到这里结束，感谢你的回答。';
+      } else {
+        displayP = rawP.trim();
+      }
       if (prodBubble) prodBubble.innerHTML = formatMsg(displayP);
       const msgs = STATE.interview.messages;
       if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
         msgs[msgs.length - 1].content = displayP;
       }
-      const minTurnsP = 3;
-      const hasEndSignalP = rawP.includes('[INTERVIEW_END]') && STATE.interview.turn >= minTurnsP;
-      const hitHardCapP = STATE.interview.turn >= STATE.interview.maxTurns;
       if (hasEndSignalP || hitHardCapP) {
         if (hitHardCapP && !hasEndSignalP) {
-          addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+          if (prodBubble) prodBubble.innerHTML = formatMsg('好的，本次面试到这里结束，感谢你的回答。');
         }
         endInterviewFlow();
       }
@@ -3596,6 +3614,8 @@ ${catFollowup}
       STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
+    if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
+
     const softEndRS = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
     const turnNoteRS = turn < softEndRS
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖项目产品思维。`
@@ -3640,16 +3660,24 @@ ${RESUME_SPEC_FOLLOWUP}
         if (rsBubble) rsBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">▋</span>';
         scrollChat();
       });
-      const displayRS = rawRS.replace(/\[INTERVIEW_END\]/g, '').trim();
+      const hasEndSignalRS = rawRS.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
+      const hitHardCapRS = STATE.interview.turn >= STATE.interview.maxTurns;
+      let displayRS;
+      if (hasEndSignalRS) {
+        const afterEnd = rawRS.slice(rawRS.indexOf('[INTERVIEW_END]') + '[INTERVIEW_END]'.length).trim();
+        displayRS = afterEnd || '好的，本次面试到这里结束，感谢你的回答。';
+      } else {
+        displayRS = rawRS.trim();
+      }
       if (rsBubble) rsBubble.innerHTML = formatMsg(displayRS);
       const msgs = STATE.interview.messages;
       if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
         msgs[msgs.length - 1].content = displayRS;
       }
-      const hasEndSignalRS = rawRS.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
-      const hitHardCapRS = STATE.interview.turn >= STATE.interview.maxTurns;
       if (hasEndSignalRS || hitHardCapRS) {
-        if (hitHardCapRS && !hasEndSignalRS) addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+        if (hitHardCapRS && !hasEndSignalRS) {
+          if (rsBubble) rsBubble.innerHTML = formatMsg('好的，本次面试到这里结束，感谢你的回答。');
+        }
         endInterviewFlow();
       }
     } catch (e) {
@@ -3661,6 +3689,8 @@ ${RESUME_SPEC_FOLLOWUP}
     }
     return;
   }
+
+  if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
 
   // Tell AI exactly which turn it's on so it can decide naturally when to end
   const softEnd = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
@@ -3764,22 +3794,29 @@ ${STATE.interview.source === 'resume-spec' ? `
       scrollChat();
     });
 
-    const displayText = extractUnderstanding(finalText);
+    const rawDisplayText = extractUnderstanding(finalText);
+    const minTurns = STATE.interview.source === 'kb-spec' ? 1 : 3;
+    const hasEndSignal = rawDisplayText.includes('[INTERVIEW_END]') && STATE.interview.turn >= minTurns;
+    const hitHardCap = STATE.interview.turn >= STATE.interview.maxTurns;
+    // When ending, show only the closing comment AFTER [INTERVIEW_END], discard any spurious question before it
+    let displayText;
+    if (hasEndSignal) {
+      const afterEnd = rawDisplayText.slice(rawDisplayText.indexOf('[INTERVIEW_END]') + '[INTERVIEW_END]'.length).trim();
+      displayText = afterEnd || '好的，本次面试到这里结束，感谢你的回答。';
+    } else {
+      displayText = rawDisplayText;
+    }
     if (bubbleEl) bubbleEl.innerHTML = formatMsg(displayText);
 
-    // Store clean text (without [理解：] prefix) in messages
+    // Store clean text in messages
     const msgs = STATE.interview.messages;
     if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
       msgs[msgs.length - 1].content = displayText;
     }
 
-    const minTurns = STATE.interview.source === 'kb-spec' ? 1 : 3;
-    const hasEndSignal = displayText.includes('[INTERVIEW_END]') && STATE.interview.turn >= minTurns;
-    const hitHardCap = STATE.interview.turn >= STATE.interview.maxTurns;
     if (hasEndSignal || hitHardCap) {
       if (hitHardCap && !hasEndSignal) {
-        // AI didn't output [INTERVIEW_END] before hard cap — add a synthetic closing line
-        addMessage('ai', '好的，本次面试到这里结束，感谢你的回答。');
+        if (bubbleEl) bubbleEl.innerHTML = formatMsg('好的，本次面试到这里结束，感谢你的回答。');
       }
       endInterviewFlow();
     }

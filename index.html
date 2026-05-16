@@ -4028,7 +4028,7 @@ ${_impFieldSpec}
 - dimension字段优先使用：完整链路/任务链路/AI介入点/产品机制/指标验证/风险兜底/可信度判断/MVP优先级/AI能力取舍/数据质量 等对应该轮实际考察主题
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}]}`
+{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}
     : isProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -4064,7 +4064,7 @@ ${_impFieldSpec}
 ${_impFieldSpec}
 
 示例格式：
-{"score":6,"relevance":7,"logical_structure":6,"product_depth":5,"ai_depth":null,"persuasiveness":6,"highlights":["角色边界清晰"],"summary":"项目描述偏功能，缺产品判断和指标验证","improvements":[{"dimension":"关键决策","issue":"只描述了做了什么功能，没有说明当时为什么这样设计而不是其他方案","why":"决策依据体现产品判断力，是面试核心考察点","how":"补充'当时我们考虑了A/B两个方案，选A的原因是…'"},{"dimension":"指标/结果","issue":"没有任何数据或验证方式说明项目是否有效","why":"AI PM需要数据意识，结果是项目价值的证明","how":"哪怕是定性反馈或AB测试结论都可以，说明验证逻辑"}]}`
+{"score":6,"relevance":7,"logical_structure":6,"product_depth":5,"ai_depth":null,"persuasiveness":6,"highlights":["角色边界清晰"],"summary":"项目描述偏功能，缺产品判断和指标验证","improvements":[{"dimension":"关键决策","issue":"只描述了做了什么功能，没有说明当时为什么这样设计而不是其他方案","why":"决策依据体现产品判断力，是面试核心考察点","how":"补充'当时我们考虑了A/B两个方案，选A的原因是…'"},{"dimension":"指标/结果","issue":"没有任何数据或验证方式说明项目是否有效","why":"AI PM需要数据意识，结果是项目价值的证明","how":"哪怕是定性反馈或AB测试结论都可以，说明验证逻辑"}],"resume_key_line":"这个项目里我主要负责需求拆解和验收，AI输出质量评估由我定义标准，底层开发是技术同学完成的"}`
     : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：

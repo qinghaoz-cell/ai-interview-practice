@@ -2339,7 +2339,7 @@ async function startInterview() {
     : _isMetricsRepeat
     ? (pref.difficulty === 'hell' ? 4 : 3)
     : src === 'resume-spec'
-    ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 6 : 4)
+    ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : src === 'product'
     ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4)
     : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
@@ -3109,13 +3109,14 @@ async function startResumeSpecInterview() {
   const ctx = buildProjFolderContext(folder, mode);
   const prompt = `你是字节/腾讯/百度的AI产品面试官，请根据以下项目/实习经历，出1道深度面试题，针对该经历进行深挖追问。
 
-从以下6个方向中随机选1个出题：
+从以下7个方向中随机选1个出题：
 1. 关键产品决策——为什么这样设计/取舍，而不是另一个方案
 2. 核心指标与验证——如何证明项目有效，指标体系是什么
 3. 挑战 / bad case——遇到的最大难点，以及如何处理和复盘
 4. 角色边界——在这个项目里具体负责什么，哪些是AI工具或技术同学完成的
 5. 用户价值与产品机制——这个项目解决了用户哪个核心痛点，背后的产品机制是什么
 6. 岗位能力迁移——这段经历体现了你什么AI PM能力，和申请岗位有什么关系
+7. 项目复盘 / 如果重做——如果重新做这个项目，会优先优化哪一块、为什么、优先级是什么
 
 注意：候选人是AI产品经理，如项目使用了Claude Code、Dify或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果和角色边界，不要问代码实现和技术细节。
 要求：直接引用该经历中的项目名/公司名，让问题像真实面试追问。只输出题目本身，不超过80字，不加任何前缀。
@@ -3132,8 +3133,8 @@ ${ctx}`;
 
   // Launch interview
   const pref = getPref();
-  // resume-spec: 4-6 rounds for deep project drill (role, decisions, metrics, bad case, reflection, fit)
-  const maxTurns = pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 6 : 4;
+  // resume-spec: normal=4 (concise), strict=5, hell=6 (deep drill)
+  const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'resume-spec', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -3985,6 +3986,8 @@ async function generateScore() {
     : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
   const _keyLineSpec = isProduct
     ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，比如"我会先把场景收敛到X类用户，原因是…"，不要解释原因）`
+    : isResumeSpec
+    ? `\n- resume_key_line: 字符串，本轮最该补的一句话（面试口语，≤40字，直接给可以原话用的表达，必须体现真实角色边界或核心判断，比如"这个项目里我主要负责需求拆解和AI输出质量评估，不负责底层模型开发"或"我当时的核心判断是先验证用户是否采纳AI建议，而不是先追求功能完整"，不要解释原因）`
     : '';
   const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数${_keyLineSpec}`;
 
@@ -4257,7 +4260,9 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 - 背景资料中没有的数据（如具体数字、效果指标、用户量）一律不得编造，可写"[待补充：具体数据]"
 - 背景资料中没有明确说明候选人负责的工作，不得代为声明是"我做的"
 - 若背景资料信息不足以支撑某个问题的回答，在改写版本中写明"这部分信息需要候选人补充：[具体补充方向]"，不要凭空构造
-- 禁止出现任何虚构的项目经历、伪造的成果数据或夸大的职责描述`
+- 禁止出现任何虚构的项目经历、伪造的成果数据或夸大的职责描述
+- 【角色边界红线】背景资料中仅证明候选人参与了分析、调研、需求整理、测试或评估的，严禁改写成"我主导开发""我搭建系统""我训练模型"等主导性表述
+- 涉及 Claude Code、Dify、技术同学或外部工具完成的部分，必须保留真实角色边界，不得将其成果代入第一人称写成"我做的"；可以写"我参与定义了需求""我验收了效果""我评估了输出质量"等符合PM角色的表述`
     : `你是资深AI产品经理面试教练。针对每道面试题，给出${showFw ? '三' : '两'}部分内容：
 ${showFw ? `1. 答题思路：识别题型，给出核心框架和切入维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和常见坑，不写完整答案）
 2. ` : '1. '}改写版本：优化候选人原有回答，保留其核心思路，使表达更清晰专业（第一人称，100-200字）
@@ -4429,10 +4434,10 @@ function renderScore(data) {
           ${imp.why ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;padding-left:14px"><span style="color:var(--warning);font-weight:500">为什么重要：</span>${escHtml(imp.why)}</div>` : ''}
           ${imp.how ? `<div style="font-size:12px;color:var(--primary);padding-left:14px"><span style="font-weight:500">下一次怎么补：</span>${escHtml(imp.how)}</div>` : ''}
         </div>`).join('')}
-      ${data.key_line ? `
+      ${(data.key_line || data.resume_key_line) ? `
       <div style="margin-top:14px;padding:10px 14px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);border-radius:var(--radius-sm)">
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">💬 本轮最该补的一句话</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line)}"</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line)}"</div>
       </div>` : ''}
     </div>` : ''}
     <div id="score-ref-section"></div>`;

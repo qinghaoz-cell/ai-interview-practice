@@ -2342,6 +2342,8 @@ async function startInterview() {
     ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : src === 'product'
     ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4)
+    : src === 'aiproduct'
+    ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, hasVoiceInput: false, rewrites: [] };
 
@@ -2690,7 +2692,7 @@ const AIPRODUCT_CAT_PROMPTS = {
 【出题要求】：
 - 背景真实，不要预设步骤数量，不要写"某公司有X个流程"
 - 问题要具体（"重复问题多但高风险问题不能全自动化"比"效率低"好）
-- 总字数80-120字
+- 总字数120-180字
 
 从以下场景中随机选一个出题（措辞可自然变化，不要照抄）：
 场景A：电商/零售客服。每天大量用户咨询订单、退款、售后，标准问题重复多，但赔付纠纷等高风险问题又不能完全自动化。
@@ -2713,7 +2715,7 @@ const AIPRODUCT_CAT_PROMPTS = {
 【出题要求】：
 - 要说明知识在哪里（内部文档、手册、合同、医疗数据等）
 - 痛点要具体（"员工找不到答案就问人，但答案可能过时"比"效率低"好）
-- 总字数80-120字
+- 总字数120-180字
 
 从以下场景中随机选一个出题（措辞可自然变化，不要照抄）：
 场景A：企业内部知识库。公司有大量制度文档、项目报告、审批流程说明，员工经常找不到准确答案，问同事效率低，文档版本也容易过期。
@@ -2736,7 +2738,7 @@ const AIPRODUCT_CAT_PROMPTS = {
 【出题要求】：
 - 流程要说清楚主要环节（但不要写"共X步"）
 - 痛点要指向具体瓶颈，不要泛泛说"效率低"
-- 总字数90-120字
+- 总字数120-180字
 
 从以下场景中随机选一个出题（措辞可自然变化，不要照抄）：
 场景A：B2B销售线索跟进。B2B销售团队的线索来自官网表单、活动报名、广告投放等渠道，流程包括线索获取、客户分级、跟进、报价、合同签署等环节。销售不知道优先跟进谁，客户画像整理耗时，成交周期长。
@@ -2759,7 +2761,7 @@ const AIPRODUCT_CAT_PROMPTS = {
 【出题要求】：
 - 要说清楚用户在哪个场景下与AI持续交互
 - 问题聚焦在"用户不信任输出""不知道下一步""上下文断裂"等交互层问题
-- 总字数80-120字
+- 总字数120-180字
 
 从以下场景中随机选一个出题（措辞可自然变化，不要照抄）：
 场景A：AI数据分析助手。用户提问，AI生成图表和结论，但用户不太信任AI的分析结论，也不知道下一步该怎么操作或继续追问。
@@ -2782,7 +2784,7 @@ const AIPRODUCT_CAT_PROMPTS = {
 【出题要求】：
 - 要说清楚为什么这个场景风险高（涉及资金、健康、法律、用户权益等）
 - 不要要求候选人给"完整解决方案"，聚焦在"如何让AI可信可控"
-- 总字数85-120字
+- 总字数120-180字
 
 从以下场景中随机选一个出题（措辞可自然变化，不要照抄）：
 场景A：金融理财建议。金融App想用AI帮用户解释理财产品和风险，但AI回答如果不准确，可能误导用户做出错误投资判断，还涉及监管合规。
@@ -3010,8 +3012,8 @@ async function startAIProductInterview() {
   }
 
   const pref = getPref();
-  // aiproduct: 4-5 rounds across all system types
-  const maxTurns = pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4;
+  // aiproduct: normal=4 (focused), strict=5, hell=6 (deep drill)
+  const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -3459,7 +3461,7 @@ ${kbCtx}` : '';
     // Hard cap: user already answered the last question — end without another API call
     if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
 
-    const softEndAP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+    const softEndAP = pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4;
     const turnNoteAP = turn < softEndAP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖产品化方案。`
       : turn === softEndAP
@@ -3988,6 +3990,8 @@ async function generateScore() {
     ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，比如"我会先把场景收敛到X类用户，原因是…"，不要解释原因）`
     : isResumeSpec
     ? `\n- resume_key_line: 字符串，本轮最该补的一句话（面试口语，≤40字，直接给可以原话用的表达，必须体现真实角色边界或核心判断，比如"这个项目里我主要负责需求拆解和AI输出质量评估，不负责底层模型开发"或"我当时的核心判断是先验证用户是否采纳AI建议，而不是先追求功能完整"，不要解释原因）`
+    : isAIProduct
+    ? `\n- ai_product_key_line: 字符串，本轮最该补的一句话（面试口语，≤45字，直接给可以原话用的表达，沉淀AI产品化核心判断，比如"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP"或"AI不是替代人工判断，而是先做识别、检索和建议，高风险动作保留确认"，不要解释原因）`
     : '';
   const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数${_keyLineSpec}`;
 
@@ -4209,9 +4213,9 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。
 
 【第1轮 — 主问题】给出三部分：
-1. 答题思路：输出完整8步框架（业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底），每步1句说明考察重点或常见盲点（共5-7条，每条不超过35字）
+1. 答题思路：输出完整8步框架（业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→指标→风险兜底），每步1句说明考察重点或常见盲点（共6-8条，每条不超过35字）
 2. 改写版本：补全候选人回答缺失的链路环节（第一人称口语，120-200字，"我会先……然后……最后……"）
-3. 参考答案：满分级别，覆盖完整6要素：业务目标→用户任务→AI介入→产品机制→指标→风险（200-280字，第一人称口语）
+3. 参考答案：满分级别，200-280字，第一人称口语。不要机械逐条列8步，但必须自然覆盖：业务目标、用户任务、任务链路、AI介入点、数据/系统、产品机制、指标、风险兜底。
 
 【第2轮起 — 追问】给出三部分（不要输出完整8步框架，只针对该轮追问主题）：
 1. 答题思路：识别该追问考察的单点主题，输出对应的单点思路链（3-5条，每条不超过30字）
@@ -4434,10 +4438,10 @@ function renderScore(data) {
           ${imp.why ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;padding-left:14px"><span style="color:var(--warning);font-weight:500">为什么重要：</span>${escHtml(imp.why)}</div>` : ''}
           ${imp.how ? `<div style="font-size:12px;color:var(--primary);padding-left:14px"><span style="font-weight:500">下一次怎么补：</span>${escHtml(imp.how)}</div>` : ''}
         </div>`).join('')}
-      ${(data.key_line || data.resume_key_line) ? `
+      ${(data.key_line || data.resume_key_line || data.ai_product_key_line) ? `
       <div style="margin-top:14px;padding:10px 14px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.35);border-radius:var(--radius-sm)">
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">💬 本轮最该补的一句话</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line)}"</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line || data.ai_product_key_line)}"</div>
       </div>` : ''}
     </div>` : ''}
     <div id="score-ref-section"></div>`;

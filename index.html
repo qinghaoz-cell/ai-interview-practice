@@ -822,11 +822,6 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <div class="pcat-name">功能价值与取舍</div>
           <div class="pcat-desc">功能价值判断、方案取舍决策、产品差异化，考察PM核心决策力</div>
         </div>
-        <div class="pcat-card" data-cat="realqa" onclick="selectPCat(this,'realqa')" style="border-color:#10b981;background:#10b98118">
-          <div class="pcat-icon">📋</div>
-          <div class="pcat-name">真题模式</div>
-          <div class="pcat-desc">模拟真实面经风格，短平快追问，围绕项目深挖和AI能力判断</div>
-        </div>
       </div>
 
       <!-- Mode & Start -->
@@ -2352,13 +2347,10 @@ async function startInterview() {
   const pref = getPref();
   // maxTurns per source/category (same logic as the originating start functions)
   const _isMetricsRepeat = src === 'product' && (subCategory === 'metrics' || subCategory === 'aiknowledge');
-  const _isRealQARepeat = src === 'product' && subCategory === 'realqa';
   const maxTurns = src === 'kb-spec'
     ? (pref.difficulty === 'hell' ? 4 : 3)
     : _isMetricsRepeat
     ? (pref.difficulty === 'hell' ? 4 : 3)
-    : _isRealQARepeat
-    ? (pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4)
     : src === 'resume-spec'
     ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : src === 'product'
@@ -2491,7 +2483,6 @@ const PRODUCT_CAT_LABELS = {
   aipm: '🤖 AI产品专项',
   aiknowledge: '🧠 AI产品认知',
   functradeoff: '⚖️ 功能价值与取舍',
-  realqa: '📋 真题模式',
 };
 
 const PRODUCT_CAT_PROMPTS = {
@@ -2678,25 +2669,6 @@ Kimi vs 豆包 / Notion AI vs 飞书AI / Cursor vs Windsurf / Dify vs Coze / WPS
 - 考察PM判断思路和决策依据，不考察技术细节
 - 题目不超过80字，直接输出题目，不加前缀`,
 
-  realqa: `你是AI产品经理面试官。参考真实面试风格，生成一道短平快的追问题。
-
-真题模式特点：
-- 题目简短、直接，像面试官随口问出来的
-- 不一定有完整业务背景，经常是某个概念或判断的追问
-- 围绕AI PM实际面试高频考点：项目深挖 / AI能力选型 / 产品判断 / 数据分析 / 行业认知
-- 有时候是"你刚才说XXX，那YYY是什么意思"这样的追问风格
-
-从以下方向随机选一个角度出一题，每次选不同的方向：
-▸ AI项目深挖：业务规则怎么制定的 / Prompt怎么设计调优 / RAG知识库怎么构建 / Multi-Agent为什么不用单Agent / 评测体系怎么搭建 / bad case怎么归因处理
-▸ AI能力选型判断：这个场景用RAG还是直接LLM / Prompt够用还是需要SFT / Agent需要哪些工具 / 什么时候触发工具调用 / 幻觉是检索问题还是生成问题
-▸ 产品判断：需求优先级怎么排 / 用户体验和成本怎么平衡 / 什么功能适合A/B test / 功能上线后差评多怎么排查 / PRD重点写什么
-▸ 数据分析：核心指标是什么 / 某指标下滑怎么拆解 / 成功指标怎么定义才不是虚荣指标 / 人评和机评各适合什么
-▸ AI产品认知：好的AI交互是什么 / LUI vs GUI的取舍 / 基座模型怎么选 / AI产品的信任感怎么建立
-
-出题要求：
-- 题目≤40字，越短越好，不加前缀，不加背景故事
-- 不出需要写代码的题
-- 像面试官随口一问，有时候不完整，让候选人自己界定范围`,
 };
 
 let _pCat = 'design';      // 当前选中的产品分类
@@ -2705,12 +2677,12 @@ function selectPCat(el, cat) {
   _pCat = cat;
   document.querySelectorAll('#pcat-grid .pcat-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题', functradeoff:'⚖️ 功能价值与取舍题', realqa:'📋 真题模式' };
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题', functradeoff:'⚖️ 功能价值与取舍题' };
   document.getElementById('pcat-title').textContent = titles[cat] || cat;
 }
 
 
-const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge','functradeoff','realqa'];
+const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge','functradeoff'];
 
 async function startProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
@@ -2719,10 +2691,8 @@ async function startProductInterview() {
   await new Promise(r => setTimeout(r, 80));
   showInterviewConfig(true);
 
-  // Resolve random category (exclude realqa from random pool — it's explicitly selected)
-  const _randomPool = PRODUCT_ALL_CATS.filter(c => c !== 'realqa');
   const resolvedCat = _pCat === 'random'
-    ? _randomPool[Math.floor(Math.random() * _randomPool.length)]
+    ? PRODUCT_ALL_CATS[Math.floor(Math.random() * PRODUCT_ALL_CATS.length)]
     : _pCat;
   const catLabel = PRODUCT_CAT_LABELS[resolvedCat] || resolvedCat;
 
@@ -2738,13 +2708,10 @@ async function startProductInterview() {
 
   // Launch interview directly
   const pref = getPref();
-  // Rounds by category: metrics/aiknowledge = 2-3; realqa = 3-5 (short real interview style); others = 4-6
+  // Rounds by category: metrics/aiknowledge = 2-3 (data analysis), others = 4-6 (full product chain)
   const _isMetricsCat = resolvedCat === 'metrics' || resolvedCat === 'aiknowledge';
-  const _isRealQA = resolvedCat === 'realqa';
   const maxTurns = _isMetricsCat
     ? (pref.difficulty === 'hell' ? 4 : 3)
-    : _isRealQA
-    ? (pref.difficulty === 'normal' ? 3 : pref.difficulty === 'hell' ? 5 : 4)
     : (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5);
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
@@ -3108,36 +3075,6 @@ const PRODUCT_CAT_FOLLOWUP = {
 - 变现路径：你说这个行业有机会，但商业化逻辑是什么？用户凭什么付钱？
 
 严禁追问：要求候选人背诵技术定义、算法原理、具体代码`,
-
-  realqa: `【追问方向 — 真题模式】追问要短、直接、有压迫感，像真实面试官随口追一句，每轮只追最薄的1个点：
-
-【AI项目深挖类题（候选人提到自己项目时）】
-- "你说的这个业务规则，是谁定的？判断依据是什么？"
-- "调Prompt过程里遇到的最大问题是什么，怎么解的？"
-- "bad case你是怎么发现的，处理流程是什么？"
-- "评测标准是谁定的？你用人评还是机评，为什么？"
-
-【AI能力选型类题】
-- "为什么用RAG，不直接给模型Prompt？"
-- "Prompt够用还是需要SFT？你的判断依据是什么？"
-- "这里的幻觉，你怎么判断是检索问题还是生成问题？"
-- "Agent需要Memory吗？跨会话上下文怎么处理？"
-
-【产品判断类题】
-- "需求优先级你是怎么排的，依据是什么？"
-- "这个功能适合做A/B test吗？为什么？"
-- "差评集中，你会从哪里开始排查？"
-- "成功指标怎么定义，才不是虚荣指标？"
-
-【认知类题】
-- "能不能用你自己的项目说明这个判断？"
-- "如果有人说你的判断是错的，他的反驳是什么？"
-- "这个结论的局限在哪里？什么情况下不成立？"
-
-追问规则：
-- 每轮≤30字，越短越好
-- 不要夸候选人，不要引导，直接问
-- 不问代码实现、算法参数`,
 };
 
 // ── 简历专项：基于项目产品思维复盘维度的专项追问逻辑 ──
@@ -4221,7 +4158,6 @@ async function generateScore() {
     metrics:      '根据题目子类型选维度——异常诊断[口径确认/影响范围/分层拆解/原因假设/验证方法/修复动作]；留存增长[留存目标/用户分层/关键行为/激活链路/增长实验/留存验证]；指标体系[产品目标/北极星指标/行为指标/体验指标/AI质量指标/风险指标/优先级]',
     aipm:         '业务场景、AI介入点、AI能力边界、产品机制、指标验证、风险兜底、替代方案差异',
     aiknowledge:  '根据题目子类型选维度——技术认知[概念准确性/适用场景/具体案例/边界风险/产品选型]；产品观[观点清晰度/用户视角/业务视角/例子支撑/边界条件]；行业趋势[趋势判断/驱动因素/场景落地/商业化路径/风险约束/PM启示]',
-    realqa:       '根据实际题目类型灵活选维度——AI技术判断题[概念准确性/项目结合/选型理由/边界与风险/评估方式]；产品判断题[切题程度/判断依据/用户视角/业务权衡/可执行性]；认知类题[观点清晰/案例支撑/反驳测试/局限认知]',
   };
   // Product: per-category Round-1 framework for scoring evaluation
   // For multi-subtype categories the value is a full instruction the model should follow
@@ -4231,7 +4167,6 @@ async function generateScore() {
     metrics:      '按实际题目子类型选框架：\n· 数据异常诊断 →「确认口径 → 定位影响范围 → 分用户/渠道/版本/场景 → 拆核心链路 → 提出原因假设 → 验证数据 → 修复动作 → 复盘监控」\n· 留存与增长 →「定义留存目标 → 用户分层 → 找关键行为 → 拆新手/激活/复访链路 → 提出增长抓手 → 设计实验 → 观察留存与质量指标」\n· 指标体系与优先级 →「明确产品目标 → 北极星/目标指标 → 行为指标 → 体验指标 → AI质量指标（如适用）→ 风险指标 → 优先级判断」',
     aipm:         '框架为「业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异」',
     aiknowledge:  '按实际题目子类型选框架：\n· 技术认知类 →「概念理解 → 适用场景 → 产品例子 → 局限风险 → 选型判断」\n· 产品观类 →「观点判断 → 背后原因 → 用户/业务视角 → 具体例子 → 边界条件 → 面试表达」\n· 行业趋势类 →「趋势判断 → 驱动因素 → 典型场景 → 商业化路径 → 风险约束 → 对AI PM的启示」',
-    realqa:       '真题模式不固定框架。根据题目类型灵活选：若AI技术追问 →「概念理解是否准确 → 能否结合项目举例 → 选型理由是否清晰 → 边界和失败情况」；若产品判断追问 →「判断是否有据 → 用户/业务视角 → 权衡取舍意识」；若认知追问 →「观点清晰度 → 案例支撑 → 反驳意识」',
   };
   const _productR1Framework = _productR1FrameworkMap[subCategory] || _productR1FrameworkMap.design;
   const _impDims = isAIProduct
@@ -4311,8 +4246,8 @@ ${subCategory === 'metrics' ? `
 - 根据实际题目子类型使用对应框架：异常诊断→「口径确认→影响范围→分层拆解→原因假设→验证方法→修复动作→复盘监控」；留存增长→「留存目标→用户分层→关键行为→激活链路→增长实验→质量指标」；指标体系→「产品目标→北极星指标→行为指标→体验指标→AI质量指标（如适用）→风险指标→优先级判断」
 - improvements的dimension字段只使用对应子类型的数据分析维度（如：口径确认/影响范围/分层拆解/原因假设/验证方法/修复动作/复盘监控/留存目标/用户分层/关键行为/激活链路/增长实验/质量指标/北极星指标/行为指标/体验指标/AI质量指标/风险指标/指标优先级），禁止使用"场景收敛/用户痛点/产品机制/MVP优先级/AI介入点/任务链路"等产品设计维度
 - 第1轮若未完整覆盖全部分析步骤，不重扣；重点看候选人是否体现了正确的分析方向和结构化思维` : ''}
-${(subCategory === 'aiknowledge' || subCategory === 'realqa') ? `
-【aiknowledge/realqa题额外规则】：这类题目考察AI技术认知、产品判断或行业观点，不是产品设计链路题，严禁按"收敛场景→用户痛点→产品机制→MVP"框架扣分。
+${subCategory === 'aiknowledge' ? `
+【aiknowledge题额外规则】：这类题目考察AI技术认知、产品判断或行业观点，不是产品设计链路题，严禁按"收敛场景→用户痛点→产品机制→MVP"框架扣分。
 评分重点改为：
 - 技术认知类追问（RAG/Prompt/Agent/评测/选型等）：①概念理解是否准确 ②能否结合真实项目解释 ③选型理由是否说清（为什么选这个，不选另一个）④能否说清边界/失败情况/评估方式
 - 产品判断类追问：①判断是否有据可依 ②是否有具体案例支撑 ③是否考虑了局限和边界条件

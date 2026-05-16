@@ -4200,8 +4200,8 @@ ${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI P
       `【第${n}轮改写版本】\n...\n\n【第${n}轮参考答案】\n...`;
   }).join('\n\n');
 
-  const prompt = `以下是面试各轮的问题和候选人回答，共${pairs.length}轮。请严格按顺序输出全部${pairs.length}轮内容，每轮都要有${showFw ? '三' : '两'}部分，不得截断、不得省略任何一轮。${kbBlock}
-格式严格如下（不加任何多余文字，必须输出所有${pairs.length}轮）：
+  const prompt = `以下是面试各轮的问题和候选人回答，共${pairs.length}轮。必须严格按顺序完整输出全部${pairs.length}轮，每轮${showFw ? '三' : '两'}部分，任何一轮都不得缺少或省略。如果内容较长，请控制每部分字数（答题思路≤150字，改写版本≤180字，参考答案≤250字），确保所有轮次都能输出完毕。${kbBlock}
+格式严格如下（每个标记单独占一行，标记后紧接内容，必须完整输出全部${pairs.length}轮）：
 
 ${allRoundsFormat}
 
@@ -4213,9 +4213,14 @@ ${questionsText}`;
   const markerToEl = {};
   pairs.forEach((_, i) => {
     const fwM  = `【第${i+1}轮答题思路】`;
+    const fwAlt = `【第${i+1}轮答题】`; // variant the AI sometimes outputs
     const impM = `【第${i+1}轮改写版本】`;
     const ansM = `【第${i+1}轮参考答案】`;
-    if (showFw) { allMarkers.push(fwM); markerToEl[fwM] = `ref-fw-${i}`; }
+    if (showFw) {
+      allMarkers.push(fwM, fwAlt);
+      markerToEl[fwM] = `ref-fw-${i}`;
+      markerToEl[fwAlt] = `ref-fw-${i}`; // map variant to same element
+    }
     allMarkers.push(impM, ansM);
     markerToEl[impM] = `ref-imp-${i}`;
     markerToEl[ansM] = `ref-ans-${i}`;
@@ -4227,9 +4232,15 @@ ${questionsText}`;
     if (start === -1) return null; // not yet seen
     const afterStart = start + marker.length;
     let end = text.length;
+    // Stop at any recognized marker
     for (const m of allMarkers) {
       const pos = text.indexOf(m, afterStart);
       if (pos !== -1 && pos < end) end = pos;
+    }
+    // Also stop at ANY 【第N轮 pattern (catches variant markers like 【第5轮答题】)
+    const nextRound = text.slice(afterStart).search(/【第\d+轮/);
+    if (nextRound !== -1 && afterStart + nextRound < end) {
+      end = afterStart + nextRound;
     }
     return text.slice(afterStart, end).trimStart();
   }

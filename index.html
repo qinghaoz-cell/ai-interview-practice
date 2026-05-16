@@ -4032,7 +4032,7 @@ ${_impFieldSpec}
 - dimension字段优先使用：完整链路/任务链路/AI介入点/产品机制/指标验证/风险兜底/可信度判断/MVP优先级/AI能力取舍/数据质量 等对应该轮实际考察主题
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}
+{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}`
     : isProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 

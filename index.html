@@ -2332,7 +2332,17 @@ async function startInterview() {
 
   // Reset state
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  // maxTurns per source/category (same logic as the originating start functions)
+  const _isMetricsRepeat = src === 'product' && (subCategory === 'metrics' || subCategory === 'aiknowledge');
+  const maxTurns = src === 'kb-spec'
+    ? (pref.difficulty === 'hell' ? 4 : 3)
+    : _isMetricsRepeat
+    ? (pref.difficulty === 'hell' ? 4 : 3)
+    : src === 'resume-spec'
+    ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 6 : 4)
+    : src === 'product'
+    ? (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4)
+    : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, hasVoiceInput: false, rewrites: [] };
 
   // Reset UI
@@ -2630,7 +2640,11 @@ async function startProductInterview() {
 
   // Launch interview directly
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  // Rounds by category: metrics/aiknowledge = 2-3 (data analysis), others = 4-5 (full product chain)
+  const _isMetricsCat = resolvedCat === 'metrics' || resolvedCat === 'aiknowledge';
+  const maxTurns = _isMetricsCat
+    ? (pref.difficulty === 'hell' ? 4 : 3)
+    : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -2996,7 +3010,8 @@ async function startAIProductInterview() {
   }
 
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  // aiproduct: 4-5 rounds across all system types
+  const maxTurns = pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -3117,7 +3132,8 @@ ${ctx}`;
 
   // Launch interview
   const pref = getPref();
-  const maxTurns = pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5;
+  // resume-spec: 4-6 rounds for deep project drill (role, decisions, metrics, bad case, reflection, fit)
+  const maxTurns = pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 6 : 4;
   STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'resume-spec', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
@@ -3548,7 +3564,7 @@ ${diffDesc[pref.difficulty] || diffDesc.strict}
 严格遵守：
 - 第1轮：只把面试题原文提出来，等待候选人回答，绝对不能自己分析或作答
 - 第2轮起：只问1个追问，不超过40字，不拆分成多个子问题
-- 结束时机：${pref.difficulty === 'normal' ? '第4~5轮' : pref.difficulty === 'hell' ? '第5~6轮' : '第4~5轮'}之间自行判断，核心考察点已覆盖则结束，还有关键盲点则再追1轮
+- 结束时机：${isMetricsCatP ? (pref.difficulty === 'hell' ? '第3~4轮' : '第2~3轮') : (pref.difficulty === 'normal' ? '第4~5轮' : pref.difficulty === 'hell' ? '第4~5轮' : '第3~4轮')}之间自行判断；${isMetricsCatP ? '数据题只追分析框架、根因定位、优化行动三步，不追产品机制或MVP' : '核心考察点已覆盖则结束，还有关键盲点则再追1轮'}
 - 决定结束时：必须立即输出"[INTERVIEW_END]"，然后用1句话点评，之后不再提问
 - 禁止：自己回答题目、给出分析框架、拆出A/B/C选项、"好的""别急着说"等废话前缀
 - 每次回复必须只含1个问号

@@ -3973,6 +3973,13 @@ async function endInterviewFlow() {
   document.getElementById('start-btn').style.display = 'none';
   document.getElementById('reconfig-btn').style.display = 'none';
 
+  // Insert end marker into chat
+  const endMarker = document.createElement('div');
+  endMarker.style.cssText = 'text-align:center;padding:18px 0 10px;display:flex;align-items:center;gap:10px';
+  endMarker.innerHTML = '<div style="flex:1;height:1px;background:var(--border)"></div><span style="white-space:nowrap;font-size:12px;color:var(--text-muted);font-weight:600;letter-spacing:.4px">🏁 面试已结束，正在生成评分…</span><div style="flex:1;height:1px;background:var(--border)"></div>';
+  document.getElementById('chat-messages').appendChild(endMarker);
+  scrollChat();
+
   // Generate score (start-btn stays hidden during scoring to prevent double-start)
   await generateScore();
 
@@ -4211,12 +4218,13 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const section = document.getElementById('score-ref-section');
   if (!section) return;
 
-  // Extract Q&A pairs (skip [INTERVIEW_END] messages)
+  // Extract Q&A pairs: only AI messages that have an actual user reply after them
+  // (skips the final closing comment which has no user turn following it)
   const pairs = [];
   for (let i = 0; i < messages.length; i++) {
     const m = messages[i];
-    if (m.role === 'ai' && !m.content.includes('[INTERVIEW_END]')) {
-      pairs.push({ question: m.content, userAnswer: messages[i + 1]?.content || '' });
+    if (m.role === 'ai' && !m.content.includes('[INTERVIEW_END]') && messages[i + 1]?.role === 'user') {
+      pairs.push({ question: m.content, userAnswer: messages[i + 1].content });
     }
   }
   if (pairs.length === 0) return;

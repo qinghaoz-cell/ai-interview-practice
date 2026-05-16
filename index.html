@@ -4141,20 +4141,16 @@ ${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI P
 ...
 
 ` : '';
-  const prompt = `以下是面试各轮的问题和候选人回答，请按顺序输出每轮的${showFw ? '三' : '两'}部分内容。${kbBlock}
-格式严格如下（不加任何多余文字）：
+  const allRoundsFormat = pairs.map((_, i) => {
+    const n = i + 1;
+    return (showFw ? `【第${n}轮答题思路】\n...\n\n` : '') +
+      `【第${n}轮改写版本】\n...\n\n【第${n}轮参考答案】\n...`;
+  }).join('\n\n');
 
-${fwFormatExample}【第1轮改写版本】
-...
+  const prompt = `以下是面试各轮的问题和候选人回答，共${pairs.length}轮。请严格按顺序输出全部${pairs.length}轮内容，每轮都要有${showFw ? '三' : '两'}部分，不得截断、不得省略任何一轮。${kbBlock}
+格式严格如下（不加任何多余文字，必须输出所有${pairs.length}轮）：
 
-【第1轮参考答案】
-...
-
-${fwFormatExample2}【第2轮改写版本】
-...
-
-【第2轮参考答案】
-...
+${allRoundsFormat}
 
 面试内容：
 ${questionsText}`;

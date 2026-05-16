@@ -3063,7 +3063,7 @@ async function startAIProductInterview() {
     : _apCat;
   const catLabel = AIPRODUCT_CAT_LABELS[resolvedCat] || resolvedCat;
 
-  toast(`AI 生成「${catLabel}」落地题中…`, 'info');
+  toast('AI 生成「AI能力产品化专项」落地题中…', 'info');
   let question = '';
   try {
     const genPrompt = AIPRODUCT_CAT_PROMPTS[resolvedCat] + getRecentQsBlock('aiproduct', resolvedCat);
@@ -4079,6 +4079,8 @@ async function generateScore() {
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明（7个专项维度）：
 - score: 整体综合分（整数1-10，综合第1轮链路完整度 + 各追问单点深度）
 - system_type: 系统类型识别分（整数1-10，第1轮是否正确识别了AI系统类型和适用场景）
+- actual_system_type: 字符串，本题实际所属系统类型（任务型/知识型/流程型/交互型/可信型），必须填写
+- system_type_reveal: 字符串（100字以内），揭示类型分析——说明：1）本题实际属于什么类型，核心判断依据是什么；2）候选人识别是否准确，如有偏差说明偏在哪里；3）下次看到类似业务场景应该抓哪个关键信号来判断类型
 - biz_scenario: 业务场景与用户任务分（整数1-10，第1轮是否说清楚了业务目标和用户核心任务）
 - ai_capability: AI能力匹配分（整数1-10，整体对话中AI能力选择是否合理，有无用错方向）
 - product_mechanism: 产品机制转化分（整数1-10，AI能力是否落地为具体产品功能和交互设计）
@@ -4098,7 +4100,7 @@ ${_impFieldSpec}
 - dimension字段优先使用：完整链路/任务链路/AI介入点/产品机制/指标验证/风险兜底/可信度判断/MVP优先级/AI能力取舍/数据质量 等对应该轮实际考察主题
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}`
+{"score":7,"system_type":8,"actual_system_type":"任务型","system_type_reveal":"本题属于任务型：核心判断依据是业务有明确的标准化任务（工单分类+回复），输入输出清晰，错误可追溯。候选人识别基本准确，但偏向把它描述成流程型——区别在于任务型是单次请求完成一个任务，流程型是多步骤审批流转。下次看到"高重复、单任务、有标准答案"的业务场景，优先判断任务型。","biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}`
     : isProduct
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -4560,6 +4562,11 @@ function renderScore(data) {
         <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line || data.ai_product_key_line)}"</div>
       </div>` : ''}
     </div>` : ''}
+    ${(isAIProduct && data.system_type_reveal) ? `
+    <div class="score-section" style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:var(--radius);padding:14px 16px;margin-top:8px">
+      <div class="score-section-title" style="color:var(--primary);margin-bottom:8px">🔍 系统类型揭示</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.65">${escHtml(data.system_type_reveal)}</div>
+    </div>` : ''}
     <div id="score-ref-section"></div>`;
 }
 
@@ -4881,7 +4888,7 @@ function renderSpecHistory(source, listElId) {
     return;
   }
 
-  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知' };
+  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
   const prefix = 'sh' + source.replace(/[^a-z0-9]/gi, '');
 
@@ -4985,7 +4992,7 @@ function renderHistory() {
   }
 
   const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项' };
-  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 
   listEl.innerHTML = history.map((h, i) => {

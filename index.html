@@ -3563,6 +3563,7 @@ ${voiceNote}
 - 还有1个关键盲点未深挖 → 可再追最后1轮，之后必须结束`
       : `\n【⚠️ 必须结束】已完成第 ${turn} 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评候选人表现。禁止再提任何问题。`;
 
+    const isMetricsCatP = STATE.interview.subCategory === 'metrics' || STATE.interview.subCategory === 'aiknowledge';
     const catFollowup = PRODUCT_CAT_FOLLOWUP[STATE.interview.subCategory] || PRODUCT_CAT_FOLLOWUP.design;
 
     const prodSystem = `你是AI产品经理面试官。你只提问，绝对不回答问题，不分析题目，不给出解题框架或答案思路。

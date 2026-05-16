@@ -3329,7 +3329,12 @@ ${kbCtx}` : '';
 
   // ── 知识点专项：独立 prompt，考察记忆与理解，不追问深度 ──
   if (STATE.interview.source === 'kb-spec') {
-    const kbTurnNote = turn === 0 ? '' : turn < 2
+    if (turn === 0) {
+      addMessage('ai', question);
+      STATE.interview.messages.push({ role: 'ai', content: question });
+      return;
+    }
+    const kbTurnNote = turn < 2
       ? `\n【当前进度】已完成第 ${turn} 轮，继续检验。`
       : turn === 2
       ? `\n【结束判断】已完成第 ${turn} 轮。候选人基本掌握则直接输出"[INTERVIEW_END]"+1句简短点评；有明显记忆盲点则最多再问1轮。`
@@ -3350,9 +3355,7 @@ ${kbCtx}` : '';
 
 - 知识点题目：${question}`;
 
-    const kbApiMessages = turn === 0
-      ? [{ role: 'user', content: '开始' }]
-      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+    const kbApiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
 
     addMessage('ai', '');
     const kbLastEl = document.getElementById('chat-messages').lastElementChild;
@@ -3390,8 +3393,14 @@ ${kbCtx}` : '';
 
   // ── AI能力产品化专项：独立 prompt ──
   if (STATE.interview.source === 'aiproduct') {
+    // Turn 0: present question directly — no API call, prevents self-answering
+    if (turn === 0) {
+      addMessage('ai', question);
+      STATE.interview.messages.push({ role: 'ai', content: question });
+      return;
+    }
     const softEndAP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
-    const turnNoteAP = turn === 0 ? '' : turn < softEndAP
+    const turnNoteAP = turn < softEndAP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖产品化方案。`
       : turn === softEndAP
       ? `\n【结束判断】已完成第 ${turn} 轮追问。请评估：
@@ -3416,9 +3425,7 @@ ${voiceNote}
 - 系统类型：${catName}
 - 面试题：${question}`;
 
-    const apApiMessages = turn === 0
-      ? [{ role: 'user', content: '开始' }]
-      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+    const apApiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
 
     addMessage('ai', '');
     const apLastEl = document.getElementById('chat-messages').lastElementChild;
@@ -3460,8 +3467,13 @@ ${voiceNote}
 
   // ── 产品思维专项：独立 prompt，按题型动态追问 ──
   if (STATE.interview.source === 'product') {
+    if (turn === 0) {
+      addMessage('ai', question);
+      STATE.interview.messages.push({ role: 'ai', content: question });
+      return;
+    }
     const softEndP = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
-    const turnNoteP = turn === 0 ? '' : turn < softEndP
+    const turnNoteP = turn < softEndP
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖。`
       : turn === softEndP
       ? `\n【结束判断】已完成第 ${turn} 轮追问（目标区间）。请评估：
@@ -3495,9 +3507,7 @@ ${catFollowup}
 
 - 面试题：${question}`;
 
-    const prodApiMessages = turn === 0
-      ? [{ role: 'user', content: '开始' }]
-      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+    const prodApiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
 
     addMessage('ai', '');
     const prodLastEl = document.getElementById('chat-messages').lastElementChild;
@@ -3540,8 +3550,13 @@ ${catFollowup}
 
   // ── 简历专项：独立 prompt，围绕项目产品思维复盘维度追问 ──
   if (STATE.interview.source === 'resume-spec') {
+    if (turn === 0) {
+      addMessage('ai', question);
+      STATE.interview.messages.push({ role: 'ai', content: question });
+      return;
+    }
     const softEndRS = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
-    const turnNoteRS = turn === 0 ? '' : turn < softEndRS
+    const turnNoteRS = turn < softEndRS
       ? `\n【当前进度】已完成第 ${turn} 轮追问，继续深挖项目产品思维。`
       : turn === softEndRS
       ? `\n【结束判断】已完成第 ${turn} 轮追问。请评估：
@@ -3568,9 +3583,7 @@ ${RESUME_SPEC_FOLLOWUP}
 
 - 面试题：${question}`;
 
-    const rsApiMessages = turn === 0
-      ? [{ role: 'user', content: '开始' }]
-      : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+    const rsApiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
 
     addMessage('ai', '');
     const rsLastEl = document.getElementById('chat-messages').lastElementChild;
@@ -3677,9 +3690,13 @@ ${STATE.interview.source === 'resume-spec' ? `
 
 判断标准：如果一个问题需要候选人写过代码才能答，就不要问。` : ''}`;
 
-  const apiMessages = turn === 0
-    ? [{ role: 'user', content: '开始' }]
-    : messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+  // Turn 0 for general branch: present question directly
+  if (turn === 0) {
+    addMessage('ai', question);
+    STATE.interview.messages.push({ role: 'ai', content: question });
+    return;
+  }
+  const apiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
 
   addMessage('ai', '');
   const lastMsgEl = document.getElementById('chat-messages').lastElementChild;

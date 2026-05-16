@@ -3939,7 +3939,7 @@ async function endInterviewFlow() {
 }
 
 async function generateScore() {
-  const { messages, question, hasVoiceInput, source } = STATE.interview;
+  const { messages, question, hasVoiceInput, source, subCategory } = STATE.interview;
   if (messages.length < 2) return;
 
   const dialog = messages.map(m => `${m.role === 'ai' ? '[面试官]' : '[候选人]'} ${m.content}`).join('\n\n');
@@ -3957,12 +3957,29 @@ async function generateScore() {
   const isProduct = source === 'product';
 
   // Module-specific improvement dimensions
+  // Product: per-category dimensions so scoring feedback matches the actual question type
+  const _productImpDimsMap = {
+    design:       '主动收敛场景、用户痛点、产品机制、MVP优先级、指标验证、风险兜底',
+    functradeoff: '目标清晰度、替代方案、用户价值、业务价值、成本风险、取舍理由、验证指标',
+    metrics:      '指标口径、指标拆解、用户分层、链路定位、原因假设、验证方法、优化动作',
+    aipm:         '业务场景、AI介入点、AI能力边界、产品机制、指标验证、风险兜底、替代方案差异',
+    aiknowledge:  '概念准确性、适用场景、具体案例、边界风险、产品判断',
+  };
+  // Product: per-category Round-1 framework for scoring evaluation
+  const _productR1FrameworkMap = {
+    design:       '收敛场景 → 切入理由 → 用户痛点 → 产品机制 → MVP → 指标/风险',
+    functradeoff: '目标 → 候选方案 → 用户价值 → 业务价值 → 成本/风险 → 取舍结论 → 验证指标',
+    metrics:      '确认口径 → 拆指标 → 分用户/场景/渠道 → 找异常环节 → 原因假设 → 验证方法 → 优化动作',
+    aipm:         '业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异',
+    aiknowledge:  '概念理解 → 适用场景 → 具体例子 → 局限风险 → 产品判断',
+  };
+  const _productR1Framework = _productR1FrameworkMap[subCategory] || _productR1FrameworkMap.design;
   const _impDims = isAIProduct
     ? '系统类型识别、业务目标与用户任务、任务链路、AI能力匹配、数据/系统接入、产品机制/功能形态、指标/评测、风险兜底、方案取舍、口语表达'
     : isResumeSpec
     ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
     : isProduct
-    ? '主动收敛场景、切入理由、用户痛点、AI能力匹配、产品机制、MVP优先级、指标验证、风险兜底、口语化表达'
+    ? (_productImpDimsMap[subCategory] || _productImpDimsMap.design)
     : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
   const _keyLineSpec = isProduct
     ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，比如"我会先把场景收敛到X类用户，原因是…"，不要解释原因）`
@@ -3999,7 +4016,7 @@ ${_impFieldSpec}
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
-- 第1轮（主问题/开放题）：重点看候选人能否主动收敛场景、给出切入理由、讲清用户痛点、匹配AI能力、说出产品机制、有MVP意识和指标/风险。第1轮如果只讲功能点而没有完整链路，需在对应维度扣分。
+- 第1轮（主问题/开放题）：按本题题型评估，框架为「${_productR1Framework}」。第1轮如果只讲功能点而没有覆盖该框架主要步骤，需在对应维度扣分。
 - 第2轮起（追问）：不要求候选人重复完整框架，只考察当轮追问主题的单点深度。追问轮次不因"没有完整链路"而扣分。
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：

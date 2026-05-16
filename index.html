@@ -3373,7 +3373,6 @@ ${kbCtx}` : '';
   if (STATE.interview.source === 'kb-spec') {
     if (turn === 0) {
       addMessage('ai', question);
-      STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
     const kbTurnNote = turn < 2
@@ -3438,7 +3437,6 @@ ${kbCtx}` : '';
     // Turn 0: present question directly — no API call, prevents self-answering
     if (turn === 0) {
       addMessage('ai', question);
-      STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
     // Hard cap: user already answered the last question — end without another API call
@@ -3521,7 +3519,6 @@ ${voiceNote}
   if (STATE.interview.source === 'product') {
     if (turn === 0) {
       addMessage('ai', question);
-      STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
     if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
@@ -3616,7 +3613,6 @@ ${catFollowup}
   if (STATE.interview.source === 'resume-spec') {
     if (turn === 0) {
       addMessage('ai', question);
-      STATE.interview.messages.push({ role: 'ai', content: question });
       return;
     }
     if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
@@ -3769,7 +3765,7 @@ ${STATE.interview.source === 'resume-spec' ? `
   // Turn 0 for general branch: present question directly
   if (turn === 0) {
     addMessage('ai', question);
-    STATE.interview.messages.push({ role: 'ai', content: question });
+
     return;
   }
   const apiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));

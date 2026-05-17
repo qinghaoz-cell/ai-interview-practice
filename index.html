@@ -3703,20 +3703,30 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
       '- 指标判断："你说这个方向有机会，用什么指标验证这个判断？北极星指标是什么？"\n' +
       '- MVP收敛："如果只让你做一个最小MVP，你会先做什么，为什么？"';
   } else if (type === 'product') {
-    followupDir = '追问方向（围绕产品思维深挖，选最切中要害的1个）：\n' +
-      '- 场景收敛："你说要优化X，具体针对哪类用户在什么场景下？为什么是这个而不是其他？"\n' +
-      '- 方案取舍："有没有其他方案？你是怎么做取舍的？砍掉了什么，为什么？"\n' +
-      '- MVP判断："如果只有两周，你优先做什么？最小可验证假设是什么？"\n' +
-      '- 指标验证："核心指标是什么？怎么证明真的产生了价值？"\n' +
-      '- 留存/增长深挖："用户不来的真正原因是什么？你怎么找到关键行为再设计实验验证？"\n' +
-      '- 差异化逻辑："和竞品比，你的差异化核心是什么？用户为什么选你而不是别人？"';
+    const companyRef = cfg && cfg.company ? cfg.company : '这家公司';
+    const jdSnippet = cfg && cfg.jd ? cfg.jd.slice(0, 120) : '';
+    const jdHint = jdSnippet ? '（JD要求中提到：' + jdSnippet + '）' : '';
+    followupDir = '【岗位产品思维追问要求】每一个追问必须注入岗位/业务上下文，绝不问通用产品题。\n' +
+      '追问方向（选最切中候选人缺口的1个，必须带入公司/业务/JD信息）：\n' +
+      '- 业务目标绑定："你为什么在' + companyRef + '这个业务场景下优先做这个？和业务目标的关系是什么？"\n' +
+      '- JD能力落地："JD里提到了XX能力要求' + jdHint + '，你这个思路怎么体现了这个能力？"\n' +
+      '- 指标与业务关联："如果这是' + companyRef + '的产品，你会先看哪个指标？为什么这个指标在这个业务里最重要？"\n' +
+      '- 竞争差异岗位化："' + companyRef + '在这个方向上的核心竞争壁垒是什么？你的方案怎么强化它？"\n' +
+      '- 资源约束现实感："在' + companyRef + '这个阶段，如果研发资源只够做一个功能，你会选哪个？理由是什么？"\n' +
+      '- 用户场景岗位化："' + companyRef + '的核心用户是谁？你说的这个场景在他们的日常使用里频率有多高？"';
   } else if (type === 'aiproduct') {
     followupDir = AIPRODUCT_INTERVIEW_SYSTEM + '\n\n【岗位绑定要求】追问时必须结合目标岗位的具体业务场景，不脱离实际业务讨论抽象AI能力。';
   } else if (type === 'migration') {
-    followupDir = RESUME_SPEC_FOLLOWUP + '\n\n【岗位迁移追问方向（优先用以下方向）】：\n' +
-      '- "这段经历里，哪个决策最能体现你适合这个岗位？"\n' +
-      '- "你认为从你当前背景到这个岗位，最大的能力gap是什么？你会怎么弥补？"\n' +
-      '- "这个岗位最看重XX能力，你有没有类似经历可以说明？"';
+    const targetRole = cfg && cfg.title ? cfg.title : '目标岗位';
+    const companyRef2 = cfg && cfg.company ? cfg.company : '这家公司';
+    followupDir = '【简历岗位迁移追问要求】聚焦"迁移价值"，不做项目深挖。追问必须围绕：这段经历能不能说服面试官你能胜任' + targetRole + '。\n' +
+      '追问方向（选最能暴露迁移说服力缺口的1个）：\n' +
+      '- 职责对应："你说的这段经历，和' + targetRole + '的哪个核心职责最直接对应？能具体说吗？"\n' +
+      '- 能力迁移说服力："面试官为什么应该相信你的这段经历能让你胜任' + companyRef2 + '的' + targetRole + '？说服我。"\n' +
+      '- 相似与不同："你之前做的和' + targetRole + '要做的，最大的相似点和最大的不同点各是什么？"\n' +
+      '- 经验落地："如果明天就入职' + companyRef2 + '，你的这段经历里哪个判断/方法可以直接用？哪些需要重新学？"\n' +
+      '- gap识别："你认为你目前最缺' + targetRole + '的哪个能力？你打算怎么补？"\n' +
+      '- 说服面试官："如果我是你的面试官，我最可能对哪个点有疑虑？你会怎么回应？"';
   }
   return '你是一名资深AI产品经理面试官，正在对候选人进行「目标岗位专项」面试练习。\n' +
     (turnNote ? turnNote + '\n' : '') +
@@ -4826,6 +4836,28 @@ async function generateScore() {
     : '';
   const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数${_keyLineSpec}`;
 
+  // Extra scoring criteria injected for job-target interviews
+  const _jtCfgForScore = isJobTarget ? (getJobTargetConfig() || {}) : null;
+  const _jtJobInfo = _jtCfgForScore ? ((_jtCfgForScore.company || '') + (_jtCfgForScore.title ? ' · ' + _jtCfgForScore.title : '')) : '';
+  const _jtJdSnip = _jtCfgForScore && _jtCfgForScore.jd ? _jtCfgForScore.jd.slice(0, 200) : '';
+  const jtScoringNoteProd = (isJobTarget && (jtTopType === 'product' || jtTopType === 'business'))
+    ? `\n\n【目标岗位专项额外评分要求${_jtJobInfo ? '（岗位：' + _jtJobInfo + '）' : ''}】：\n` +
+      '在评分和improvements字段中，额外关注以下岗位绑定维度（这是普通产品思维专项没有的考察点）：\n' +
+      '- 业务目标契合度：候选人的产品判断是否与目标公司/业务方向对齐，而不是泛泛的产品思维\n' +
+      '- JD能力落地' + (_jtJdSnip ? '（JD摘要：' + _jtJdSnip + '）' : '') + '：回答是否体现了JD里要求的具体能力，能否说清产品思路在这个岗位的落地方式\n' +
+      '- 业务特异性：追问时是否能把通用框架与目标公司的业务场景、竞争态势、用户群体结合，而不是给一个对任何公司都成立的答案\n' +
+      '如候选人回答完全没有提及岗位/公司/业务的具体上下文，improvements中加一条维度："岗位业务绑定"，issue写具体缺失，how写如何把判断与目标岗位挂钩。'
+    : '';
+  const jtScoringNoteRS = (isJobTarget && jtTopType === 'migration')
+    ? `\n\n【目标岗位专项·简历岗位迁移额外评分要求${_jtJobInfo ? '（岗位：' + _jtJobInfo + '）' : ''}】：\n` +
+      '这不是简历专项的项目深挖，而是考察"迁移价值"——候选人能否说服面试官他的经历让他胜任目标岗位。额外关注：\n' +
+      '- 职责对应清晰度：候选人是否明确说出哪段经历对应目标岗位的哪个具体职责，而不是模糊类比\n' +
+      '- 能力迁移说服力：候选人的判断/方法论/经历是否真的能迁移到目标岗位，论据是否充分\n' +
+      '- gap识别与补充策略：候选人是否主动识别了自身与目标岗位要求的差距，并有具体弥补思路\n' +
+      '- 面试官视角：候选人是否站在面试官角度主动回应潜在疑虑，而不是只陈述经历\n' +
+      '如候选人只做项目深挖而没有迁移论证，improvements中加维度："迁移价值论证"，issue写"只介绍了经历但没有说明与目标岗位的对应关系和迁移理由"，how写如何补充。'
+    : '';
+
   const system = scoreAsAIP
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -4895,7 +4927,7 @@ ${subCategory === 'aiknowledge' ? `
 - 第1轮主要看：是否给出了清晰的核心判断 + 是否有具体案例支撑；不要求结构完整，短平快的判断题本来就不是完整链路题` : ''}
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["第1轮主动收敛到新人用户场景，切入有说服力","追问MVP时优先级判断清晰"],"summary":"主问题场景收敛好，指标验证和风险兜底还需深挖","improvements":[{"dimension":"MVP优先级","issue":"这一轮考的是MVP取舍，你提了3个方向但没有说为什么先做这一个","why":"MVP优先级决定了验证速度和资源效率","how":"补充'我会先做X，因为它验证核心假设且开发成本最低'"}],"key_line":"我会先把场景收敛到刚入职三个月的新人，因为他们需求最集中、路径最清晰"}`
+{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["第1轮主动收敛到新人用户场景，切入有说服力","追问MVP时优先级判断清晰"],"summary":"主问题场景收敛好，指标验证和风险兜底还需深挖","improvements":[{"dimension":"MVP优先级","issue":"这一轮考的是MVP取舍，你提了3个方向但没有说为什么先做这一个","why":"MVP优先级决定了验证速度和资源效率","how":"补充'我会先做X，因为它验证核心假设且开发成本最低'"}],"key_line":"我会先把场景收敛到刚入职三个月的新人，因为他们需求最集中、路径最清晰"}${jtScoringNoteProd}`
     : scoreAsRS
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的简历项目经历深挖考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -4916,7 +4948,7 @@ ${_impFieldSpec}
 - 如果候选人完全没有提到任何验证逻辑（既无量化数据也无任何轻量验证说明），则正常扣分，并提示补充。
 
 示例格式：
-{"score":6,"relevance":7,"logical_structure":6,"product_depth":5,"ai_depth":null,"persuasiveness":6,"highlights":["角色边界清晰"],"summary":"项目描述偏功能，缺产品判断和指标验证","improvements":[{"dimension":"关键决策","issue":"只描述了做了什么功能，没有说明当时为什么这样设计而不是其他方案","why":"决策依据体现产品判断力，是面试核心考察点","how":"补充'当时我们考虑了A/B两个方案，选A的原因是…'"},{"dimension":"指标/结果","issue":"没有任何数据或验证方式说明项目是否有效","why":"AI PM需要数据意识，结果是项目价值的证明","how":"哪怕是定性反馈或AB测试结论都可以，说明验证逻辑"}],"resume_key_line":"这个项目里我主要负责需求拆解和验收，AI输出质量评估由我定义标准，底层开发是技术同学完成的"}`
+{"score":6,"relevance":7,"logical_structure":6,"product_depth":5,"ai_depth":null,"persuasiveness":6,"highlights":["角色边界清晰"],"summary":"项目描述偏功能，缺产品判断和指标验证","improvements":[{"dimension":"关键决策","issue":"只描述了做了什么功能，没有说明当时为什么这样设计而不是其他方案","why":"决策依据体现产品判断力，是面试核心考察点","how":"补充'当时我们考虑了A/B两个方案，选A的原因是…'"},{"dimension":"指标/结果","issue":"没有任何数据或验证方式说明项目是否有效","why":"AI PM需要数据意识，结果是项目价值的证明","how":"哪怕是定性反馈或AB测试结论都可以，说明验证逻辑"}],"resume_key_line":"这个项目里我主要负责需求拆解和验收，AI输出质量评估由我定义标准，底层开发是技术同学完成的"}${jtScoringNoteRS}`
     : `你是一位公正专业的面试评估专家，专注于AI产品经理岗位。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
@@ -5073,6 +5105,18 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const isJobTargetRef = STATE.interview?.source === 'job-target';
   const jtSubRef = isJobTargetRef ? (STATE.interview?.subCategory || '') : '';
   const productRefSubCat = STATE.interview?.subCategory || '';
+  // Job-target context for reference answer coaching
+  const _jtRefCfg = isJobTargetRef ? (getJobTargetConfig() || {}) : null;
+  const _jtRefJobInfo = _jtRefCfg ? ((_jtRefCfg.company || '') + (_jtRefCfg.title ? ' · ' + _jtRefCfg.title : '')) : '';
+  const _jtRefJdSnip = _jtRefCfg && _jtRefCfg.jd ? _jtRefCfg.jd.slice(0, 250) : '';
+  const _jtRefDept = _jtRefCfg && _jtRefCfg.deptDesc ? _jtRefCfg.deptDesc.slice(0, 150) : '';
+  const _jtRefCtxBlock = isJobTargetRef && (_jtRefJobInfo || _jtRefJdSnip || _jtRefDept)
+    ? '\n\n【目标岗位信息（务必结合进改写和参考答案）】\n' +
+      (_jtRefJobInfo ? '目标岗位：' + _jtRefJobInfo + '\n' : '') +
+      (_jtRefJdSnip ? 'JD核心要求（摘要）：' + _jtRefJdSnip + '\n' : '') +
+      (_jtRefDept ? '业务方向：' + _jtRefDept + '\n' : '') +
+      '——改写版本和参考答案中，产品判断、指标选取、方案取舍都必须与上述岗位/业务背景挂钩，不要给适用于任何公司的通用答案。'
+    : '';
   const system = (isAIProductRef || jtSubRef === 'aiproduct')
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。
 
@@ -5138,8 +5182,28 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 2. 改写版本：保留候选人原意，只补强该追问主题的单点深度（第一人称口语，80-150字，不补完整框架）
 3. 参考答案：该追问主题的高质量单点口语回答（100-180字，不重复完整产品方案）
 
-核心原则：第1轮训练"收敛场景→MVP单点"，追问训练"单点深挖讲清判断"。参考答案不给完整产品矩阵，先给一个最小可验证的单点。改写版本必须保留候选人原意，不要强行补成完整框架。所有输出保持面试口语节奏，不要写成文章。`)
-    : (isResumeSpecRef || jtSubRef === 'migration')
+核心原则：第1轮训练"收敛场景→MVP单点"，追问训练"单点深挖讲清判断"。参考答案不给完整产品矩阵，先给一个最小可验证的单点。改写版本必须保留候选人原意，不要强行补成完整框架。所有输出保持面试口语节奏，不要写成文章。${_jtRefCtxBlock}`)
+    : (jtSubRef === 'migration')
+    ? `你是资深AI产品经理面试教练，专注「目标岗位迁移」面试练习。这类题不是项目深挖，而是考察候选人能否把自身经历说清楚、说服面试官他能胜任目标岗位。针对每道面试题，给出三部分内容：
+
+1. 答题思路：识别追问方向（职责对应/能力迁移/经验落地/gap分析/说服面试官/相似与不同），给出核心答题维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和候选人常见坑）
+
+2. 改写版本：聚焦迁移价值论证，保留候选人原有思路，补强"为什么这段经历适合这个岗位"的论证层（第一人称口语，100-180字），严格规则见下
+
+3. 参考答案：满分级别的面试口语版（160-240字，第一人称口语）。核心结构：经历快速定位（1-2句）→ 迁移价值论证（这段经历和目标岗位哪个职责最对应，判断/方法可以直接用）→ 差异承认与应对（坦诚说哪里不同，有什么补充计划）→ 说服面试官的收尾（为什么应该相信我），严格规则见下
+
+【核心原则 — 迁移价值，不是项目复述】：
+- 参考答案不是在讲"项目做了什么"，而是在论证"为什么做过这个→能胜任那个"
+- 改写版本和参考答案必须有明确的"迁移论证句"，如："这段经历里我做的XX，和目标岗位要求的XX本质上是一件事：都是……"
+- 不要回避gap，而是主动说清楚，并给出具体补充计划（如"这部分我正在通过XX方式弥补"）
+- 参考答案结尾必须站在面试官视角，主动回应最可能的疑虑${_jtRefCtxBlock}
+
+【知识库尊重规则 — 必须遵守】：
+- 改写版本和参考答案必须严格基于【候选人真实背景资料】中的真实信息，不得虚构项目名称、数据或职责
+- 背景资料中没有的数据一律不得编造，可写"[待补充：具体数据]"
+- 背景资料中没有明确说明候选人负责的工作，不得代为声明是"我做的"
+- 禁止出现任何虚构的项目经历、伪造的成果数据或夸大的职责描述`
+    : isResumeSpecRef
     ? `你是资深AI产品经理面试教练，专注简历项目经历深挖练习。针对每道面试题，给出三部分内容：
 
 1. 答题思路：识别追问方向（角色边界/项目价值/取舍/指标/bad case/岗位迁移/优化方向），给出核心答题维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和候选人常见坑）
@@ -5186,14 +5250,18 @@ ${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI P
 - 候选人没有做过的事、资料中没有的数据，不要编造`;
 
   const questionsText = pairs.map((p, i) => {
-    const roundLabel = isAIProductRef
+    const roundLabel = (isAIProductRef || jtSubRef === 'aiproduct')
       ? (i === 0
         ? `【第1轮 — 主问题（需评估完整AI产品化链路）】`
         : `【第${i+1}轮 — 追问（只需针对该追问主题的单点深度，不重复完整框架）】`)
-      : isProductRef
+      : (isProductRef || jtSubRef === 'product' || jtSubRef === 'business')
       ? (i === 0
-        ? `【第1轮 — 主问题（开放题，评估完整产品思维链路）】`
-        : `【第${i+1}轮 — 追问（只需针对该追问主题的单点深度，不重复完整框架）】`)
+        ? `【第1轮 — 主问题（开放题，评估完整产品思维链路，注意结合目标岗位业务场景）】`
+        : `【第${i+1}轮 — 追问（只需针对该追问主题的单点深度，追问必须关联目标岗位，不重复完整框架）】`)
+      : jtSubRef === 'migration'
+      ? (i === 0
+        ? `【第1轮 — 主问题（考察迁移价值：这段经历如何对应目标岗位职责）】`
+        : `【第${i+1}轮 — 追问（聚焦迁移论证：职责对应/能力迁移/gap分析/说服面试官）】`)
       : `【第${i+1}轮问题】`;
     return `${roundLabel}\n问题：${p.question}\n候选人回答：${p.userAnswer}`;
   }).join('\n\n');

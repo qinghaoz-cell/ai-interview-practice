@@ -5004,6 +5004,7 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     const attemptNo = history.filter(h => h.question === qShort).length + 1;
     data._attemptNo = attemptNo; // attach to score data for renderScore
     renderScore(data);
+    generateDiagnosis(data, messages, question); // fire async, don't await — streams in parallel with history save
     history.unshift({
       id: hId,
       time: new Date().toLocaleString('zh-CN'),
@@ -5388,6 +5389,89 @@ ${questionsText}`;
   }
 }
 
+async function generateDiagnosis(scoreData, messages, question) {
+  const section = document.getElementById('score-diagnosis-section');
+  if (!section) return;
+
+  const diagnosisMarkers = ['【整体表现】', '【答得好的地方】', '【真正扣分点】', '【下次可以怎么说】', '【对系统反馈的校准】'];
+  const sectionConfig = [
+    { marker: '【整体表现】', icon: '📊', color: 'var(--text)', bg: 'transparent', border: 'none', padding: '0 0 12px 0' },
+    { marker: '【答得好的地方】', icon: '💡', color: '#10b981', bg: 'rgba(16,185,129,.08)', border: '1px solid rgba(16,185,129,.2)', padding: '10px 14px' },
+    { marker: '【真正扣分点】', icon: '🎯', color: 'var(--warning)', bg: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', padding: '10px 14px' },
+    { marker: '【下次可以怎么说】', icon: '🗣️', color: 'var(--primary)', bg: 'rgba(99,102,241,.08)', border: '1px solid rgba(99,102,241,.22)', padding: '10px 14px' },
+    { marker: '【对系统反馈的校准】', icon: '⚖️', color: 'var(--text-muted)', bg: 'transparent', border: 'none', padding: '10px 0 0 0' },
+  ];
+
+  // Render skeleton with placeholders for each section
+  section.innerHTML = `
+    <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:16px 18px;margin-top:12px">
+      <div style="font-size:13px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:6px">🎙️ 面试官诊断</div>
+      ${sectionConfig.map((s, i) => `
+        <div style="margin-bottom:${i < sectionConfig.length - 1 ? '12px' : '0'}">
+          <div style="font-size:11px;font-weight:700;color:${s.color === 'var(--text)' ? 'var(--text-muted)' : s.color};text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">${s.icon} ${s.marker.replace(/【|】/g, '')}</div>
+          <div id="diag-${i}" style="font-size:13px;color:var(--text);line-height:1.72;white-space:pre-wrap;background:${s.bg};border:${s.border};border-radius:${s.bg !== 'transparent' ? 'var(--radius-sm)' : '0'};padding:${s.padding}"><span style="color:var(--text-muted)">生成中…</span></div>
+        </div>`).join('')}
+    </div>`;
+
+  // Build context for the coaching prompt
+  const dialog = messages.map(function(m) { return (m.role === 'ai' ? '[面试官]' : '[候选人]') + ' ' + m.content; }).join('\n\n');
+  const scoreSummary = JSON.stringify({
+    score: scoreData.score,
+    summary: scoreData.summary,
+    highlights: scoreData.highlights,
+    improvements: scoreData.improvements,
+    key_line: scoreData.key_line || scoreData.resume_key_line || scoreData.ai_product_key_line || null,
+  }, null, 2);
+
+  const system = '你是一名经验丰富的AI产品经理面试教练，正在帮候选人做真实面试复盘。你的风格：直接、具体、像真人教练在帮他复盘，不像自动评分器。\n\n' +
+    '输出格式严格如下，每个标记单独占一行，标记后紧接内容：\n\n' +
+    '【整体表现】\n' +
+    '（一句话判断这轮回答处于什么水平，要具体到"哪步做对了，哪步没做"，禁止说"表现不错"这类空话；如果是多次练习同一题，可以对比进步或退步）\n\n' +
+    '【答得好的地方】\n' +
+    '（2-3条，必须具体说我做对了什么、什么地方体现出产品/AI/迁移判断力，禁止说"有思考""有结构"这类泛语；每条以"- "开头）\n\n' +
+    '【真正扣分点】\n' +
+    '（1-3条最关键的问题，不要堆太多。优先判断：第一轮框架是否没搭好？场景是否没收敛？功能是否太大？指标/风险是否没讲？表达是否太散？替代方案差异是否没说透？每条以"- "开头，要直接点名具体轮次和具体问题）\n\n' +
+    '【下次可以怎么说】\n' +
+    '（给一段可以直接口语复用的优化版回答，120-200字，像真实面试时候说的话，不要太书面，不要用段落标题，直接给回答内容）\n\n' +
+    '【对系统反馈的校准】\n' +
+    '（如果系统评分偏严/偏宽、改进项不准确、参考答案过度理想化/过度技术化/与真实项目不符，直接指出；如果系统反馈基本准确，写"系统反馈基本准确，无需校准。"不要强行找茬）';
+
+  const prompt = '面试题目：' + question + '\n\n面试对话：\n' + dialog + '\n\n系统自动评分结果（供参考和校准）：\n' + scoreSummary;
+
+  // Accumulate streamed text and parse sections
+  let accumulated = '';
+  function onDiagStream(text) {
+    accumulated = text;
+    diagnosisMarkers.forEach(function(marker, i) {
+      const start = text.indexOf(marker);
+      if (start === -1) return;
+      const afterStart = start + marker.length;
+      let end = text.length;
+      diagnosisMarkers.forEach(function(m2) {
+        const pos = text.indexOf(m2, afterStart);
+        if (pos !== -1 && pos < end) end = pos;
+      });
+      const content = text.slice(afterStart, end).trimStart();
+      const el = document.getElementById('diag-' + i);
+      if (el && content) el.textContent = content;
+    });
+  }
+
+  try {
+    await callClaude([{ role: 'user', content: prompt }], system, onDiagStream, 0, false, false, 1000);
+    // Final pass to ensure all sections are filled
+    onDiagStream(accumulated);
+    // Replace any still-loading sections
+    diagnosisMarkers.forEach(function(marker, i) {
+      const el = document.getElementById('diag-' + i);
+      if (el && el.querySelector('span')) el.textContent = '（无内容）';
+    });
+  } catch (e) {
+    section.innerHTML = '';
+    console.warn('[面试官诊断生成失败]', e.message);
+  }
+}
+
 function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
@@ -5454,6 +5538,12 @@ function renderScore(data) {
       <div class="score-section-title" style="color:var(--primary);margin-bottom:8px">🔍 系统类型揭示</div>
       <div style="font-size:13px;color:var(--text);line-height:1.65">${escHtml(data.system_type_reveal)}</div>
     </div>` : ''}
+    <div id="score-diagnosis-section">
+      <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:16px 18px;margin-top:12px">
+        <div style="font-size:13px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">🎙️ 面试官诊断</div>
+        <div id="diagnosis-content" style="font-size:13px;color:var(--text-muted);text-align:center;padding:8px 0">⏳ 生成中…</div>
+      </div>
+    </div>
     <div id="score-ref-section"></div>`;
 }
 

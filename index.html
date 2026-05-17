@@ -5013,7 +5013,7 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     const attemptNo = history.filter(h => h.question === qShort).length + 1;
     data._attemptNo = attemptNo; // attach to score data for renderScore
     renderScore(data);
-    generateDiagnosis(data, messages, question); // fire async, don't await — streams in parallel with history save
+    generateDiagnosis(data, messages, question, hId); // fire async, don't await — streams in parallel with history save
     history.unshift({
       id: hId,
       time: new Date().toLocaleString('zh-CN'),
@@ -5401,7 +5401,7 @@ ${questionsText}`;
   }
 }
 
-async function generateDiagnosis(scoreData, messages, question) {
+async function generateDiagnosis(scoreData, messages, question, hId) {
   const section = document.getElementById('score-diagnosis-section');
   if (!section) return;
 
@@ -5542,7 +5542,35 @@ async function generateDiagnosis(scoreData, messages, question) {
       const el = document.getElementById('diag-' + i);
       if (el && el.querySelector('span')) el.textContent = '（无内容）';
     });
+    // Save parsed diagnosis to history record
+    if (hId) {
+      function extractDiag(text, marker) {
+        var start = text.indexOf(marker);
+        if (start === -1) return '';
+        var afterStart = start + marker.length;
+        var end = text.length;
+        diagnosisMarkers.forEach(function(m2) {
+          var pos = text.indexOf(m2, afterStart);
+          if (pos !== -1 && pos < end) end = pos;
+        });
+        return text.slice(afterStart, end).trim();
+      }
+      var diag = {
+        overall:     extractDiag(accumulated, '【整体表现】'),
+        strengths:   extractDiag(accumulated, '【答得好的地方】'),
+        issues:      extractDiag(accumulated, '【真正扣分点】'),
+        nextTime:    extractDiag(accumulated, '【下次可以怎么说】'),
+        calibration: extractDiag(accumulated, '【对系统反馈的校准】'),
+      };
+      var hist = getHistory();
+      var rec = hist.find(function(h) { return h.id === hId; });
+      if (rec && (diag.overall || diag.issues)) {
+        rec.diagnosis = diag;
+        LS.set('history', hist.slice(0, 100));
+      }
+    }
   } catch (e) {
+    if (e?.aborted || e?.message === 'ABORTED') return;
     section.innerHTML = '';
     console.warn('[面试官诊断生成失败]', e.message);
   }
@@ -5885,6 +5913,27 @@ function deleteHistory(id) {
   toast('已删除', 'info');
 }
 
+function buildDiagnosisHtml(h) {
+  var d = h.diagnosis;
+  if (!d || (!d.overall && !d.issues)) return '';
+  var rows = [
+    d.overall     ? { icon: '📊', label: '整体表现',         color: 'var(--text-muted)', text: d.overall } : null,
+    d.strengths   ? { icon: '💡', label: '答得好的地方',     color: '#10b981',           text: d.strengths } : null,
+    d.issues      ? { icon: '🎯', label: '真正扣分点',       color: 'var(--warning)',     text: d.issues } : null,
+    d.nextTime    ? { icon: '🗣️', label: '下次可以怎么说',   color: 'var(--primary)',     text: d.nextTime } : null,
+    d.calibration ? { icon: '⚖️', label: '对系统反馈的校准', color: 'var(--text-muted)', text: d.calibration } : null,
+  ].filter(Boolean);
+  return '<div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px">' +
+    '<div style="font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">🎙️ 面试官诊断</div>' +
+    rows.map(function(r) {
+      return '<div style="margin-bottom:8px">' +
+        '<div style="font-size:11px;font-weight:600;color:' + r.color + ';margin-bottom:3px">' + r.icon + ' ' + r.label + '</div>' +
+        '<div style="font-size:12px;color:var(--text);line-height:1.65;white-space:pre-wrap">' + escHtml(r.text) + '</div>' +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
 function buildHistoryDialog(h) {
   let userIdx = 0;
   return (h.messages || []).map(function(m) {
@@ -5988,6 +6037,7 @@ function renderSpecHistory(source, listElId) {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
+        ${buildDiagnosisHtml(h)}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
@@ -6101,6 +6151,7 @@ function renderHistory() {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
+        ${buildDiagnosisHtml(h)}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">

@@ -6037,7 +6037,8 @@ function renderSpecHistory(source, listElId) {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
-        ${buildDiagnosisHtml(h)}
+        <div id="specdiag-${h.id}">${buildDiagnosisHtml(h)}</div>
+        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="specdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ 生成面试官诊断</button></div>` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
@@ -6151,7 +6152,8 @@ function renderHistory() {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
-        ${buildDiagnosisHtml(h)}
+        <div id="hdiag-${h.id}">${buildDiagnosisHtml(h)}</div>
+        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="hdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ 生成面试官诊断</button></div>` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">
@@ -6160,6 +6162,136 @@ function renderHistory() {
       </div>
     </div>`;
   }).join('');
+}
+
+async function genHistoryDiagnosis(hId) {
+  // Hide buttons for both history views; show skeleton in the right slot
+  ['specdiag-btn-' + hId, 'hdiag-btn-' + hId].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">⏳ 面试官诊断生成中…</div>';
+  });
+
+  const hist = getHistory();
+  const rec = hist.find(function(h) { return h.id === hId; });
+  if (!rec || !rec.messages || !rec.messages.length) {
+    ['specdiag-btn-' + hId, 'hdiag-btn-' + hId].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '<div style="color:var(--danger);font-size:12px">无对话记录，无法生成</div>';
+    });
+    return;
+  }
+
+  // Build diagnosis markers and streaming logic inline (same as generateDiagnosis but renders into history slots)
+  const diagnosisMarkers = ['【整体表现】', '【答得好的地方】', '【真正扣分点】', '【下次可以怎么说】', '【对系统反馈的校准】'];
+  const sectionConfig = [
+    { marker: '【整体表现】',         icon: '📊', label: '整体表现',         color: 'var(--text-muted)' },
+    { marker: '【答得好的地方】',     icon: '💡', label: '答得好的地方',     color: '#10b981' },
+    { marker: '【真正扣分点】',       icon: '🎯', label: '真正扣分点',       color: 'var(--warning)' },
+    { marker: '【下次可以怎么说】',   icon: '🗣️', label: '下次可以怎么说',   color: 'var(--primary)' },
+    { marker: '【对系统反馈的校准】', icon: '⚖️', label: '对系统反馈的校准', color: 'var(--text-muted)' },
+  ];
+
+  // Render skeleton in both possible slots
+  const skeletonHtml = '<div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px">' +
+    '<div style="font-size:11px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">🎙️ 面试官诊断</div>' +
+    sectionConfig.map(function(s, i) {
+      return '<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:' + s.color + ';margin-bottom:3px">' + s.icon + ' ' + s.label + '</div>' +
+        '<div id="hd-' + hId + '-' + i + '" style="font-size:12px;color:var(--text-muted);line-height:1.65;white-space:pre-wrap">生成中…</div></div>';
+    }).join('') + '</div>';
+
+  ['specdiag-' + hId, 'hdiag-' + hId].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = skeletonHtml;
+  });
+  // Hide buttons now that skeleton is shown
+  ['specdiag-btn-' + hId, 'hdiag-btn-' + hId].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  const dialog = (rec.messages || []).map(function(m) {
+    return (m.role === 'ai' ? '[面试官]' : '[候选人]') + ' ' + m.content;
+  }).join('\n\n');
+  const scoreData = rec.score || {};
+  const scoreSummary = JSON.stringify({
+    score: scoreData.score, summary: scoreData.summary,
+    highlights: scoreData.highlights, improvements: scoreData.improvements,
+    key_line: scoreData.key_line || scoreData.resume_key_line || scoreData.ai_product_key_line || null,
+  }, null, 2);
+  const question = (rec.question || '').slice(0, 300);
+
+  const _src = rec.source || '';
+  const _subCat = rec.subCategory || '';
+  const _jtT = '';
+  const moduleCtx = '【本次练习模块信息】\n模块来源：' +
+    (_src === 'product' ? '产品思维专项' : _src === 'aiproduct' ? 'AI能力产品化专项' : _src === 'resume-spec' ? '简历专项' : _src === 'kb-spec' ? '知识库/AI认知专项' : _src === 'job-target' ? '目标岗位专项' : _src) +
+    '\n' + (_subCat ? '子分类：' + _subCat + '\n' : '') + '请结合以上信息，先判断具体题型和轮次，再选扣分点。\n';
+
+  // Reuse the same system prompt as generateDiagnosis
+  const system = '你是一名经验丰富的AI产品经理面试教练，正在帮候选人做真实面试复盘。你的风格：直接、具体、像真人教练在帮他复盘，不像自动评分器。\n\n' +
+    '【诊断第一步 — 必须先识别】在输出任何评价之前，先在内心确认：\n1. 这道题属于哪个模块？\n2. 具体是哪个子题型？\n3. 当前是第几轮？\n\n' +
+    '输出格式严格如下，每个标记单独占一行，标记后紧接内容：\n\n' +
+    '【整体表现】\n（一句话判断，具体到"哪步做对了，哪步没做到"，禁止空话）\n\n' +
+    '【答得好的地方】\n（2-3条具体好点，禁止说"有思考"，每条以"- "开头）\n\n' +
+    '【真正扣分点】\n（先标注[模块→子题型→第N轮]，再列1-3条最关键问题，从该子题型对应维度里选，每条以"- "开头）\n\n' +
+    '【下次可以怎么说】\n（120-200字口语优化版，可直接复用；改进方案题聚焦一个核心机制；商业数字必须用假设框架）\n\n' +
+    '【对系统反馈的校准】\n（如有偏差直接指出；无问题写"系统反馈基本准确，无需校准。"）';
+
+  const prompt = moduleCtx + '\n面试题目：' + question + '\n\n面试对话：\n' + dialog + '\n\n系统自动评分结果（供参考和校准）：\n' + scoreSummary;
+
+  let accumulated = '';
+  function onStream(text) {
+    accumulated = text;
+    diagnosisMarkers.forEach(function(marker, i) {
+      const start = text.indexOf(marker);
+      if (start === -1) return;
+      const afterStart = start + marker.length;
+      let end = text.length;
+      diagnosisMarkers.forEach(function(m2) {
+        const pos = text.indexOf(m2, afterStart);
+        if (pos !== -1 && pos < end) end = pos;
+      });
+      const content = text.slice(afterStart, end).trimStart();
+      // Update both possible history slots
+      ['hd-' + hId + '-' + i].forEach(function(elId) {
+        const el = document.getElementById(elId);
+        if (el && content) el.textContent = content;
+      });
+    });
+  }
+
+  try {
+    await callClaude([{ role: 'user', content: prompt }], system, onStream, 0, false, false, 1000);
+    onStream(accumulated);
+    // Save to history
+    function extractD(text, marker) {
+      var s = text.indexOf(marker); if (s === -1) return '';
+      var a = s + marker.length, e = text.length;
+      diagnosisMarkers.forEach(function(m2) { var p = text.indexOf(m2, a); if (p !== -1 && p < e) e = p; });
+      return text.slice(a, e).trim();
+    }
+    var diag = {
+      overall:     extractD(accumulated, '【整体表现】'),
+      strengths:   extractD(accumulated, '【答得好的地方】'),
+      issues:      extractD(accumulated, '【真正扣分点】'),
+      nextTime:    extractD(accumulated, '【下次可以怎么说】'),
+      calibration: extractD(accumulated, '【对系统反馈的校准】'),
+    };
+    var h2 = getHistory();
+    var rec2 = h2.find(function(x) { return x.id === hId; });
+    if (rec2) { rec2.diagnosis = diag; LS.set('history', h2.slice(0, 100)); }
+    // Re-render the diagnosis slot from saved data for consistent display
+    ['specdiag-' + hId, 'hdiag-' + hId].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && rec2) el.innerHTML = buildDiagnosisHtml(rec2);
+    });
+  } catch (e) {
+    ['specdiag-btn-' + hId, 'hdiag-btn-' + hId].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.style.display = ''; el.innerHTML = '<button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--danger)" onclick="genHistoryDiagnosis(\'' + hId + '\')">⚠️ 生成失败，点击重试</button>'; }
+    });
+    console.warn('[历史诊断生成失败]', e.message);
+  }
 }
 
 async function genHistoryRefAnswers(hId) {

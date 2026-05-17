@@ -982,9 +982,15 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
             <div class="pcat-desc">你的项目/实习如何迁移到这个岗位，体现AI PM能力</div>
           </div>
         </div>
+        <!-- Sub-type panel (shown when a specific type is selected) -->
+        <div id="jt-subtype-panel" style="margin-top:14px;display:none">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.03em;margin-bottom:8px;text-transform:uppercase">具体题型</div>
+          <div class="product-cat-grid" id="jt-subtype-grid" style="gap:8px"></div>
+        </div>
+
         <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="startJobTargetInterview()">▶ 开始练习</button>
-          <span id="jt-type-label" style="font-size:13px;color:var(--text-muted)">当前：岗位业务理解题</span>
+          <span id="jt-type-label" style="font-size:13px;color:var(--text-muted)">当前：岗位业务理解题 · 随机</span>
         </div>
       </div>
 
@@ -3351,14 +3357,103 @@ const JT_TYPE_LABELS = {
   migration: '简历岗位迁移题',
 };
 const JT_ALL_TYPES = ['business', 'product', 'aiproduct', 'migration'];
+
+// Sub-types per top-level type
+const JT_SUBTYPES = {
+  business: [
+    { id: 'random',      icon: '🎲', label: '随机',       desc: '从业务理解方向中随机抽取' },
+    { id: 'users',       icon: '👥', label: '用户与场景', desc: '核心用户是谁、最高频使用时刻' },
+    { id: 'opportunity', icon: '💡', label: '产品机会',   desc: '这个业务最大的机会/痛点在哪' },
+    { id: 'competitive', icon: '🔍', label: '竞品认知',   desc: '竞品怎么解决问题、差异化在哪' },
+    { id: 'bizmodel',    icon: '📈', label: '商业逻辑',   desc: '增长驱动力、制约因素、变现路径' },
+    { id: 'biz_metrics', icon: '🎯', label: '指标体系',   desc: '北极星指标、核心衡量维度设计' },
+  ],
+  product: [
+    { id: 'random',          icon: '🎲', label: '随机',         desc: '从产品思维方向中随机抽取' },
+    { id: 'design',          icon: '🎨', label: '产品设计/改进', desc: '功能设计、体验优化、改进方向' },
+    { id: 'metrics',         icon: '📊', label: '数据分析',     desc: '指标异常诊断、指标体系设计' },
+    { id: 'retention',       icon: '🔄', label: '留存与增长',   desc: '用户留存/活跃提升、增长实验' },
+    { id: 'priority',        icon: '⚖️', label: '优先级取舍',   desc: '多个需求方向如何取舍决策' },
+    { id: 'differentiation', icon: '🏆', label: '差异化定位',   desc: '和竞品的差异化策略是什么' },
+  ],
+  aiproduct: [
+    { id: 'random',     icon: '🎲', label: '随机',     desc: '从AI系统类型中随机抽取' },
+    { id: 'task',       icon: '⚡', label: '任务型',   desc: '单意图/明确输出，如智能表单、AI客服' },
+    { id: 'knowledge',  icon: '📚', label: '知识型',   desc: 'RAG/检索，知识问答、企业内部搜索' },
+    { id: 'workflow',   icon: '🔄', label: '流程型',   desc: '多步骤自动化、Agent编排、审批流' },
+    { id: 'interactive',icon: '💬', label: '交互型',   desc: '多轮对话、个性化记忆、AI助手' },
+    { id: 'trustworthy',icon: '🛡️', label: '可信型',   desc: '高风险决策、合规审计、风险治理' },
+  ],
+  migration: [
+    { id: 'random',   icon: '🎲', label: '随机',         desc: '从迁移方向中随机抽取' },
+    { id: 'decision', icon: '🎯', label: '关键决策',     desc: '最能体现AI PM判断力的决策' },
+    { id: 'metrics',  icon: '📊', label: '指标与验证',   desc: '如何证明项目有效，指标体系是什么' },
+    { id: 'badcase',  icon: '🔥', label: '难点/bad case',desc: '遇到过什么挑战，如何分析复盘' },
+    { id: 'value',    icon: '💼', label: '迁移价值',     desc: '你的经历和这个岗位最相关的是什么' },
+    { id: 'gap',      icon: '📐', label: '能力gap分析',  desc: '转到这个岗位最大的gap是什么' },
+  ],
+};
+
+// Maps JT sub-type to product scoring sub-category
+const JT_SUBTYPE_TO_PROD_CAT = {
+  design: 'design', metrics: 'metrics', retention: 'metrics',
+  priority: 'functradeoff', differentiation: 'design',
+  users: 'design', opportunity: 'design', competitive: 'design',
+  bizmodel: 'design', biz_metrics: 'metrics',
+  decision: 'design', badcase: 'design', value: 'design', gap: 'design',
+};
+
 let _jtType = 'business';
+let _jtSubType = 'random'; // sub-type within the selected type
 let _jtPendingFiles = [];
 
+function renderJTSubtypeGrid(type) {
+  const panel = document.getElementById('jt-subtype-panel');
+  const grid = document.getElementById('jt-subtype-grid');
+  if (!panel || !grid) return;
+  const subs = JT_SUBTYPES[type];
+  if (!subs) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  _jtSubType = 'random'; // reset to random when switching types
+  grid.innerHTML = subs.map(function(s) {
+    const isActive = s.id === 'random';
+    return '<div class="pcat-card' + (isActive ? ' active' : '') + '" data-jtsub="' + s.id + '" onclick="selectJTSubType(this,\'' + s.id + '\')" style="padding:10px 12px">' +
+      '<div class="pcat-icon" style="font-size:18px;margin-bottom:4px">' + s.icon + '</div>' +
+      '<div class="pcat-name" style="font-size:12px">' + s.label + '</div>' +
+      (s.desc ? '<div class="pcat-desc" style="font-size:11px">' + s.desc + '</div>' : '') +
+      '</div>';
+  }).join('');
+  updateJTLabel();
+}
+
+function selectJTSubType(el, subType) {
+  document.querySelectorAll('#jt-subtype-grid .pcat-card').forEach(function(c) { c.classList.remove('active'); });
+  el.classList.add('active');
+  _jtSubType = subType;
+  updateJTLabel();
+}
+
+function updateJTLabel() {
+  const el = document.getElementById('jt-type-label');
+  if (!el) return;
+  const typeLabel = JT_TYPE_LABELS[_jtType] || _jtType;
+  if (_jtType === 'random') { el.textContent = '当前：随机岗位面试'; return; }
+  const subs = JT_SUBTYPES[_jtType] || [];
+  const subLabel = (subs.find(function(s) { return s.id === _jtSubType; }) || {}).label || '';
+  el.textContent = '当前：' + typeLabel + ' · ' + (subLabel || '随机');
+}
+
 function selectJTType(el, type) {
-  document.querySelectorAll('#jt-type-grid .pcat-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#jt-type-grid .pcat-card').forEach(function(c) { c.classList.remove('active'); });
   el.classList.add('active');
   _jtType = type;
-  document.getElementById('jt-type-label').textContent = '当前：' + (JT_TYPE_LABELS[type] || type);
+  if (type === 'random') {
+    const panel = document.getElementById('jt-subtype-panel');
+    if (panel) panel.style.display = 'none';
+    updateJTLabel();
+  } else {
+    renderJTSubtypeGrid(type);
+  }
 }
 
 function getJobTargetConfig() {
@@ -3506,7 +3601,7 @@ function saveJobTargetConfig() {
   renderJobTarget();
 }
 
-function buildJTQuestionPrompt(type, cfg) {
+function buildJTQuestionPrompt(type, subType, cfg) {
   const ctx = buildJobTargetContext(cfg);
   const ctxNote = ctx ? '\n\n【目标岗位资料】\n' + ctx : '';
   const hasInfo = cfg && (cfg.company || cfg.title || cfg.jd);
@@ -3515,17 +3610,43 @@ function buildJTQuestionPrompt(type, cfg) {
   const openPrefix = hasInfo ? ('基于' + companyStr + titleStr) : '基于以下目标岗位资料';
   const noInfoNote = hasInfo ? '' : '\n注意：岗位资料不足时，用"基于你目前了解的这个岗位/业务"开头，不要编造具体业务事实。';
 
+  // Sub-type direction overrides — focus the question on a specific angle
+  const businessSubDir = {
+    users:       '出「用户与场景」方向题：核心用户是谁、最高频使用时刻是什么、和其他用户群有什么不同',
+    opportunity: '出「产品机会」方向题：该业务最大的产品机会或痛点在哪里，如果你是PM会优先从哪里切入',
+    competitive: '出「竞品认知」方向题：竞品如何解决这个问题、这个业务在行业里的核心差异化是什么',
+    bizmodel:    '出「商业逻辑」方向题：这个业务的核心增长驱动力是什么、制约因素在哪里、变现路径如何',
+    biz_metrics: '出「指标体系」方向题：如果为这个业务设计指标体系，北极星指标是什么、核心衡量维度有哪些',
+  };
+  const productSubDir = {
+    design:          '出「产品设计/改进」方向题：如何优化某个具体功能/体验/转化环节，或改进某个已有产品方向',
+    metrics:         '出「数据分析」方向题：某个关键指标异常，如何诊断、定位根因、修复，或设计指标体系',
+    retention:       '出「留存与增长」方向题：如何提升用户留存/活跃/复访，设计一个增长实验方案',
+    priority:        '出「优先级取舍」方向题：给定若干产品需求或功能方向，如何做取舍决策，判断优先级',
+    differentiation: '出「差异化定位」方向题：和某竞品相比，这个产品/业务如何做差异化，核心策略是什么',
+  };
+  const migrationSubDir = {
+    decision: '出「关键决策」方向题：追问你在过去某个项目/实习里最能体现AI PM判断力的决策是什么',
+    metrics:  '出「指标与验证」方向题：追问你如何证明过去某个项目有效、指标体系是什么、验证方式如何',
+    badcase:  '出「难点/bad case」方向题：追问你在过去项目中遇到过什么挑战、最棘手的bad case如何分析复盘',
+    value:    '出「迁移价值」方向题：你过去的经历与这个岗位最相关的是什么、如何介绍迁移价值',
+    gap:      '出「能力gap分析」方向题：你认为从你当前背景转到这个岗位最大的gap是什么、你会怎么弥补',
+  };
+
   if (type === 'business') {
+    const dir = (subType && subType !== 'random' && businessSubDir[subType])
+      ? businessSubDir[subType]
+      : '从以下方向随机选1个出题：\n1. 这个业务方向最核心的用户是谁、他们的核心需求是什么\n2. 如果你是这个部门的PM，你认为最大的产品机会/痛点在哪里\n3. 这个业务的核心增长驱动力是什么？有哪些制约因素？\n4. 这个产品/业务在行业里的核心差异化是什么？竞品怎么做的？\n5. 如果要为这个业务设计关键指标体系，北极星指标是什么、为什么？';
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位业务理解题」，考察候选人对该部门业务、用户和产品机会的理解。\n' +
-      openPrefix + '，从以下方向随机选1个出题：\n' +
-      '1. 这个业务方向最核心的用户是谁、他们的核心需求是什么\n' +
-      '2. 如果你是这个部门的PM，你认为最大的产品机会/痛点在哪里\n' +
-      '3. 这个业务的核心增长驱动力是什么？有哪些制约因素？\n' +
-      '4. 这个产品/业务在行业里的核心差异化是什么？竞品怎么做的？\n' +
-      '5. 如果要为这个业务设计关键指标体系，北极星指标是什么、为什么？\n' +
-      noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      openPrefix + '，' + dir + noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'product') {
+    if (subType && subType !== 'random' && productSubDir[subType]) {
+      const dir = productSubDir[subType];
+      return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景' + dir + '。\n' +
+        openPrefix + '，题目必须与该岗位的具体业务场景强绑定，不要出通用产品题。\n' +
+        noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+    }
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景出产品设计、指标、留存或差异化题目。\n' +
       openPrefix + '，从以下方向随机选1个出题：\n' +
       '1. 产品设计/改进：如何优化某个具体功能/体验/转化环节\n' +
@@ -3537,6 +3658,12 @@ function buildJTQuestionPrompt(type, cfg) {
       noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'aiproduct') {
+    // For specific AI system types, inject the existing AIPRODUCT_CAT_PROMPTS style
+    const aiSubs = ['task','knowledge','workflow','interactive','trustworthy'];
+    if (subType && subType !== 'random' && aiSubs.includes(subType)) {
+      return (AIPRODUCT_CAT_PROMPTS[subType] || '') +
+        '\n\n【重要】题目必须结合以下目标岗位的具体业务场景出题，不要脱离该岗位的实际业务背景：' + ctxNote;
+    }
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位AI能力产品化题」，考察候选人能否把AI能力在该业务场景落地。\n' +
       openPrefix + '，要求：\n' +
       '- 给定该业务的一个具体AI落地场景，要求候选人设计完整AI产品方案\n' +
@@ -3546,14 +3673,13 @@ function buildJTQuestionPrompt(type, cfg) {
       '直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
   }
   if (type === 'migration') {
+    const dir = (subType && subType !== 'random' && migrationSubDir[subType])
+      ? migrationSubDir[subType]
+      : '从以下方向随机选1个：\n1. 你过去的经历，和这个岗位最相关的是什么？你会怎么介绍它的迁移价值？\n2. 你在过去的AI项目里，最能体现AI PM判断力的决策是什么？和这个岗位有什么关联？\n3. 你过去做过的AI产品方向，和这个业务有哪些相似挑战？你会怎么迁移经验？\n4. 从你之前的岗位转到这个岗位，你认为最大的能力gap是什么？你会怎么弥补？';
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「简历岗位迁移题」，考察候选人能否将项目/实习经历迁移到该岗位，体现AI PM能力。\n' +
-      openPrefix + '，从以下方向随机选1个：\n' +
-      '1. 你过去的经历，和这个岗位最相关的是什么？你会怎么介绍它的迁移价值？\n' +
-      '2. 你在过去的AI项目里，最能体现AI PM判断力的决策是什么？和这个岗位有什么关联？\n' +
-      '3. 你过去做过的AI产品方向，和这个业务有哪些相似挑战？你会怎么迁移经验？\n' +
-      '4. 从你之前的岗位转到这个岗位，你认为最大的能力gap是什么？你会怎么弥补？\n' +
-      (hasInfo ? '' : '若无候选人简历资料，用"根据你目前的项目/实习经历…"开头。\n') +
-      '直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      openPrefix + '，' + dir +
+      (hasInfo ? '' : '\n若无候选人简历资料，用"根据你目前的项目/实习经历…"开头。') +
+      '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   return '';
 }
@@ -3615,23 +3741,42 @@ async function startJobTargetInterview() {
     return;
   }
   API_QUEUE.abort();
+  // Resolve top-level type
   const resolvedType = _jtType === 'random'
     ? JT_ALL_TYPES[Math.floor(Math.random() * JT_ALL_TYPES.length)]
     : _jtType;
+  // Resolve sub-type within the resolved type
+  const typeSubs = JT_SUBTYPES[resolvedType] || [];
+  const availSubs = typeSubs.filter(function(s) { return s.id !== 'random'; });
+  let resolvedSubType;
+  if (_jtType === 'random') {
+    // fully random: pick random sub-type too
+    resolvedSubType = availSubs.length ? availSubs[Math.floor(Math.random() * availSubs.length)].id : 'random';
+  } else if (_jtSubType === 'random') {
+    resolvedSubType = availSubs.length ? availSubs[Math.floor(Math.random() * availSubs.length)].id : 'random';
+  } else {
+    resolvedSubType = _jtSubType;
+  }
+  // Determine subCategory for history/scoring: use sub-type for product/aiproduct, type for others
+  const subCatForHistory = (resolvedType === 'product' || resolvedType === 'aiproduct')
+    ? resolvedSubType
+    : resolvedType;
+
   navigate('interview');
   await new Promise(function(r) { setTimeout(r, 80); });
   showInterviewConfig(true);
-  toast('正在生成「' + (JT_TYPE_LABELS[resolvedType] || resolvedType) + '」中…', 'info');
+  const subLabel = (typeSubs.find(function(s) { return s.id === resolvedSubType; }) || {}).label || '';
+  toast('正在生成「' + (JT_TYPE_LABELS[resolvedType] || resolvedType) + (subLabel ? ' · ' + subLabel : '') + '」中…', 'info');
   let question = '';
   try {
-    question = await genQuestion(buildJTQuestionPrompt(resolvedType, cfg));
+    question = await genQuestion(buildJTQuestionPrompt(resolvedType, resolvedSubType, cfg));
   } catch (e) {
     toast('生成失败：' + e.message, 'error');
     return;
   }
   const pref = getPref();
   const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
-  STATE.interview = { active: true, question: question, messages: [], turn: 0, maxTurns: maxTurns, source: 'job-target', subCategory: resolvedType, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question: question, messages: [], turn: 0, maxTurns: maxTurns, source: 'job-target', subCategory: subCatForHistory, jtType: resolvedType, hasVoiceInput: false, rewrites: [] };
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
   document.getElementById('start-btn').style.display = 'none';
@@ -4615,7 +4760,7 @@ async function endInterviewFlow() {
 }
 
 async function generateScore() {
-  const { messages, question, hasVoiceInput, source, subCategory } = STATE.interview;
+  const { messages, question, hasVoiceInput, source, subCategory, jtType } = STATE.interview;
   if (messages.length < 2) return;
 
   const dialog = messages.map(m => `${m.role === 'ai' ? '[面试官]' : '[候选人]'} ${m.content}`).join('\n\n');
@@ -4632,11 +4777,14 @@ async function generateScore() {
   const isResumeSpec = source === 'resume-spec';
   const isProduct = source === 'product';
   const isJobTarget = source === 'job-target';
-  const jtSub = isJobTarget ? subCategory : null; // 'business'|'product'|'aiproduct'|'migration'
-  // Route job-target to existing scoring systems based on question type
-  const scoreAsAIP = isAIProduct || jtSub === 'aiproduct';
-  const scoreAsRS = isResumeSpec || jtSub === 'migration';
-  const scoreAsProd = isProduct || jtSub === 'product' || jtSub === 'business';
+  // jtType = top-level type (business|product|aiproduct|migration), subCategory = resolved sub-type
+  const jtTopType = isJobTarget ? (jtType || subCategory || '') : '';
+  // Map job-target sub-type to the product scoring sub-category
+  const _jtProdCat = isJobTarget ? (JT_SUBTYPE_TO_PROD_CAT[subCategory] || 'design') : subCategory;
+  // Route job-target to existing scoring systems based on top-level type
+  const scoreAsAIP = isAIProduct || jtTopType === 'aiproduct';
+  const scoreAsRS = isResumeSpec || jtTopType === 'migration';
+  const scoreAsProd = isProduct || jtTopType === 'product' || jtTopType === 'business';
 
   // Module-specific improvement dimensions
   // Product: per-category dimensions so scoring feedback matches the actual question type
@@ -4657,26 +4805,22 @@ async function generateScore() {
     aipm:         '框架为「业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异」',
     aiknowledge:  '按实际题目子类型选框架：\n· 技术认知类 →「概念理解 → 适用场景 → 产品例子 → 局限风险 → 选型判断」\n· 产品观类 →「观点判断 → 背后原因 → 用户/业务视角 → 具体例子 → 边界条件 → 面试表达」\n· 行业趋势类 →「趋势判断 → 驱动因素 → 典型场景 → 商业化路径 → 风险约束 → 对AI PM的启示」',
   };
-  const _productR1Framework = _productR1FrameworkMap[subCategory] || _productR1FrameworkMap.design;
+  const _productR1Framework = _productR1FrameworkMap[isJobTarget ? _jtProdCat : subCategory] || _productR1FrameworkMap.design;
   const _impDims = scoreAsAIP
     ? '系统类型识别、业务目标与用户任务、任务链路、AI能力匹配、数据/系统接入、产品机制/功能形态、指标/评测、风险兜底、方案取舍、口语表达'
-    : (jtSub === 'migration')
+    : scoreAsRS
     ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
-    : isResumeSpec
-    ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
-    : (jtSub === 'business')
+    : (jtTopType === 'business')
     ? '业务理解深度、用户场景清晰度、产品机会判断、竞品/市场认知、指标思路、表达说服力'
-    : scoreAsProd
-    ? (_productImpDimsMap[isJobTarget ? 'design' : subCategory] || _productImpDimsMap.design)
-    : isProduct
-    ? (_productImpDimsMap[subCategory] || _productImpDimsMap.design)
+    : (scoreAsProd || isProduct)
+    ? (_productImpDimsMap[isJobTarget ? _jtProdCat : subCategory] || _productImpDimsMap.design)
     : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
   const _keyLineSpec = scoreAsAIP
     ? `\n- ai_product_key_line: 字符串，本轮最该补的一句话（面试口语，≤45字，直接给可以原话用的表达，沉淀AI产品化核心判断，比如"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP"或"AI不是替代人工判断，而是先做识别、检索和建议，高风险动作保留确认"，不要解释原因）`
     : (scoreAsRS)
     ? `\n- resume_key_line: 字符串，本轮最该补的一句话（面试口语，≤40字，直接给可以原话用的表达，必须体现真实角色边界或核心判断，比如"这个项目里我主要负责需求拆解和AI输出质量评估，不负责底层模型开发"或"我当时的核心判断是先验证用户是否采纳AI建议，而不是先追求功能完整"，不要解释原因）`
     : (scoreAsProd || isProduct)
-    ? ((isJobTarget ? 'design' : subCategory) === 'metrics'
+    ? ((isJobTarget ? _jtProdCat : subCategory) === 'metrics'
       ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤35字，根据题目子类型选择风格——异常诊断类如"我会先确认口径，再分层定位异常集中在哪个链路"；留存增长类如"我会先找到影响留存的关键行为，再围绕激活和复访设计实验"；指标体系类如"我会先明确产品要证明的价值，再分层设计目标、行为、质量和风险指标"，不要解释原因）`
       : `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，要能迁移到其他题——禁止绑定具体人名或具体商品名，应该是可以跨场景套用的判断句式，比如"我会先收敛到X类用户在Y时刻的场景，因为…"或"我会先做一个功能而不是三个，先验证核心假设"，不要解释原因）`)
     : '';
@@ -5534,7 +5678,12 @@ function renderSpecHistory(source, listElId) {
     return;
   }
 
-  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项' };
+  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+    business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
+    retention: '留存与增长', priority: '优先级取舍', differentiation: '差异化定位',
+    users: '用户与场景', opportunity: '产品机会', bizmodel: '商业逻辑', biz_metrics: '指标体系',
+    decision: '关键决策', badcase: '难点/bad case', value: '迁移价值', gap: '能力gap分析',
+  };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
   const prefix = 'sh' + source.replace(/[^a-z0-9]/gi, '');
 
@@ -5638,7 +5787,16 @@ function renderHistory() {
   }
 
   const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
-  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+    // job-target top-level types
+    business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
+    // job-target sub-types (product)
+    retention: '留存与增长', priority: '优先级取舍', differentiation: '差异化定位',
+    // job-target sub-types (business)
+    users: '用户与场景', opportunity: '产品机会', bizmodel: '商业逻辑', biz_metrics: '指标体系',
+    // job-target sub-types (migration)
+    decision: '关键决策', badcase: '难点/bad case', value: '迁移价值', gap: '能力gap分析',
+  };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 
   listEl.innerHTML = history.map((h, i) => {

@@ -5132,7 +5132,13 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const isResumeSpecRef = STATE.interview?.source === 'resume-spec';
   const isJobTargetRef = STATE.interview?.source === 'job-target';
   const jtSubRef = isJobTargetRef ? (STATE.interview?.subCategory || '') : '';
-  const productRefSubCat = STATE.interview?.subCategory || '';
+  // jtTopRef = top-level type (product/business/aiproduct/migration) — needed to route job-target correctly
+  // jtSubRef = sub-type (metrics/design/retention/…) — used to pick the right coaching flavor
+  const jtTopRef = isJobTargetRef ? (STATE.interview?.jtType || '') : '';
+  // Map job-target sub-type to the product scoring category (same mapping used in generateScore)
+  const productRefSubCat = isJobTargetRef
+    ? (JT_SUBTYPE_TO_PROD_CAT[jtSubRef] || jtSubRef || '')
+    : (STATE.interview?.subCategory || '');
   // Job-target context for reference answer coaching
   const _jtRefCfg = isJobTargetRef ? (getJobTargetConfig() || {}) : null;
   const _jtRefJobInfo = _jtRefCfg ? ((_jtRefCfg.company || '') + (_jtRefCfg.title ? ' · ' + _jtRefCfg.title : '')) : '';
@@ -5180,7 +5186,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 3. 参考答案：该追问主题的高质量单点回答（120-200字，不重复完整产品方案，第一人称口语）
 
 核心原则：第1轮训练"搭骨架"，追问训练"单点深挖"。所有输出都保持口语节奏，不要虚构数据。`
-    : (isProductRef || jtSubRef === 'product' || jtSubRef === 'business')
+    : (isProductRef || jtTopRef === 'product' || jtTopRef === 'business')
     ? (productRefSubCat === 'metrics'
       ? `你是资深AI产品经理面试教练，专注数据分析类面试题练习。对话中第1轮是主问题，第2轮起是追问。请严格区分两类，不要把追问当完整大题处理。
 
@@ -5189,12 +5195,14 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 【三种子类型框架】：
 · 数据异常诊断 →「确认口径→定位影响范围→分用户/渠道/版本/场景分层→拆核心链路→提出原因假设→验证数据→修复动作→复盘监控」
 · 留存与增长 →「定义留存目标→用户分层→找关键行为→拆新手/激活/复访链路→提出增长抓手→设计实验→观察留存与质量指标」
-· 指标体系与优先级 →「明确产品目标→北极星/目标指标→行为指标→体验指标→AI质量指标（如适用）→风险指标→优先级判断」
+· 指标体系与优先级 →「明确产品目标→北极星指标（如日活支付用户、GTV）→核心维度拆解（用户规模/交易活跃/场景渗透/商户生态等）→体验指标（成功率/失败率/投诉率）→风险指标（风控误拦截率）→指标冲突与优先级权衡」
+
+【指标体系题特别规则】：如果题目要求"设计指标体系/北极星指标/核心衡量维度"，参考答案必须直接给出层级化指标结构，不要给产品方案或MVP建议。改写版本和参考答案严禁出现"我会先收敛场景""优化某个功能""做一个MVP"等产品设计动作。
 
 【第1轮 — 主问题】给出三部分：
 1. 答题思路：先判断题目属于哪个子类型，输出对应框架每步1句说明考察重点或常见坑（共5-7条，每条不超过35字）
 2. 改写版本：保留候选人原意，按对应子类型框架补逻辑缺口（第一人称口语，120-180字，"我会先……然后……"）
-3. 参考答案：面试口语风格，150-230字，按对应子类型框架组织答案，严禁出现"收敛场景""用户痛点""产品机制"等产品设计词汇
+3. 参考答案：面试口语风格，150-230字，按对应子类型框架组织答案，严禁出现"收敛场景""用户痛点""产品机制""MVP"等产品设计词汇
 
 【第2轮起 — 追问】给出三部分（只针对该追问主题的单点深度，不重复完整框架）：
 1. 答题思路：识别该追问考察的单点，输出对应思路链（3-5条，每条不超过30字）
@@ -5296,9 +5304,9 @@ ${showFw ? '3. ' : '2. '}参考答案：满分级别的标准答案，体现AI P
       ? (i === 0
         ? `【第1轮 — 主问题（需评估完整AI产品化链路）】`
         : `【第${i+1}轮 — 追问（只需针对该追问主题的单点深度，不重复完整框架）】`)
-      : (isProductRef || jtSubRef === 'product' || jtSubRef === 'business')
+      : (isProductRef || jtTopRef === 'product' || jtTopRef === 'business')
       ? (i === 0
-        ? `【第1轮 — 主问题（开放题，评估完整产品思维链路，注意结合目标岗位业务场景）】`
+        ? `【第1轮 — 主问题（${productRefSubCat === 'metrics' ? '指标体系题/数据分析题，评估指标拆解框架，不要套产品设计框架' : '开放题，评估完整产品思维链路'}，注意结合目标岗位业务场景）】`
         : `【第${i+1}轮 — 追问（只需针对该追问主题的单点深度，追问必须关联目标岗位，不重复完整框架）】`)
       : jtSubRef === 'migration'
       ? (i === 0
@@ -5467,7 +5475,7 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
     '- 产品差异化题：替代方案对比→差异来源→用户选择理由\n' +
     '- 数据异常题：口径确认→分层拆解→链路归因→假设验证→止血动作\n' +
     '- 留存增长题：用户分层→关键行为→激活/复访链路→实验设计→质量指标\n' +
-    '- 指标体系题：产品目标→北极星指标→行为指标→体验指标→AI质量指标→风险指标\n' +
+    '- 指标体系题：产品目标→北极星指标→核心维度拆解（用户规模/交易活跃/场景渗透/商户生态等）→体验/风险指标→指标冲突与权衡。【重要】指标体系题严禁套用产品设计框架（场景收敛→痛点→MVP单点→验证），「下次可以怎么说」必须直接给出指标层级和具体指标名称，不要建议去做MVP功能或产品方案。\n' +
     '- 需求优先级题：目标清晰度→用户价值→业务价值→成本/风险→紧急性\n\n' +
     '▌AI能力产品化专项（先判断系统类型）\n' +
     '- 任务型：任务链路→Tool Use设计→执行边界→失败兜底\n' +

@@ -3687,6 +3687,9 @@ function buildJTQuestionPrompt(type, subType, cfg) {
 
 function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
   const jobInfo = cfg ? ((cfg.company || '') + (cfg.title ? ' · ' + cfg.title : '')) : '';
+  const hasJD = !!(cfg && cfg.jd && cfg.jd.trim());
+  const hasDept = !!(cfg && cfg.deptDesc && cfg.deptDesc.trim());
+  const hasBizInfo = hasJD || hasDept; // whether enough dept/business context exists
   const ctxBlock = cfg && (cfg.company || cfg.title || cfg.jd || cfg.deptDesc)
     ? '\n\n【目标岗位背景】\n' +
       (jobInfo ? '岗位：' + jobInfo + '\n' : '') +
@@ -3704,16 +3707,20 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
       '- MVP收敛："如果只让你做一个最小MVP，你会先做什么，为什么？"';
   } else if (type === 'product') {
     const companyRef = cfg && cfg.company ? cfg.company : '这家公司';
-    const jdSnippet = cfg && cfg.jd ? cfg.jd.slice(0, 120) : '';
-    const jdHint = jdSnippet ? '（JD要求中提到：' + jdSnippet + '）' : '';
-    followupDir = '【岗位产品思维追问要求】每一个追问必须注入岗位/业务上下文，绝不问通用产品题。\n' +
-      '追问方向（选最切中候选人缺口的1个，必须带入公司/业务/JD信息）：\n' +
-      '- 业务目标绑定："你为什么在' + companyRef + '这个业务场景下优先做这个？和业务目标的关系是什么？"\n' +
-      '- JD能力落地："JD里提到了XX能力要求' + jdHint + '，你这个思路怎么体现了这个能力？"\n' +
-      '- 指标与业务关联："如果这是' + companyRef + '的产品，你会先看哪个指标？为什么这个指标在这个业务里最重要？"\n' +
-      '- 竞争差异岗位化："' + companyRef + '在这个方向上的核心竞争壁垒是什么？你的方案怎么强化它？"\n' +
-      '- 资源约束现实感："在' + companyRef + '这个阶段，如果研发资源只够做一个功能，你会选哪个？理由是什么？"\n' +
-      '- 用户场景岗位化："' + companyRef + '的核心用户是谁？你说的这个场景在他们的日常使用里频率有多高？"';
+    const jdDirectionNote = hasJD
+      ? '- JD能力落地（最多用1次，不要在每轮都提JD）：候选人这个思路体现了岗位要求的哪个核心能力？自然追问，不要说"JD里提到"，直接问能力本身\n'
+      : '';
+    const insufficientDataNote = hasBizInfo ? '' :
+      '\n【资料不足提示】用户只填写了公司/岗位名称，没有详细业务信息。追问时禁止假设或编造该公司/部门的具体业务事实；改用开放式问法，例如："你目前对这个岗位的业务方向了解多少？你会先补充哪些信息？" 或 "如果这个业务的核心目标是提升XX，你会怎么思考？"';
+    followupDir = '【岗位产品思维追问要求】追问要结合目标公司/部门的业务场景，但要自然，不要机械引用JD。\n' +
+      '追问方向（选最切中候选人缺口的1个）：\n' +
+      '- 业务目标绑定：你这个方向在' + companyRef + '这个业务里，和核心业务目标的关系是什么？\n' +
+      jdDirectionNote +
+      '- 指标与业务关联：如果在' + companyRef + '这个产品里，你会先看哪个指标？为什么这个指标最重要？\n' +
+      '- 竞争差异岗位化：' + companyRef + '在这个方向上的核心竞争壁垒是什么？你的方案怎么强化它？\n' +
+      '- 资源约束现实感：如果只有有限资源，你在' + companyRef + '会先做哪个？理由是什么？\n' +
+      '- 用户场景岗位化：' + companyRef + '的核心用户是谁？你说的这个场景在他们日常使用里频率有多高？' +
+      insufficientDataNote;
   } else if (type === 'aiproduct') {
     followupDir = AIPRODUCT_INTERVIEW_SYSTEM + '\n\n【岗位绑定要求】追问时必须结合目标岗位的具体业务场景，不脱离实际业务讨论抽象AI能力。';
   } else if (type === 'migration') {
@@ -3728,11 +3735,19 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
       '- gap识别："你认为你目前最缺' + targetRole + '的哪个能力？你打算怎么补？"\n' +
       '- 说服面试官："如果我是你的面试官，我最可能对哪个点有疑虑？你会怎么回应？"';
   }
+  const jdCitationRule = '【JD引用规则】JD信息是背景参考，不是每轮必引的模板。' +
+    (type === 'migration'
+      ? '简历岗位迁移题可以适当引用JD能力要求，但表达要自然，不要每句话都说"JD里提到"。'
+      : '岗位产品思维题重点结合公司/部门业务方向，JD能力要求最多在1次追问中点到，其余追问直接围绕业务/场景/判断来问，不要机械前缀"JD里提到"。');
+  const bizFabricationRule = hasBizInfo
+    ? ''
+    : '\n【禁止编造业务事实】当前用户未提供详细部门业务资料。追问中禁止假设或陈述该公司/部门的具体业务数据、产品功能或运营细节；改用开放式追问："你目前对这个业务方向了解多少？""如果该业务目标是提升XX，你会怎么思考？""你会先补充了解哪些信息？"';
   return '你是一名资深AI产品经理面试官，正在对候选人进行「目标岗位专项」面试练习。\n' +
     (turnNote ? turnNote + '\n' : '') +
     diffDesc + ctxBlock + '\n\n' +
     '【面试目标】考察候选人能否把通用产品思维、AI产品化能力和个人项目经历，真正迁移到这个具体岗位的业务场景中。追问要有岗位/业务特异性，不要泛泛而谈。\n\n' +
     '【追问风格】追问要短（≤45字）、直接、有压力感，像真实面试官。优先用：为什么？依据是什么？和这个岗位/业务的关联是什么？具体指标是什么？\n\n' +
+    jdCitationRule + bizFabricationRule + '\n\n' +
     '严格遵守：\n' +
     '- 第1轮：只把面试题原文提出来，不做任何分析\n' +
     '- 第2轮起：根据候选人回答中最明显的缺失项，只问1个追问，不超过50字\n' +
@@ -4840,12 +4855,15 @@ async function generateScore() {
   const _jtCfgForScore = isJobTarget ? (getJobTargetConfig() || {}) : null;
   const _jtJobInfo = _jtCfgForScore ? ((_jtCfgForScore.company || '') + (_jtCfgForScore.title ? ' · ' + _jtCfgForScore.title : '')) : '';
   const _jtJdSnip = _jtCfgForScore && _jtCfgForScore.jd ? _jtCfgForScore.jd.slice(0, 200) : '';
+  const _jtScoreHasBizInfo = !!(_jtJdSnip || (_jtCfgForScore && _jtCfgForScore.deptDesc));
   const jtScoringNoteProd = (isJobTarget && (jtTopType === 'product' || jtTopType === 'business'))
     ? `\n\n【目标岗位专项额外评分要求${_jtJobInfo ? '（岗位：' + _jtJobInfo + '）' : ''}】：\n` +
       '在评分和improvements字段中，额外关注以下岗位绑定维度（这是普通产品思维专项没有的考察点）：\n' +
       '- 业务目标契合度：候选人的产品判断是否与目标公司/业务方向对齐，而不是泛泛的产品思维\n' +
-      '- JD能力落地' + (_jtJdSnip ? '（JD摘要：' + _jtJdSnip + '）' : '') + '：回答是否体现了JD里要求的具体能力，能否说清产品思路在这个岗位的落地方式\n' +
-      '- 业务特异性：追问时是否能把通用框架与目标公司的业务场景、竞争态势、用户群体结合，而不是给一个对任何公司都成立的答案\n' +
+      (_jtScoreHasBizInfo
+        ? '- JD/业务能力落地' + (_jtJdSnip ? '（JD摘要：' + _jtJdSnip + '）' : '') + '：回答是否体现了岗位要求的核心能力；能力契合度重要，但不要因为候选人没有逐条引用JD而扣分\n'
+        : '- 岗位视角：用户没有提供详细业务资料，因此只评估候选人是否有意识地把回答与目标岗位的性质（而非通用产品逻辑）挂钩\n') +
+      '- 业务特异性：是否能把通用框架与目标岗位的业务场景、用户群体结合，而不是给一个对任何公司都成立的答案\n' +
       '如候选人回答完全没有提及岗位/公司/业务的具体上下文，improvements中加一条维度："岗位业务绑定"，issue写具体缺失，how写如何把判断与目标岗位挂钩。'
     : '';
   const jtScoringNoteRS = (isJobTarget && jtTopType === 'migration')
@@ -5110,12 +5128,23 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const _jtRefJobInfo = _jtRefCfg ? ((_jtRefCfg.company || '') + (_jtRefCfg.title ? ' · ' + _jtRefCfg.title : '')) : '';
   const _jtRefJdSnip = _jtRefCfg && _jtRefCfg.jd ? _jtRefCfg.jd.slice(0, 250) : '';
   const _jtRefDept = _jtRefCfg && _jtRefCfg.deptDesc ? _jtRefCfg.deptDesc.slice(0, 150) : '';
-  const _jtRefCtxBlock = isJobTargetRef && (_jtRefJobInfo || _jtRefJdSnip || _jtRefDept)
-    ? '\n\n【目标岗位信息（务必结合进改写和参考答案）】\n' +
-      (_jtRefJobInfo ? '目标岗位：' + _jtRefJobInfo + '\n' : '') +
-      (_jtRefJdSnip ? 'JD核心要求（摘要）：' + _jtRefJdSnip + '\n' : '') +
-      (_jtRefDept ? '业务方向：' + _jtRefDept + '\n' : '') +
-      '——改写版本和参考答案中，产品判断、指标选取、方案取舍都必须与上述岗位/业务背景挂钩，不要给适用于任何公司的通用答案。'
+  const _jtRefHasJD = !!(_jtRefJdSnip);
+  const _jtRefHasDept = !!(_jtRefDept);
+  const _jtRefHasBizInfo = _jtRefHasJD || _jtRefHasDept;
+  const _jtRefCtxBlock = isJobTargetRef
+    ? (_jtRefHasBizInfo
+      ? '\n\n【目标岗位信息（务必结合进改写和参考答案）】\n' +
+        (_jtRefJobInfo ? '目标岗位：' + _jtRefJobInfo + '\n' : '') +
+        (_jtRefJdSnip ? 'JD核心要求（摘要）：' + _jtRefJdSnip + '\n' : '') +
+        (_jtRefDept ? '业务方向：' + _jtRefDept + '\n' : '') +
+        '——改写版本和参考答案中，产品判断、指标选取、方案取舍结合上述岗位/业务背景，' +
+        'JD信息作为背景参考（可在1处自然提及能力要求），不要在每段都重复引用JD原文。' +
+        '不要给完全通用的答案。'
+      : (_jtRefJobInfo
+        ? '\n\n【目标岗位信息】目标岗位：' + _jtRefJobInfo + '\n' +
+          '——用户未提供详细部门业务资料。改写版本和参考答案中，禁止编造该公司/部门的具体业务数据、功能细节或运营事实；' +
+          '改用开放式表述，如"基于你目前了解的该岗位业务……""如果该业务目标是提升XX……""你会先补充了解哪些业务信息？"'
+        : ''))
     : '';
   const system = (isAIProductRef || jtSubRef === 'aiproduct')
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。

@@ -1616,6 +1616,37 @@ const API_QUEUE = (() => {
   };
 })();
 
+// Escape any unescaped double-quotes that appear INSIDE JSON string values.
+// After smart-quote replacement, inner curly-quotes become bare " and break parsing.
+// Strategy: walk char-by-char tracking string state; when inside a string, peek ahead —
+// if next non-whitespace is a JSON structural char (:,}]) treat as closing delimiter,
+// otherwise escape the quote.
+function escapeInnerStringQuotes(s) {
+  let result = '';
+  let inStr = false;
+  let esc = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (esc) { result += ch; esc = false; continue; }
+    if (ch === '\\') { result += ch; if (inStr) esc = true; continue; }
+    if (ch === '"') {
+      if (!inStr) { inStr = true; result += '"'; continue; }
+      // Inside a string — peek ahead past whitespace to determine role
+      let j = i + 1;
+      while (j < s.length && (s[j] === ' ' || s[j] === '\t' || s[j] === '\n' || s[j] === '\r')) j++;
+      const peek = j < s.length ? s[j] : '';
+      if (!peek || peek === ':' || peek === ',' || peek === '}' || peek === ']') {
+        inStr = false; result += '"'; // closing delimiter
+      } else {
+        result += '\\"'; // inner quote — escape it
+      }
+      continue;
+    }
+    result += ch;
+  }
+  return result;
+}
+
 // Robust JSON parser: handles trailing commas, smart quotes, unescaped newlines in strings
 function closeTruncatedJSON(s) {
   // Walk string tracking depth; if truncated mid-string, roll back to
@@ -1643,8 +1674,13 @@ function robustParseJSON(raw) {
   let s = (raw.match(/\{[\s\S]*/) || [raw])[0];
   // 2. Remove trailing commas before } or ]
   s = s.replace(/,\s*([\}\]])/g, '$1');
-  // 3. Replace smart/curly quotes with straight quotes
-  s = s.replace(/[\u201C\u201D\u300C\u300D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  // 3. Replace smart curly-quotes used as JSON string delimiters with straight quotes.
+  //    Only replace U+201C/U+201D ("") \u2014 they're sometimes used as JSON delimiters by models.
+  //    Do NOT replace U+300C/U+300D (\u300C\u300D) \u2014 those appear inside content and must stay as-is.
+  s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+  // 3.5. Escape any unescaped double-quotes that ended up inside string values after step 3
+  //      (e.g. model used curly-quotes inside a value; replacing them above created bare ")
+  s = escapeInnerStringQuotes(s);
   // 4. Replace literal newlines inside strings with \n
   s = s.replace(/"((?:[^"\\]|\\.)*)"/g, (_, inner) => '"' + inner.replace(/\n/g, '\\n').replace(/\r/g, '') + '"');
   // 5. Try direct parse

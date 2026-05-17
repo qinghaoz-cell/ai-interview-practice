@@ -590,6 +590,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-item" data-page="aiproduct" onclick="navigate('aiproduct')" style="border-left:2px solid var(--accent);margin-left:6px;padding-left:16px">
         <span class="nav-icon">🤖</span>AI能力产品化
       </div>
+      <div class="nav-item" data-page="job-target" onclick="navigate('job-target')" style="border-left:2px solid #10b981;margin-left:6px;padding-left:16px">
+        <span class="nav-icon">🎯</span>目标岗位专项
+      </div>
       <div class="nav-item" data-page="history" onclick="navigate('history')">
         <span class="nav-icon">📊</span>历史记录
         <span class="nav-badge" id="history-badge">0</span>
@@ -903,6 +906,95 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       </div>
     </section>
 
+    <!-- ── Page: 目标岗位专项 ── -->
+    <section class="page" id="page-job-target">
+      <div class="page-header">
+        <div class="page-title">🎯 目标岗位专项</div>
+        <div class="page-sub">基于目标公司/岗位/JD，定向练习面试题，迁移通用能力到具体业务</div>
+      </div>
+
+      <!-- Config card -->
+      <div class="card" id="jt-config-card">
+        <div class="card-title">📋 目标岗位配置 <span class="badge" id="jt-status" style="background:#fef3c7;color:#b45309">未配置</span></div>
+        <div class="grid2" style="gap:12px;margin-bottom:12px">
+          <div class="input-group">
+            <label class="input-label">公司名称</label>
+            <input type="text" class="input-field" id="jt-company" placeholder="如：字节跳动、腾讯、阿里">
+          </div>
+          <div class="input-group">
+            <label class="input-label">岗位名称</label>
+            <input type="text" class="input-field" id="jt-title" placeholder="如：商业化AI产品经理">
+          </div>
+        </div>
+        <div class="input-group" style="margin-bottom:12px">
+          <label class="input-label">JD文本 <span style="color:var(--text-muted);font-size:11px">（粘贴原始招聘描述，越详细出题越精准）</span></label>
+          <textarea class="input-field" id="jt-jd" rows="5" placeholder="粘贴JD内容…" style="resize:vertical"></textarea>
+        </div>
+        <div class="input-group" style="margin-bottom:12px">
+          <label class="input-label">部门/业务说明 <span style="color:var(--text-muted);font-size:11px">（可选，补充部门背景、核心业务方向）</span></label>
+          <textarea class="input-field" id="jt-dept" rows="3" placeholder="如：负责xx业务线的AI能力落地，核心指标是…" style="resize:vertical"></textarea>
+        </div>
+        <div class="input-group" style="margin-bottom:14px">
+          <label class="input-label">上传业务资料 <span style="color:var(--text-muted);font-size:11px">（可选，支持 .docx / .pdf / .txt）</span></label>
+          <input type="file" id="jt-file-input" multiple accept=".docx,.pdf,.txt" style="display:none" onchange="handleJTFiles(this)">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('jt-file-input').click()">+ 上传文档</button>
+          <div id="jt-files-list" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveJobTargetConfig()">💾 保存配置</button>
+      </div>
+
+      <!-- Current target summary (shown when configured) -->
+      <div id="jt-current-card" style="display:none" class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="card-title" style="margin-bottom:0">📌 当前目标岗位</div>
+          <button class="btn btn-ghost btn-sm" onclick="showJTConfigCard()" style="font-size:11px">修改</button>
+        </div>
+        <div id="jt-current-display" style="font-size:14px;color:var(--text)"></div>
+      </div>
+
+      <!-- Question type selector -->
+      <div class="card">
+        <div class="card-title">选择练习方向</div>
+        <div class="product-cat-grid" id="jt-type-grid">
+          <div class="pcat-card" data-jt="random" onclick="selectJTType(this,'random')">
+            <div class="pcat-icon">🎲</div>
+            <div class="pcat-name">随机岗位面试</div>
+            <div class="pcat-desc">从四类题中随机抽一类，模拟真实面试的不确定性</div>
+          </div>
+          <div class="pcat-card active" data-jt="business" onclick="selectJTType(this,'business')" style="border-color:#10b981;background:#10b98112">
+            <div class="pcat-icon">🏢</div>
+            <div class="pcat-name">岗位业务理解题</div>
+            <div class="pcat-desc">考察你是否理解该部门业务、用户和产品机会</div>
+          </div>
+          <div class="pcat-card" data-jt="product" onclick="selectJTType(this,'product')" style="border-color:var(--primary);background:var(--accent-dim)">
+            <div class="pcat-icon">🧩</div>
+            <div class="pcat-name">岗位产品思维题</div>
+            <div class="pcat-desc">基于该业务出设计、指标、留存、优先级、差异化题</div>
+          </div>
+          <div class="pcat-card" data-jt="aiproduct" onclick="selectJTType(this,'aiproduct')" style="border-color:#f59e0b;background:#f59e0b12">
+            <div class="pcat-icon">🤖</div>
+            <div class="pcat-name">岗位AI能力产品化题</div>
+            <div class="pcat-desc">AI如何落地？Agent/RAG/Workflow/规则怎么选？</div>
+          </div>
+          <div class="pcat-card" data-jt="migration" onclick="selectJTType(this,'migration')" style="border-color:#a78bfa;background:#a78bfa12">
+            <div class="pcat-icon">💼</div>
+            <div class="pcat-name">简历岗位迁移题</div>
+            <div class="pcat-desc">你的项目/实习如何迁移到这个岗位，体现AI PM能力</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="startJobTargetInterview()">▶ 开始练习</button>
+          <span id="jt-type-label" style="font-size:13px;color:var(--text-muted)">当前：岗位业务理解题</span>
+        </div>
+      </div>
+
+      <!-- 历史记录 -->
+      <div style="margin-top:4px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="job-target-spec-history"></div>
+      </div>
+    </section>
+
     <!-- ── Page: 简历专项 ── -->
     <section class="page" id="page-resume-spec">
       <div class="page-header">
@@ -1000,6 +1092,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <button class="cat-pill" onclick="setHfSrc(this,'aiproduct')">🤖 AI产品化</button>
         <button class="cat-pill" onclick="setHfSrc(this,'resume-spec')">💼 简历专项</button>
         <button class="cat-pill" onclick="setHfSrc(this,'kb-spec')">🧠 知识点专项</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'job-target')">🎯 目标岗位专项</button>
       </div>
       <div id="hf-sub-row" style="display:none;margin-bottom:12px">
         <div class="cat-pills" id="hf-sub-pills" data-selected="all"></div>
@@ -1682,6 +1775,7 @@ function navigate(page) {
   if (page === 'product') renderSpecHistory('product', 'product-spec-history');
   if (page === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
   if (page === 'kb-spec') renderKBSpec();
+  if (page === 'job-target') renderJobTarget();
   // When navigating directly to interview page (not mid-interview), restore clean config state
   if (page === 'interview' && !STATE.interview.active && !STATE.isGenerating) showInterviewConfig();
 }
@@ -3246,6 +3340,316 @@ async function startAIProductInterview() {
 }
 
 // ────────────────────────────────────────────────────────────
+// 目标岗位专项
+// ────────────────────────────────────────────────────────────
+
+const JT_TYPE_LABELS = {
+  random: '随机岗位面试',
+  business: '岗位业务理解题',
+  product: '岗位产品思维题',
+  aiproduct: '岗位AI能力产品化题',
+  migration: '简历岗位迁移题',
+};
+const JT_ALL_TYPES = ['business', 'product', 'aiproduct', 'migration'];
+let _jtType = 'business';
+let _jtPendingFiles = [];
+
+function selectJTType(el, type) {
+  document.querySelectorAll('#jt-type-grid .pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  _jtType = type;
+  document.getElementById('jt-type-label').textContent = '当前：' + (JT_TYPE_LABELS[type] || type);
+}
+
+function getJobTargetConfig() {
+  try { return JSON.parse(localStorage.getItem('jobTargetConfig') || 'null'); } catch { return null; }
+}
+
+function buildJobTargetContext(cfg) {
+  if (!cfg) return '';
+  const parts = [];
+  if (cfg.company) parts.push('目标公司：' + cfg.company);
+  if (cfg.title) parts.push('目标岗位：' + cfg.title);
+  if (cfg.jd) parts.push('【JD原文】\n' + cfg.jd);
+  if (cfg.deptDesc) parts.push('【部门/业务说明】\n' + cfg.deptDesc);
+  if (cfg.files && cfg.files.length) {
+    cfg.files.forEach(function(f) { parts.push('【业务资料：' + f.name + '】\n' + f.content); });
+  }
+  return parts.join('\n\n');
+}
+
+function showJTConfigCard() {
+  document.getElementById('jt-config-card').style.display = '';
+  document.getElementById('jt-current-card').style.display = 'none';
+}
+
+function renderJTFilesList(files) {
+  const el = document.getElementById('jt-files-list');
+  if (!el) return;
+  if (!files || !files.length) { el.innerHTML = ''; return; }
+  el.innerHTML = files.map(function(f, i) {
+    return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+      '<span>📎 ' + escHtml(f.name) + '</span>' +
+      '<span style="color:var(--success);font-size:11px">✓ 已解析</span>' +
+      '<button class="btn btn-ghost btn-sm" style="padding:0 6px;font-size:11px" onclick="removeJTPendingFile(' + i + ')">删除</button>' +
+      '</div>';
+  }).join('');
+}
+
+function removeJTPendingFile(idx) {
+  _jtPendingFiles.splice(idx, 1);
+  renderJTFilesList(_jtPendingFiles);
+}
+
+async function handleJTFiles(input) {
+  const existingCfg = getJobTargetConfig() || {};
+  _jtPendingFiles = (existingCfg.files || []).slice();
+  for (let i = 0; i < input.files.length; i++) {
+    const file = input.files[i];
+    const ext = file.name.split('.').pop().toLowerCase();
+    let content = '';
+    try {
+      if (ext === 'txt') {
+        content = await new Promise(function(res, rej) {
+          const r = new FileReader();
+          r.onload = function(e) { res(e.target.result); };
+          r.onerror = rej;
+          r.readAsText(file);
+        });
+      } else if (ext === 'docx') {
+        const ab = await new Promise(function(res, rej) {
+          const r = new FileReader();
+          r.onload = function(e) { res(e.target.result); };
+          r.onerror = rej;
+          r.readAsArrayBuffer(file);
+        });
+        const result = await mammoth.extractRawText({ arrayBuffer: ab });
+        content = result.value || '';
+      } else if (ext === 'pdf') {
+        const ab = await new Promise(function(res, rej) {
+          const r = new FileReader();
+          r.onload = function(e) { res(e.target.result); };
+          r.onerror = rej;
+          r.readAsArrayBuffer(file);
+        });
+        const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+        let text = '';
+        for (let p = 1; p <= pdf.numPages; p++) {
+          const pg = await pdf.getPage(p);
+          const tc = await pg.getTextContent();
+          text += tc.items.map(function(it) { return it.str; }).join(' ') + '\n';
+        }
+        content = text;
+      }
+      _jtPendingFiles = _jtPendingFiles.filter(function(f) { return f.name !== file.name; });
+      _jtPendingFiles.push({ name: file.name, content: content.slice(0, 8000) });
+    } catch (e) {
+      toast(file.name + ' 解析失败：' + e.message, 'error');
+    }
+  }
+  renderJTFilesList(_jtPendingFiles);
+  input.value = '';
+}
+
+function renderJobTarget() {
+  const cfg = getJobTargetConfig();
+  const statusEl = document.getElementById('jt-status');
+  const configCard = document.getElementById('jt-config-card');
+  const currentCard = document.getElementById('jt-current-card');
+  const currentDisplay = document.getElementById('jt-current-display');
+  if (!statusEl) return;
+
+  if (cfg && (cfg.company || cfg.title || cfg.jd)) {
+    statusEl.textContent = '已配置';
+    statusEl.style.background = '#d1fae5';
+    statusEl.style.color = '#065f46';
+    configCard.style.display = 'none';
+    currentCard.style.display = '';
+    // Pre-fill form with saved values
+    document.getElementById('jt-company').value = cfg.company || '';
+    document.getElementById('jt-title').value = cfg.title || '';
+    document.getElementById('jt-jd').value = cfg.jd || '';
+    document.getElementById('jt-dept').value = cfg.deptDesc || '';
+    // Show current summary
+    const fileNames = cfg.files && cfg.files.length ? cfg.files.map(function(f) { return f.name; }).join('、') : '';
+    currentDisplay.innerHTML =
+      '<div style="margin-bottom:6px"><strong>' + escHtml(cfg.company || '(公司未填)') + ' · ' + escHtml(cfg.title || '(岗位未填)') + '</strong></div>' +
+      (cfg.jd ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">JD：' + escHtml(cfg.jd.slice(0, 100)) + (cfg.jd.length > 100 ? '…' : '') + '</div>' : '') +
+      (cfg.deptDesc ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">业务说明：' + escHtml(cfg.deptDesc.slice(0, 80)) + (cfg.deptDesc.length > 80 ? '…' : '') + '</div>' : '') +
+      (fileNames ? '<div style="font-size:12px;color:var(--text-muted)">📎 资料：' + escHtml(fileNames) + '</div>' : '');
+    // Restore file list in config card
+    _jtPendingFiles = (cfg.files || []).slice();
+    renderJTFilesList(_jtPendingFiles);
+  } else {
+    statusEl.textContent = '未配置';
+    statusEl.style.background = '#fef3c7';
+    statusEl.style.color = '#b45309';
+    configCard.style.display = '';
+    currentCard.style.display = 'none';
+  }
+  renderSpecHistory('job-target', 'job-target-spec-history');
+}
+
+function saveJobTargetConfig() {
+  const company = document.getElementById('jt-company').value.trim();
+  const title = document.getElementById('jt-title').value.trim();
+  const jd = document.getElementById('jt-jd').value.trim();
+  const deptDesc = document.getElementById('jt-dept').value.trim();
+  if (!company && !title && !jd) {
+    toast('请至少填写公司名称、岗位名称或JD文本之一', 'error');
+    return;
+  }
+  const existingCfg = getJobTargetConfig() || {};
+  const files = _jtPendingFiles.length > 0 ? _jtPendingFiles : (existingCfg.files || []);
+  localStorage.setItem('jobTargetConfig', JSON.stringify({ company: company, title: title, jd: jd, deptDesc: deptDesc, files: files }));
+  toast('目标岗位配置已保存', 'success');
+  renderJobTarget();
+}
+
+function buildJTQuestionPrompt(type, cfg) {
+  const ctx = buildJobTargetContext(cfg);
+  const ctxNote = ctx ? '\n\n【目标岗位资料】\n' + ctx : '';
+  const hasInfo = cfg && (cfg.company || cfg.title || cfg.jd);
+  const companyStr = (cfg && cfg.company) ? '「' + cfg.company + '」' : '该公司';
+  const titleStr = (cfg && cfg.title) ? '的「' + cfg.title + '」岗位' : '目标岗位';
+  const openPrefix = hasInfo ? ('基于' + companyStr + titleStr) : '基于以下目标岗位资料';
+  const noInfoNote = hasInfo ? '' : '\n注意：岗位资料不足时，用"基于你目前了解的这个岗位/业务"开头，不要编造具体业务事实。';
+
+  if (type === 'business') {
+    return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位业务理解题」，考察候选人对该部门业务、用户和产品机会的理解。\n' +
+      openPrefix + '，从以下方向随机选1个出题：\n' +
+      '1. 这个业务方向最核心的用户是谁、他们的核心需求是什么\n' +
+      '2. 如果你是这个部门的PM，你认为最大的产品机会/痛点在哪里\n' +
+      '3. 这个业务的核心增长驱动力是什么？有哪些制约因素？\n' +
+      '4. 这个产品/业务在行业里的核心差异化是什么？竞品怎么做的？\n' +
+      '5. 如果要为这个业务设计关键指标体系，北极星指标是什么、为什么？\n' +
+      noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+  }
+  if (type === 'product') {
+    return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景出产品设计、指标、留存或差异化题目。\n' +
+      openPrefix + '，从以下方向随机选1个出题：\n' +
+      '1. 产品设计/改进：如何优化某个具体功能/体验/转化环节\n' +
+      '2. 数据/指标：某关键指标异常，如何诊断、定位和修复\n' +
+      '3. 留存与增长：如何提升用户留存/活跃，设计一个增长实验\n' +
+      '4. 产品优先级：有多个需求，如何做取舍决策\n' +
+      '5. 差异化定位：和某竞品相比，如何做差异化，核心策略是什么\n' +
+      '要求：题目必须与该岗位的具体业务场景强绑定，不要出通用产品题。\n' +
+      noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+  }
+  if (type === 'aiproduct') {
+    return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位AI能力产品化题」，考察候选人能否把AI能力在该业务场景落地。\n' +
+      openPrefix + '，要求：\n' +
+      '- 给定该业务的一个具体AI落地场景，要求候选人设计完整AI产品方案\n' +
+      '- 涵盖：用户任务→AI介入点→Agent/RAG/Workflow/规则/普通LLM怎么选→产品机制→指标→风险\n' +
+      '- 场景必须与JD/业务说明中的真实业务方向对应\n' +
+      (hasInfo ? '' : '若资料不足，用"假设该部门要用AI解决[合理推测的场景]，你会怎么设计产品方案"。\n') +
+      '直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
+  }
+  if (type === 'migration') {
+    return '你是字节/腾讯/阿里的AI产品面试官。请出1道「简历岗位迁移题」，考察候选人能否将项目/实习经历迁移到该岗位，体现AI PM能力。\n' +
+      openPrefix + '，从以下方向随机选1个：\n' +
+      '1. 你过去的经历，和这个岗位最相关的是什么？你会怎么介绍它的迁移价值？\n' +
+      '2. 你在过去的AI项目里，最能体现AI PM判断力的决策是什么？和这个岗位有什么关联？\n' +
+      '3. 你过去做过的AI产品方向，和这个业务有哪些相似挑战？你会怎么迁移经验？\n' +
+      '4. 从你之前的岗位转到这个岗位，你认为最大的能力gap是什么？你会怎么弥补？\n' +
+      (hasInfo ? '' : '若无候选人简历资料，用"根据你目前的项目/实习经历…"开头。\n') +
+      '直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+  }
+  return '';
+}
+
+
+function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
+  const jobInfo = cfg ? ((cfg.company || '') + (cfg.title ? ' · ' + cfg.title : '')) : '';
+  const ctxBlock = cfg && (cfg.company || cfg.title || cfg.jd || cfg.deptDesc)
+    ? '\n\n【目标岗位背景】\n' +
+      (jobInfo ? '岗位：' + jobInfo + '\n' : '') +
+      (cfg.jd ? 'JD摘要：' + cfg.jd.slice(0, 300) + '\n' : '') +
+      (cfg.deptDesc ? '业务方向：' + cfg.deptDesc.slice(0, 200) : '')
+    : '';
+  let followupDir = '';
+  if (type === 'business') {
+    followupDir = '追问方向（围绕业务理解深挖，选最切中要害的1个）：\n' +
+      '- 用户深挖："你说核心用户是X，他们最高频的使用场景是什么？和其他用户群有什么不同？"\n' +
+      '- 机会判断："你认为最大机会在哪里，依据是什么？有没有被低估的方向？"\n' +
+      '- 竞品认知："你有没有深度研究过竞品？他们怎么解决这个问题？你的判断和他们有什么不同？"\n' +
+      '- 商业逻辑："这个业务核心商业逻辑是什么？增长驱动力是什么？制约在哪里？"\n' +
+      '- 指标判断："你说这个方向有机会，用什么指标验证这个判断？北极星指标是什么？"\n' +
+      '- MVP收敛："如果只让你做一个最小MVP，你会先做什么，为什么？"';
+  } else if (type === 'product') {
+    followupDir = '追问方向（围绕产品思维深挖，选最切中要害的1个）：\n' +
+      '- 场景收敛："你说要优化X，具体针对哪类用户在什么场景下？为什么是这个而不是其他？"\n' +
+      '- 方案取舍："有没有其他方案？你是怎么做取舍的？砍掉了什么，为什么？"\n' +
+      '- MVP判断："如果只有两周，你优先做什么？最小可验证假设是什么？"\n' +
+      '- 指标验证："核心指标是什么？怎么证明真的产生了价值？"\n' +
+      '- 留存/增长深挖："用户不来的真正原因是什么？你怎么找到关键行为再设计实验验证？"\n' +
+      '- 差异化逻辑："和竞品比，你的差异化核心是什么？用户为什么选你而不是别人？"';
+  } else if (type === 'aiproduct') {
+    followupDir = AIPRODUCT_INTERVIEW_SYSTEM + '\n\n【岗位绑定要求】追问时必须结合目标岗位的具体业务场景，不脱离实际业务讨论抽象AI能力。';
+  } else if (type === 'migration') {
+    followupDir = RESUME_SPEC_FOLLOWUP + '\n\n【岗位迁移追问方向（优先用以下方向）】：\n' +
+      '- "这段经历里，哪个决策最能体现你适合这个岗位？"\n' +
+      '- "你认为从你当前背景到这个岗位，最大的能力gap是什么？你会怎么弥补？"\n' +
+      '- "这个岗位最看重XX能力，你有没有类似经历可以说明？"';
+  }
+  return '你是一名资深AI产品经理面试官，正在对候选人进行「目标岗位专项」面试练习。\n' +
+    (turnNote ? turnNote + '\n' : '') +
+    diffDesc + ctxBlock + '\n\n' +
+    '【面试目标】考察候选人能否把通用产品思维、AI产品化能力和个人项目经历，真正迁移到这个具体岗位的业务场景中。追问要有岗位/业务特异性，不要泛泛而谈。\n\n' +
+    '【追问风格】追问要短（≤45字）、直接、有压力感，像真实面试官。优先用：为什么？依据是什么？和这个岗位/业务的关联是什么？具体指标是什么？\n\n' +
+    '严格遵守：\n' +
+    '- 第1轮：只把面试题原文提出来，不做任何分析\n' +
+    '- 第2轮起：根据候选人回答中最明显的缺失项，只问1个追问，不超过50字\n' +
+    '- 结束时必须立即输出"[INTERVIEW_END]"，然后用1句话点评\n' +
+    '- 禁止：多问题列举 / 废话前缀 / 引导式句式\n' +
+    voiceNote + '\n\n' +
+    followupDir;
+}
+
+async function startJobTargetInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  const cfg = getJobTargetConfig();
+  if (!cfg || (!cfg.company && !cfg.title && !cfg.jd)) {
+    toast('请先配置目标岗位信息', 'error');
+    showJTConfigCard();
+    return;
+  }
+  API_QUEUE.abort();
+  const resolvedType = _jtType === 'random'
+    ? JT_ALL_TYPES[Math.floor(Math.random() * JT_ALL_TYPES.length)]
+    : _jtType;
+  navigate('interview');
+  await new Promise(function(r) { setTimeout(r, 80); });
+  showInterviewConfig(true);
+  toast('正在生成「' + (JT_TYPE_LABELS[resolvedType] || resolvedType) + '」中…', 'info');
+  let question = '';
+  try {
+    question = await genQuestion(buildJTQuestionPrompt(resolvedType, cfg));
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+  const pref = getPref();
+  const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
+  STATE.interview = { active: true, question: question, messages: [], turn: 0, maxTurns: maxTurns, source: 'job-target', subCategory: resolvedType, hasVoiceInput: false, rewrites: [] };
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
+
+// ────────────────────────────────────────────────────────────
 // 简历专项
 // ────────────────────────────────────────────────────────────
 
@@ -3923,6 +4327,55 @@ ${RESUME_SPEC_FOLLOWUP}
     return;
   }
 
+  // ── 目标岗位专项：独立 prompt，围绕岗位业务/产品/AI/迁移追问 ──
+  if (STATE.interview.source === 'job-target') {
+    if (turn === 0) { addMessage('ai', question); return; }
+    if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
+    const softEndJT = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 5 : 4;
+    const turnNoteJT = turn < softEndJT
+      ? '\n【当前进度】已完成第 ' + turn + ' 轮追问，继续深挖。'
+      : turn === softEndJT
+      ? '\n【结束判断】已完成第 ' + turn + ' 轮追问。请评估：\n- 核心考察点已覆盖 → 本轮直接输出"[INTERVIEW_END]"+1句点评，不再提问\n- 还有1个关键薄弱点未深挖 → 可再追最后1轮，之后必须结束'
+      : '\n【⚠️ 必须结束】已完成第 ' + turn + ' 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评。禁止再提问。';
+    const jtCfg = getJobTargetConfig() || {};
+    const jtSystem = buildJTFollowupSystem(STATE.interview.subCategory, jtCfg, diffDesc[pref.difficulty] || diffDesc.strict, turnNoteJT, voiceNote) + '\n\n- 面试题：' + question;
+    const jtApiMessages = messages.map(function(m) { return { role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }; });
+    addMessage('ai', '');
+    const jtLastEl = document.getElementById('chat-messages').lastElementChild;
+    const jtBubble = jtLastEl ? jtLastEl.querySelector('.msg-bubble') : null;
+    if (jtBubble) jtBubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+    STATE.isGenerating = true;
+    document.getElementById('send-btn').disabled = true;
+    try {
+      const rawJT = await callClaude(jtApiMessages, jtSystem, function(text) {
+        const display = text.replace(/\[INTERVIEW_END\]/g, '').trim();
+        if (jtBubble) jtBubble.innerHTML = formatMsg(display) + '<span class="typing-cursor">◫</span>';
+        scrollChat();
+      });
+      const hasEndJT = rawJT.includes('[INTERVIEW_END]') && STATE.interview.turn >= 3;
+      const hitCapJT = STATE.interview.turn >= STATE.interview.maxTurns;
+      let displayJT;
+      if (hasEndJT) {
+        const afterEnd = rawJT.slice(rawJT.indexOf('[INTERVIEW_END]') + '[INTERVIEW_END]'.length).trim();
+        displayJT = afterEnd || '好的，本次面试到这里结束，感谢你的回答。';
+      } else { displayJT = rawJT.trim(); }
+      if (jtBubble) jtBubble.innerHTML = formatMsg(displayJT);
+      const msgs = STATE.interview.messages;
+      if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') msgs[msgs.length - 1].content = displayJT;
+      if (hasEndJT || hitCapJT) {
+        if (hitCapJT && !hasEndJT && jtBubble) jtBubble.innerHTML = formatMsg('好的，本次面试到这里结束，感谢你的回答。');
+        endInterviewFlow();
+      }
+    } catch (e) {
+      if (jtBubble) jtBubble.innerHTML = '<span style="color:var(--danger)">⚠️ ' + e.message + '</span>';
+      toast(e.message, 'error');
+    } finally {
+      STATE.isGenerating = false;
+      document.getElementById('send-btn').disabled = false;
+    }
+    return;
+  }
+
   if (turn > STATE.interview.maxTurns) { endInterviewFlow(); return; }
 
   // Tell AI exactly which turn it's on so it can decide naturally when to end
@@ -4178,6 +4631,12 @@ async function generateScore() {
   const isAIProduct = source === 'aiproduct';
   const isResumeSpec = source === 'resume-spec';
   const isProduct = source === 'product';
+  const isJobTarget = source === 'job-target';
+  const jtSub = isJobTarget ? subCategory : null; // 'business'|'product'|'aiproduct'|'migration'
+  // Route job-target to existing scoring systems based on question type
+  const scoreAsAIP = isAIProduct || jtSub === 'aiproduct';
+  const scoreAsRS = isResumeSpec || jtSub === 'migration';
+  const scoreAsProd = isProduct || jtSub === 'product' || jtSub === 'business';
 
   // Module-specific improvement dimensions
   // Product: per-category dimensions so scoring feedback matches the actual question type
@@ -4199,25 +4658,31 @@ async function generateScore() {
     aiknowledge:  '按实际题目子类型选框架：\n· 技术认知类 →「概念理解 → 适用场景 → 产品例子 → 局限风险 → 选型判断」\n· 产品观类 →「观点判断 → 背后原因 → 用户/业务视角 → 具体例子 → 边界条件 → 面试表达」\n· 行业趋势类 →「趋势判断 → 驱动因素 → 典型场景 → 商业化路径 → 风险约束 → 对AI PM的启示」',
   };
   const _productR1Framework = _productR1FrameworkMap[subCategory] || _productR1FrameworkMap.design;
-  const _impDims = isAIProduct
+  const _impDims = scoreAsAIP
     ? '系统类型识别、业务目标与用户任务、任务链路、AI能力匹配、数据/系统接入、产品机制/功能形态、指标/评测、风险兜底、方案取舍、口语表达'
+    : (jtSub === 'migration')
+    ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
     : isResumeSpec
     ? '项目一句话、用户/业务问题、我的角色、关键决策、指标/结果、难点/bad case、AI风险/质量控制、岗位迁移、表达边界'
+    : (jtSub === 'business')
+    ? '业务理解深度、用户场景清晰度、产品机会判断、竞品/市场认知、指标思路、表达说服力'
+    : scoreAsProd
+    ? (_productImpDimsMap[isJobTarget ? 'design' : subCategory] || _productImpDimsMap.design)
     : isProduct
     ? (_productImpDimsMap[subCategory] || _productImpDimsMap.design)
     : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
-  const _keyLineSpec = isProduct
-    ? (subCategory === 'metrics'
+  const _keyLineSpec = scoreAsAIP
+    ? `\n- ai_product_key_line: 字符串，本轮最该补的一句话（面试口语，≤45字，直接给可以原话用的表达，沉淀AI产品化核心判断，比如"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP"或"AI不是替代人工判断，而是先做识别、检索和建议，高风险动作保留确认"，不要解释原因）`
+    : (scoreAsRS)
+    ? `\n- resume_key_line: 字符串，本轮最该补的一句话（面试口语，≤40字，直接给可以原话用的表达，必须体现真实角色边界或核心判断，比如"这个项目里我主要负责需求拆解和AI输出质量评估，不负责底层模型开发"或"我当时的核心判断是先验证用户是否采纳AI建议，而不是先追求功能完整"，不要解释原因）`
+    : (scoreAsProd || isProduct)
+    ? ((isJobTarget ? 'design' : subCategory) === 'metrics'
       ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤35字，根据题目子类型选择风格——异常诊断类如"我会先确认口径，再分层定位异常集中在哪个链路"；留存增长类如"我会先找到影响留存的关键行为，再围绕激活和复访设计实验"；指标体系类如"我会先明确产品要证明的价值，再分层设计目标、行为、质量和风险指标"，不要解释原因）`
       : `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，要能迁移到其他题——禁止绑定具体人名或具体商品名，应该是可以跨场景套用的判断句式，比如"我会先收敛到X类用户在Y时刻的场景，因为…"或"我会先做一个功能而不是三个，先验证核心假设"，不要解释原因）`)
-    : isResumeSpec
-    ? `\n- resume_key_line: 字符串，本轮最该补的一句话（面试口语，≤40字，直接给可以原话用的表达，必须体现真实角色边界或核心判断，比如"这个项目里我主要负责需求拆解和AI输出质量评估，不负责底层模型开发"或"我当时的核心判断是先验证用户是否采纳AI建议，而不是先追求功能完整"，不要解释原因）`
-    : isAIProduct
-    ? `\n- ai_product_key_line: 字符串，本轮最该补的一句话（面试口语，≤45字，直接给可以原话用的表达，沉淀AI产品化核心判断，比如"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP"或"AI不是替代人工判断，而是先做识别、检索和建议，高风险动作保留确认"，不要解释原因）`
     : '';
   const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数${_keyLineSpec}`;
 
-  const system = isAIProduct
+  const system = scoreAsAIP
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
@@ -4251,7 +4716,7 @@ ${_impFieldSpec}
 
 示例格式（请填入真实评分，不要照抄示例）：
 {"score":7,"system_type":8,"actual_system_type":"任务型","system_type_reveal":"本题属于任务型：核心判断依据是业务有明确的标准化任务（工单分类+回复），输入输出清晰，错误可追溯。候选人识别基本准确，但偏向把它描述成流程型——区别在于任务型是单次请求完成一个任务，流程型是多步骤审批流转。下次看到"高重复、单任务、有标准答案"的业务场景，优先判断任务型。","biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"风险兜底","issue":"这一轮考的是风险兜底，你提到了误判但没有说触发条件和人工接入时机","why":"高风险场景没有触发机制等于没有兜底","how":"补充置信度阈值+触发条件+人工审核时间窗口三层设计"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}`
-    : isProduct
+    : scoreAsProd
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
@@ -4287,7 +4752,7 @@ ${subCategory === 'aiknowledge' ? `
 
 示例格式（请填入真实评分，不要照抄示例）：
 {"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"ai_depth":7,"persuasiveness":7,"highlights":["第1轮主动收敛到新人用户场景，切入有说服力","追问MVP时优先级判断清晰"],"summary":"主问题场景收敛好，指标验证和风险兜底还需深挖","improvements":[{"dimension":"MVP优先级","issue":"这一轮考的是MVP取舍，你提了3个方向但没有说为什么先做这一个","why":"MVP优先级决定了验证速度和资源效率","how":"补充'我会先做X，因为它验证核心假设且开发成本最低'"}],"key_line":"我会先把场景收敛到刚入职三个月的新人，因为他们需求最集中、路径最清晰"}`
-    : isResumeSpec
+    : scoreAsRS
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的简历项目经历深挖考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明：
@@ -4461,8 +4926,10 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 
   // Single API call: framework + improved rewrite + standard reference per round
   const isResumeSpecRef = STATE.interview?.source === 'resume-spec';
+  const isJobTargetRef = STATE.interview?.source === 'job-target';
+  const jtSubRef = isJobTargetRef ? (STATE.interview?.subCategory || '') : '';
   const productRefSubCat = STATE.interview?.subCategory || '';
-  const system = isAIProductRef
+  const system = (isAIProductRef || jtSubRef === 'aiproduct')
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。
 
 【第1轮 — 主问题】给出三部分：
@@ -4483,7 +4950,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 3. 参考答案：该追问主题的高质量单点回答（120-200字，不重复完整产品方案，第一人称口语）
 
 核心原则：第1轮训练"搭骨架"，追问训练"单点深挖"。所有输出都保持口语节奏，不要虚构数据。`
-    : isProductRef
+    : (isProductRef || jtSubRef === 'product' || jtSubRef === 'business')
     ? (productRefSubCat === 'metrics'
       ? `你是资深AI产品经理面试教练，专注数据分析类面试题练习。对话中第1轮是主问题，第2轮起是追问。请严格区分两类，不要把追问当完整大题处理。
 
@@ -4528,7 +4995,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
 3. 参考答案：该追问主题的高质量单点口语回答（100-180字，不重复完整产品方案）
 
 核心原则：第1轮训练"收敛场景→MVP单点"，追问训练"单点深挖讲清判断"。参考答案不给完整产品矩阵，先给一个最小可验证的单点。改写版本必须保留候选人原意，不要强行补成完整框架。所有输出保持面试口语节奏，不要写成文章。`)
-    : isResumeSpecRef
+    : (isResumeSpecRef || jtSubRef === 'migration')
     ? `你是资深AI产品经理面试教练，专注简历项目经历深挖练习。针对每道面试题，给出三部分内容：
 
 1. 答题思路：识别追问方向（角色边界/项目价值/取舍/指标/bad case/岗位迁移/优化方向），给出核心答题维度（简洁条目，每条不超过30字，共3-5条；指出考察重点和候选人常见坑）
@@ -5170,7 +5637,7 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项' };
+  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
   const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项' };
   const diffLabels = { normal: '普通', strict: '严格', hell: '地狱' };
 

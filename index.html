@@ -929,9 +929,17 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
             <input type="text" class="input-field" id="jt-title" placeholder="如：商业化AI产品经理">
           </div>
         </div>
-        <div class="input-group" style="margin-bottom:12px">
-          <label class="input-label">JD文本 <span style="color:var(--text-muted);font-size:11px">（粘贴原始招聘描述，越详细出题越精准）</span></label>
+        <div class="input-group" style="margin-bottom:4px">
+          <label class="input-label">岗位职责 / JD文本 <span style="color:var(--text-muted);font-size:11px">（用于出业务理解题、产品思维题、AI能力产品化题）</span></label>
           <textarea class="input-field" id="jt-jd" rows="5" placeholder="粘贴JD内容…" style="resize:vertical"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="autoExtractRequirements()">✨ 从JD自动提取任职要求</button>
+          <span style="font-size:11px;color:var(--text-muted)" id="jt-extract-status"></span>
+        </div>
+        <div class="input-group" style="margin-bottom:12px">
+          <label class="input-label">任职要求 <span style="color:var(--text-muted);font-size:11px">（用于迁移题、能力匹配题、gap追问 — 可手动填写或点击上方自动提取）</span></label>
+          <textarea class="input-field" id="jt-requirements" rows="4" placeholder="如：3年以上AI产品经验 / 有RAG/Agent落地经验 / 熟悉ToB业务场景…" style="resize:vertical"></textarea>
         </div>
         <div class="input-group" style="margin-bottom:12px">
           <label class="input-label">部门/业务说明 <span style="color:var(--text-muted);font-size:11px">（可选，补充部门背景、核心业务方向）</span></label>
@@ -3588,12 +3596,20 @@ function getJobTargetConfig() {
   try { return JSON.parse(localStorage.getItem('jobTargetConfig') || 'null'); } catch { return null; }
 }
 
-function buildJobTargetContext(cfg) {
+function buildJobTargetContext(cfg, opts) {
+  // opts: { forMigration: bool } — controls which sections are emphasised
   if (!cfg) return '';
+  const forMigration = opts && opts.forMigration;
   const parts = [];
   if (cfg.company) parts.push('目标公司：' + cfg.company);
   if (cfg.title) parts.push('目标岗位：' + cfg.title);
-  if (cfg.jd) parts.push('【JD原文】\n' + cfg.jd);
+  if (cfg.jd) parts.push('【岗位职责/JD原文】\n' + cfg.jd);
+  // 任职要求: included in all contexts, but prominently flagged for migration use
+  if (cfg.requirements) {
+    parts.push((forMigration
+      ? '【任职要求（重点参考：出题/追问/评分/参考答案均应对照这些要求）】\n'
+      : '【任职要求】\n') + cfg.requirements);
+  }
   if (cfg.deptDesc) parts.push('【部门/业务说明】\n' + cfg.deptDesc);
   if (cfg.files && cfg.files.length) {
     cfg.files.forEach(function(f) { parts.push('【业务资料：' + f.name + '】\n' + f.content); });
@@ -3692,12 +3708,14 @@ function renderJobTarget() {
     document.getElementById('jt-company').value = cfg.company || '';
     document.getElementById('jt-title').value = cfg.title || '';
     document.getElementById('jt-jd').value = cfg.jd || '';
+    document.getElementById('jt-requirements').value = cfg.requirements || '';
     document.getElementById('jt-dept').value = cfg.deptDesc || '';
     // Show current summary
     const fileNames = cfg.files && cfg.files.length ? cfg.files.map(function(f) { return f.name; }).join('、') : '';
     currentDisplay.innerHTML =
       '<div style="margin-bottom:6px"><strong>' + escHtml(cfg.company || '(公司未填)') + ' · ' + escHtml(cfg.title || '(岗位未填)') + '</strong></div>' +
-      (cfg.jd ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">JD：' + escHtml(cfg.jd.slice(0, 100)) + (cfg.jd.length > 100 ? '…' : '') + '</div>' : '') +
+      (cfg.jd ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">职责：' + escHtml(cfg.jd.slice(0, 80)) + (cfg.jd.length > 80 ? '…' : '') + '</div>' : '') +
+      (cfg.requirements ? '<div style="font-size:12px;color:#6366f1;margin-bottom:4px">任职要求：' + escHtml(cfg.requirements.slice(0, 80)) + (cfg.requirements.length > 80 ? '…' : '') + '</div>' : '') +
       (cfg.deptDesc ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">业务说明：' + escHtml(cfg.deptDesc.slice(0, 80)) + (cfg.deptDesc.length > 80 ? '…' : '') + '</div>' : '') +
       (fileNames ? '<div style="font-size:12px;color:var(--text-muted)">📎 资料：' + escHtml(fileNames) + '</div>' : '');
     // Restore file list in config card
@@ -3717,6 +3735,7 @@ function saveJobTargetConfig() {
   const company = document.getElementById('jt-company').value.trim();
   const title = document.getElementById('jt-title').value.trim();
   const jd = document.getElementById('jt-jd').value.trim();
+  const requirements = document.getElementById('jt-requirements').value.trim();
   const deptDesc = document.getElementById('jt-dept').value.trim();
   if (!company && !title && !jd) {
     toast('请至少填写公司名称、岗位名称或JD文本之一', 'error');
@@ -3724,13 +3743,14 @@ function saveJobTargetConfig() {
   }
   const existingCfg = getJobTargetConfig() || {};
   const files = _jtPendingFiles.length > 0 ? _jtPendingFiles : (existingCfg.files || []);
-  localStorage.setItem('jobTargetConfig', JSON.stringify({ company: company, title: title, jd: jd, deptDesc: deptDesc, files: files }));
+  localStorage.setItem('jobTargetConfig', JSON.stringify({ company, title, jd, requirements, deptDesc, files }));
   toast('目标岗位配置已保存', 'success');
   renderJobTarget();
 }
 
 function buildJTQuestionPrompt(type, subType, cfg) {
-  const ctx = buildJobTargetContext(cfg);
+  const isMigType = type === 'migration';
+  const ctx = buildJobTargetContext(cfg, { forMigration: isMigType });
   const ctxNote = ctx ? '\n\n【目标岗位资料】\n' + ctx : '';
   const hasInfo = cfg && (cfg.company || cfg.title || cfg.jd);
   const companyStr = (cfg && cfg.company) ? '「' + cfg.company + '」' : '该公司';
@@ -3803,13 +3823,20 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       '直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
   }
   if (type === 'migration') {
+    const hasReqs = !!(cfg && cfg.requirements && cfg.requirements.trim());
+    const reqNote = hasReqs
+      ? '\n\n【任职要求（出题时对照这些要求，考察候选人是否能匹配）】\n' + cfg.requirements.slice(0, 400)
+      : '';
     const dir = (subType && subType !== 'random' && migrationSubDir[subType])
       ? migrationSubDir[subType]
       : '从以下方向随机选1个：\n1. 你过去的经历，和这个岗位最相关的是什么？你会怎么介绍它的迁移价值？\n2. 你在过去的AI项目里，最能体现AI PM判断力的决策是什么？和这个岗位有什么关联？\n3. 你过去做过的AI产品方向，和这个业务有哪些相似挑战？你会怎么迁移经验？\n4. 从你之前的岗位转到这个岗位，你认为最大的能力gap是什么？你会怎么弥补？';
+    const reqDirection = hasReqs
+      ? '\n如有任职要求，优先出能暴露候选人是否满足某项具体要求的题目（如：某项技能的实际经验、项目里体现的能力与JD要求的对应关系、gap在哪里）。'
+      : '';
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「简历岗位迁移题」，考察候选人能否将项目/实习经历迁移到该岗位，体现AI PM能力。\n' +
-      openPrefix + '，' + dir +
+      openPrefix + '，' + dir + reqDirection +
       (hasInfo ? '' : '\n若无候选人简历资料，用"根据你目前的项目/实习经历…"开头。') +
-      '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote + reqNote;
   }
   return '';
 }
@@ -3819,11 +3846,15 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
   const jobInfo = cfg ? ((cfg.company || '') + (cfg.title ? ' · ' + cfg.title : '')) : '';
   const hasJD = !!(cfg && cfg.jd && cfg.jd.trim());
   const hasDept = !!(cfg && cfg.deptDesc && cfg.deptDesc.trim());
+  const hasReqs = !!(cfg && cfg.requirements && cfg.requirements.trim());
   const hasBizInfo = hasJD || hasDept; // whether enough dept/business context exists
-  const ctxBlock = cfg && (cfg.company || cfg.title || cfg.jd || cfg.deptDesc)
+  const isMigration = type === 'migration';
+  const ctxBlock = cfg && (cfg.company || cfg.title || cfg.jd || cfg.deptDesc || cfg.requirements)
     ? '\n\n【目标岗位背景】\n' +
       (jobInfo ? '岗位：' + jobInfo + '\n' : '') +
-      (cfg.jd ? 'JD摘要：' + cfg.jd.slice(0, 300) + '\n' : '') +
+      (cfg.jd && !isMigration ? 'JD摘要：' + cfg.jd.slice(0, 300) + '\n' : '') +
+      (cfg.jd && isMigration ? '岗位职责摘要：' + cfg.jd.slice(0, 200) + '\n' : '') +
+      (hasReqs ? (isMigration ? '【任职要求（追问重点参考，考察经历是否匹配这些要求）】\n' : '任职要求：') + cfg.requirements.slice(0, 300) + '\n' : '') +
       (cfg.deptDesc ? '业务方向：' + cfg.deptDesc.slice(0, 200) : '')
     : '';
   let followupDir = '';
@@ -3856,14 +3887,21 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
   } else if (type === 'migration') {
     const targetRole = cfg && cfg.title ? cfg.title : '目标岗位';
     const companyRef2 = cfg && cfg.company ? cfg.company : '这家公司';
+    const reqMatchNote = hasReqs
+      ? '\n- 要求匹配："JD中要求[从任职要求里选一条最关键的]，你过去的哪个项目或经历最直接证明了这一点？"\n' +
+        '- gap追问："JD要求[某项具体技能/经验]，你目前在这方面的实际经验是什么情况？入职后你计划怎么补？"\n' +
+        '- 能力体现："这个项目具体体现了任职要求中的哪项能力？给我一个面试官能验证的细节。"'
+      : '';
     followupDir = '【简历岗位迁移追问要求】聚焦"迁移价值"，不做项目深挖。追问必须围绕：这段经历能不能说服面试官你能胜任' + targetRole + '。\n' +
+      (hasReqs ? '【重要】有任职要求时，优先从要求中选1条具体的能力/经验要求来追问，考察候选人是否真的匹配；不要只问泛泛的迁移论证。\n' : '') +
       '追问方向（选最能暴露迁移说服力缺口的1个）：\n' +
       '- 职责对应："你说的这段经历，和' + targetRole + '的哪个核心职责最直接对应？能具体说吗？"\n' +
       '- 能力迁移说服力："面试官为什么应该相信你的这段经历能让你胜任' + companyRef2 + '的' + targetRole + '？说服我。"\n' +
       '- 相似与不同："你之前做的和' + targetRole + '要做的，最大的相似点和最大的不同点各是什么？"\n' +
       '- 经验落地："如果明天就入职' + companyRef2 + '，你的这段经历里哪个判断/方法可以直接用？哪些需要重新学？"\n' +
       '- gap识别："你认为你目前最缺' + targetRole + '的哪个能力？你打算怎么补？"\n' +
-      '- 说服面试官："如果我是你的面试官，我最可能对哪个点有疑虑？你会怎么回应？"';
+      '- 说服面试官："如果我是你的面试官，我最可能对哪个点有疑虑？你会怎么回应？"' +
+      reqMatchNote;
   }
   const jdCitationRule = '【JD引用规则】JD信息是背景参考，不是每轮必引的模板。' +
     (type === 'migration'
@@ -4992,6 +5030,7 @@ async function generateScore() {
   const _jtCfgForScore = isJobTarget ? (getJobTargetConfig() || {}) : null;
   const _jtJobInfo = _jtCfgForScore ? ((_jtCfgForScore.company || '') + (_jtCfgForScore.title ? ' · ' + _jtCfgForScore.title : '')) : '';
   const _jtJdSnip = _jtCfgForScore && _jtCfgForScore.jd ? _jtCfgForScore.jd.slice(0, 200) : '';
+  const _jtReqSnip = _jtCfgForScore && _jtCfgForScore.requirements ? _jtCfgForScore.requirements.slice(0, 300) : '';
   const _jtScoreHasBizInfo = !!(_jtJdSnip || (_jtCfgForScore && _jtCfgForScore.deptDesc));
   const jtScoringNoteProd = (isJobTarget && (jtTopType === 'product' || jtTopType === 'business'))
     ? `\n\n【目标岗位专项额外评分要求${_jtJobInfo ? '（岗位：' + _jtJobInfo + '）' : ''}】：\n` +
@@ -5010,7 +5049,11 @@ async function generateScore() {
       '- 能力迁移说服力：候选人的判断/方法论/经历是否真的能迁移到目标岗位，论据是否充分\n' +
       '- gap识别与补充策略：候选人是否主动识别了自身与目标岗位要求的差距，并有具体弥补思路\n' +
       '- 面试官视角：候选人是否站在面试官角度主动回应潜在疑虑，而不是只陈述经历\n' +
-      '如候选人只做项目深挖而没有迁移论证，improvements中加维度："迁移价值论证"，issue写"只介绍了经历但没有说明与目标岗位的对应关系和迁移理由"，how写如何补充。'
+      (_jtReqSnip
+        ? '- 【任职要求匹配度】对照以下任职要求，评估候选人回答是否体现了对应能力；如有明显未覆盖的要求，列入improvements维度"要求匹配度"：\n  ' + _jtReqSnip + '\n'
+        : '') +
+      '如候选人只做项目深挖而没有迁移论证，improvements中加维度："迁移价值论证"，issue写"只介绍了经历但没有说明与目标岗位的对应关系和迁移理由"，how写如何补充。\n' +
+      '如回答完全没有提到任职要求中某个关键能力，improvements中加维度："要求匹配度"，issue写具体哪项要求没有覆盖，how写"用一个具体项目经历说明自己在这方面的实际经验，或坦诚说明gap并给补齐计划"。'
     : '';
 
   const system = scoreAsAIP
@@ -5281,19 +5324,30 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   const _jtRefCfg = isJobTargetRef ? (getJobTargetConfig() || {}) : null;
   const _jtRefJobInfo = _jtRefCfg ? ((_jtRefCfg.company || '') + (_jtRefCfg.title ? ' · ' + _jtRefCfg.title : '')) : '';
   const _jtRefJdSnip = _jtRefCfg && _jtRefCfg.jd ? _jtRefCfg.jd.slice(0, 250) : '';
+  const _jtRefReqSnip = _jtRefCfg && _jtRefCfg.requirements ? _jtRefCfg.requirements.slice(0, 300) : '';
   const _jtRefDept = _jtRefCfg && _jtRefCfg.deptDesc ? _jtRefCfg.deptDesc.slice(0, 150) : '';
   const _jtRefHasJD = !!(_jtRefJdSnip);
   const _jtRefHasDept = !!(_jtRefDept);
+  const _jtRefHasReqs = !!(_jtRefReqSnip);
   const _jtRefHasBizInfo = _jtRefHasJD || _jtRefHasDept;
+  const _isMigrationRef = jtTopRef === 'migration';
   const _jtRefCtxBlock = isJobTargetRef
-    ? (_jtRefHasBizInfo
+    ? (_jtRefHasBizInfo || _jtRefHasReqs
       ? '\n\n【目标岗位信息（务必结合进改写和参考答案）】\n' +
         (_jtRefJobInfo ? '目标岗位：' + _jtRefJobInfo + '\n' : '') +
-        (_jtRefJdSnip ? 'JD核心要求（摘要）：' + _jtRefJdSnip + '\n' : '') +
+        (!_isMigrationRef && _jtRefJdSnip ? 'JD核心职责（摘要）：' + _jtRefJdSnip + '\n' : '') +
+        (_isMigrationRef && _jtRefJdSnip ? '岗位职责摘要：' + _jtRefJdSnip + '\n' : '') +
+        (_jtRefReqSnip
+          ? (_isMigrationRef
+            ? '【任职要求（改写和参考答案必须对照这些要求，体现经历如何匹配，或坦诚说明gap）】\n' + _jtRefReqSnip + '\n'
+            : '任职要求：' + _jtRefReqSnip + '\n')
+          : '') +
         (_jtRefDept ? '业务方向：' + _jtRefDept + '\n' : '') +
-        '——改写版本和参考答案中，产品判断、指标选取、方案取舍结合上述岗位/业务背景，' +
-        'JD信息作为背景参考（可在1处自然提及能力要求），不要在每段都重复引用JD原文。' +
-        '不要给完全通用的答案。\n' +
+        (_isMigrationRef
+          ? '——改写版本和参考答案的核心任务：用候选人真实经历说明如何匹配任职要求，或坦诚说明gap并给补齐思路。' +
+            '不要只陈述项目，必须有"迁移论证"：哪段经历对应哪条要求，为什么。\n'
+          : '——改写版本和参考答案中，产品判断、指标选取、方案取舍结合上述岗位/业务背景，' +
+            'JD信息作为背景参考（可在1处自然提及能力要求），不要在每段都重复引用JD原文。不要给完全通用的答案。\n') +
         '【禁止编造内部数字】如需引用成本/补贴/费率/流失率等商业数字，必须用假设式表达（"假设单用户补贴为X元"），' +
         '禁止给出看似真实但无来源的精确数字。如果题目是"设计一项改进方案"，参考答案必须只围绕一个核心机制展开，' +
         '结构是：目标用户/场景 → 核心痛点 → 一个核心机制 → 关键流程 → 验证指标，不要并列多个方案。'
@@ -6784,6 +6838,47 @@ function init() {
   // If no API key set, suggest settings
   if (!getActiveKey()) {
     setTimeout(() => toast('请先在「设置」中填写 API Key', 'info', 5000), 500);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  目标岗位：从JD自动提取任职要求
+// ═══════════════════════════════════════════════
+async function autoExtractRequirements() {
+  const jdText = document.getElementById('jt-jd').value.trim();
+  if (!jdText) { toast('请先在上方填写JD文本', 'warn'); return; }
+  const statusEl = document.getElementById('jt-extract-status');
+  const reqEl = document.getElementById('jt-requirements');
+  statusEl.textContent = '提取中…';
+  const system = '你是一名招聘文本分析助手。用户会粘贴一段职位描述（JD），请你从中提取「任职要求」部分，包括：学历要求、工作年限、技能要求、经验要求等。\n\n输出规则：\n- 只输出任职要求内容，不要输出岗位职责\n- 如果JD原文中已有明确的「任职要求」/「岗位要求」/「职位要求」段落，直接提取该段落内容\n- 如果没有明确分段，从全文中推断并列出任职要求条目\n- 每条以"- "开头，保持简洁，不要添加额外说明\n- 如果JD中根本没有任职要求相关内容，输出"未发现明确任职要求，请手动填写"';
+  try {
+    let result = '';
+    await callClaude([{ role: 'user', content: '以下是JD文本，请提取任职要求：\n\n' + jdText }], system, function(t) { result = t; }, 0, false, true, 500);
+    if (result && !result.includes('未发现')) {
+      // Only fill if user hasn't manually typed something meaningful
+      const existing = reqEl.value.trim();
+      if (!existing) {
+        reqEl.value = result.trim();
+        statusEl.textContent = '✓ 已自动提取，可手动修改';
+        statusEl.style.color = '#10b981';
+      } else {
+        // Ask user whether to overwrite
+        if (confirm('任职要求已有内容，是否用提取结果覆盖？\n\n提取结果：\n' + result.slice(0, 200) + (result.length > 200 ? '…' : ''))) {
+          reqEl.value = result.trim();
+          statusEl.textContent = '✓ 已更新';
+          statusEl.style.color = '#10b981';
+        } else {
+          statusEl.textContent = '已取消';
+          statusEl.style.color = '';
+        }
+      }
+    } else {
+      statusEl.textContent = '未找到任职要求，请手动填写';
+      statusEl.style.color = 'var(--warning)';
+    }
+  } catch(e) {
+    statusEl.textContent = '提取失败：' + e.message;
+    statusEl.style.color = 'var(--danger)';
   }
 }
 

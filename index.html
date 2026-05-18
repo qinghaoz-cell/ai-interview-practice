@@ -593,6 +593,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-item" data-page="job-target" onclick="navigate('job-target')" style="border-left:2px solid #10b981;margin-left:6px;padding-left:16px">
         <span class="nav-icon">🎯</span>目标岗位专项
       </div>
+      <div class="nav-item" data-page="obs" onclick="navigate('obs')">
+        <span class="nav-icon">👁️</span>产品观察训练
+      </div>
       <div class="nav-item" data-page="history" onclick="navigate('history')">
         <span class="nav-icon">📊</span>历史记录
         <span class="nav-badge" id="history-badge">0</span>
@@ -1073,6 +1076,80 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div style="margin-top:4px" id="kbspec-history-section">
         <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
         <div id="kbspec-history"></div>
+      </div>
+    </section>
+
+    <!-- ── Page: 日常产品观察训练 ── -->
+    <section class="page" id="page-obs">
+      <div class="page-header">
+        <div class="page-title">👁️ 日常产品观察训练</div>
+        <div class="page-sub">拆解你日常看到的任何产品功能，训练具体化表达和产品思维深度</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📝 功能拆解</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">选一个你最近用过或注意到的功能，认真填完。没想法可以从身边APP随便挑一个。</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">产品 / 功能名称 <span style="color:var(--danger)">*</span></label>
+            <input class="input-field" id="obs-product" type="text" placeholder="例：微信「拍一拍」、饿了么「准时宝」、美团「超省卡」">
+          </div>
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">目标用户 <span style="color:var(--danger)">*</span></label>
+            <input class="input-field" id="obs-user" type="text" placeholder="例：点餐频率高、对时间敏感的上班族">
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-top:12px;margin-bottom:0">
+          <label class="input-label">使用场景（什么人，什么时刻，遇到了什么情况）<span style="color:var(--danger)">*</span></label>
+          <textarea class="input-field" id="obs-scene" rows="2" placeholder="例：午休时间点外卖，担心外卖迟到扣工资，但不敢选太远的商家"></textarea>
+        </div>
+
+        <div class="input-group" style="margin-top:12px;margin-bottom:0">
+          <label class="input-label">核心痛点（用户原来怎么解决这个问题，问题在哪里）<span style="color:var(--danger)">*</span></label>
+          <textarea class="input-field" id="obs-pain" rows="2" placeholder="例：只能靠商家评价估计送达时间，不确定性高，超时了也不知道找谁"></textarea>
+        </div>
+
+        <div class="input-group" style="margin-top:12px;margin-bottom:0">
+          <label class="input-label">产品机制（这个功能怎么解决痛点的，核心逻辑是什么）<span style="color:var(--danger)">*</span></label>
+          <textarea class="input-field" id="obs-mech" rows="2" placeholder="例：平台承诺超时赔付，把不确定性风险从用户转移给平台，用户付费换确定性"></textarea>
+        </div>
+
+        <div class="input-group" style="margin-top:12px;margin-bottom:0">
+          <label class="input-label">为什么不做其他方案（比较过什么，为什么选这个）</label>
+          <textarea class="input-field" id="obs-tradeoff" rows="2" placeholder="例：另一个方案是只显示更准的预计时间——但不能消除用户焦虑，用户仍然承担风险"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">可能的风险或局限</label>
+            <textarea class="input-field" id="obs-risk" rows="2" placeholder="例：骑手接单意愿下降；补贴成本高；用户对赔付金额期望不断提高"></textarea>
+          </div>
+          <div class="input-group" style="margin-bottom:0">
+            <label class="input-label">验证指标（什么数据能说明这个机制有效）</label>
+            <textarea class="input-field" id="obs-metric" rows="2" placeholder="例：开通率、订单量变化、差评率、赔付率、骑手流失率"></textarea>
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-top:12px;margin-bottom:0">
+          <label class="input-label">一句话面试表达（如果被问到这个功能，你怎么一句话说清楚它的产品逻辑）<span style="color:var(--danger)">*</span></label>
+          <input class="input-field" id="obs-keyline" type="text" placeholder="例：准时宝的核心不是给时间承诺，而是把超时风险从用户转移给平台，用确定性溢价换取用户决策信心">
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" id="obs-submit-btn" onclick="submitObservation()">🤖 获取Mentor点评</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearObsForm()">清空</button>
+        </div>
+      </div>
+
+      <!-- Feedback section (streams in) -->
+      <div id="obs-feedback-section" style="display:none;margin-top:12px"></div>
+
+      <!-- History -->
+      <div style="margin-top:20px" id="obs-history-section">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 观察记录</div>
+        <div id="obs-history-list"></div>
       </div>
     </section>
 
@@ -1818,6 +1895,7 @@ function navigate(page) {
   if (page === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
   if (page === 'kb-spec') renderKBSpec();
   if (page === 'job-target') renderJobTarget();
+  if (page === 'obs') renderObsHistory();
   // When navigating directly to interview page (not mid-interview), restore clean config state
   if (page === 'interview' && !STATE.interview.active && !STATE.isGenerating) showInterviewConfig();
 }
@@ -6706,6 +6784,180 @@ function init() {
   // If no API key set, suggest settings
   if (!getActiveKey()) {
     setTimeout(() => toast('请先在「设置」中填写 API Key', 'info', 5000), 500);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  日常产品观察训练
+// ═══════════════════════════════════════════════
+const OBS_FIELDS = [
+  { id: 'obs-product',  label: '产品/功能' },
+  { id: 'obs-user',     label: '目标用户' },
+  { id: 'obs-scene',    label: '使用场景' },
+  { id: 'obs-pain',     label: '核心痛点' },
+  { id: 'obs-mech',     label: '产品机制' },
+  { id: 'obs-tradeoff', label: '为什么不做其他方案' },
+  { id: 'obs-risk',     label: '可能风险' },
+  { id: 'obs-metric',   label: '验证指标' },
+  { id: 'obs-keyline',  label: '一句话面试表达' },
+];
+
+function getObsHistory() {
+  try { return JSON.parse(localStorage.getItem('obsHistory') || '[]'); } catch { return []; }
+}
+function saveObsHistory(arr) {
+  localStorage.setItem('obsHistory', JSON.stringify(arr.slice(0, 50)));
+}
+
+function clearObsForm() {
+  OBS_FIELDS.forEach(f => { const el = document.getElementById(f.id); if (el) el.value = ''; });
+  document.getElementById('obs-feedback-section').style.display = 'none';
+}
+
+function renderObsHistory() {
+  const list = document.getElementById('obs-history-list');
+  if (!list) return;
+  const hist = getObsHistory();
+  if (!hist.length) {
+    list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">还没有观察记录，填完表单提交后自动保存。</div>';
+    return;
+  }
+  list.innerHTML = hist.map(function(rec) {
+    const fb = rec.feedback || '';
+    const markers = ['【你做得好的地方】', '【最该补的点】', '【更好的口语化版本】'];
+    function extractSec(text, marker) {
+      const start = text.indexOf(marker);
+      if (start === -1) return '';
+      const afterStart = start + marker.length;
+      let end = text.length;
+      markers.forEach(function(m) { const p = text.indexOf(m, afterStart); if (p !== -1 && p < end) end = p; });
+      return text.slice(afterStart, end).trim();
+    }
+    const good = extractSec(fb, '【你做得好的地方】');
+    const fix  = extractSec(fb, '【最该补的点】');
+    const ver  = extractSec(fb, '【更好的口语化版本】');
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-weight:600;font-size:14px;color:var(--text)">${escHtml(rec.product || '未命名')}</div>
+        <div style="font-size:11px;color:var(--text-muted);white-space:nowrap;margin-left:12px">${new Date(rec.time).toLocaleDateString('zh-CN', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${escHtml((rec.keyline || '').slice(0, 80))}${(rec.keyline||'').length > 80 ? '…' : ''}</div>
+      ${fb ? `<div style="display:grid;gap:8px">
+        ${good ? `<div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text);white-space:pre-wrap"><span style="font-size:11px;font-weight:700;color:#10b981;display:block;margin-bottom:4px">💡 做得好的地方</span>${escHtml(good)}</div>` : ''}
+        ${fix  ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text);white-space:pre-wrap"><span style="font-size:11px;font-weight:700;color:var(--warning);display:block;margin-bottom:4px">🎯 最该补的点</span>${escHtml(fix)}</div>` : ''}
+        ${ver  ? `<div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text);white-space:pre-wrap"><span style="font-size:11px;font-weight:700;color:var(--primary);display:block;margin-bottom:4px">🗣️ 更好的表达</span>${escHtml(ver)}</div>` : ''}
+      </div>` : '<div style="font-size:12px;color:var(--text-muted)">（无点评）</div>'}
+    </div>`;
+  }).join('');
+}
+
+async function submitObservation() {
+  const vals = {};
+  let missing = [];
+  OBS_FIELDS.forEach(function(f) {
+    const el = document.getElementById(f.id);
+    vals[f.id] = el ? el.value.trim() : '';
+  });
+  ['obs-product', 'obs-user', 'obs-scene', 'obs-pain', 'obs-mech', 'obs-keyline'].forEach(function(id) {
+    if (!vals[id]) missing.push(OBS_FIELDS.find(function(f){ return f.id === id; }).label);
+  });
+  if (missing.length) { toast('请先填写：' + missing.join('、'), 'warn'); return; }
+
+  const btn = document.getElementById('obs-submit-btn');
+  btn.disabled = true; btn.textContent = '生成中…';
+
+  const section = document.getElementById('obs-feedback-section');
+  section.style.display = 'block';
+  section.innerHTML = `<div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.22);border-radius:var(--radius);padding:16px 18px">
+    <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:6px">🎙️ Mentor 点评</div>
+    <div id="obs-sec-0" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:#10b981;margin-bottom:4px">💡 你做得好的地方</div>
+      <div id="obs-text-0" style="font-size:13px;color:var(--text);line-height:1.72;white-space:pre-wrap"><span style="color:var(--text-muted)">生成中…</span></div>
+    </div>
+    <div id="obs-sec-1" style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--warning);margin-bottom:4px">🎯 最该补的点</div>
+      <div id="obs-text-1" style="font-size:13px;color:var(--text);line-height:1.72;white-space:pre-wrap"><span style="color:var(--text-muted)">生成中…</span></div>
+    </div>
+    <div id="obs-sec-2">
+      <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:4px">🗣️ 更好的口语化版本</div>
+      <div id="obs-text-2" style="font-size:13px;color:var(--text);line-height:1.72;white-space:pre-wrap"><span style="color:var(--text-muted)">生成中…</span></div>
+    </div>
+  </div>`;
+
+  const obsMarkers = ['【你做得好的地方】', '【最该补的点】', '【更好的口语化版本】'];
+
+  const system = `你是一位AI产品经理的产品思维mentor，正在帮一位在校生或求职者训练「日常产品观察」的能力。
+
+你的风格：直接、具体、像真实教练在帮他改稿，不是打分，不是泛泛鼓励。
+
+你评点时内心参考以下7个维度，但不需要逐条列出：
+1. 场景具体性：有没有说清楚什么用户、什么时刻、什么情况
+2. 痛点真实性：用户真的有这个问题吗，还是假设性的伪需求
+3. 产品机制清晰度：功能如何解决痛点，逻辑是否闭环
+4. 方案取舍合理性：为什么不做其他方案，理由是否站得住脚
+5. 风险意识：有没有想到可能失败的情况或副作用
+6. 指标有效性：指标能验证核心假设吗，还是只是通用数据
+7. 一句话面试表达：是否简洁有力、有判断感、可以直接在面试中说
+
+输出格式严格如下，每个标记单独占一行，标记后紧接内容：
+
+【你做得好的地方】
+（1-2条具体说哪里好，指出候选人真正做对的判断，不要泛泛说"有思考"；每条以"- "开头）
+
+【最该补的点】
+（从7个维度里选真正有问题的1-3条，每条说清：问题是什么 + 怎么改更好；不要凑数，没有问题就不列；每条以"- "开头）
+
+【更好的口语化版本】
+（给一个更好的"一句话面试表达"，然后给一段可以直接在面试里说的简短阐述，3-5句话，口语化，有产品判断感，不要太书面）
+
+${NO_FABRICATION_RULE}`;
+
+  const fieldLines = OBS_FIELDS.map(function(f) {
+    const v = vals[f.id];
+    return v ? f.label + '：' + v : null;
+  }).filter(Boolean).join('\n');
+  const prompt = '以下是候选人的产品功能观察记录，请给出mentor式点评：\n\n' + fieldLines;
+
+  let accumulated = '';
+  function onStream(text) {
+    accumulated = text;
+    obsMarkers.forEach(function(marker, i) {
+      const start = text.indexOf(marker);
+      if (start === -1) return;
+      const afterStart = start + marker.length;
+      let end = text.length;
+      obsMarkers.forEach(function(m2) { const p = text.indexOf(m2, afterStart); if (p !== -1 && p < end) end = p; });
+      const content = text.slice(afterStart, end).trimStart();
+      const el = document.getElementById('obs-text-' + i);
+      if (el && content) el.textContent = content;
+    });
+  }
+
+  try {
+    await callClaude([{ role: 'user', content: prompt }], system, onStream, 0, false, true, 900);
+    onStream(accumulated);
+    obsMarkers.forEach(function(marker, i) {
+      const el = document.getElementById('obs-text-' + i);
+      if (el && el.querySelector('span')) el.textContent = '（无内容）';
+    });
+
+    // Save to history
+    const hist = getObsHistory();
+    hist.unshift({
+      id: Date.now(),
+      time: Date.now(),
+      product: vals['obs-product'],
+      keyline: vals['obs-keyline'],
+      fields: vals,
+      feedback: accumulated,
+    });
+    saveObsHistory(hist);
+    renderObsHistory();
+  } catch(e) {
+    if (e?.aborted || e?.message === 'ABORTED') { btn.disabled = false; btn.textContent = '🤖 获取Mentor点评'; return; }
+    section.innerHTML = `<div style="color:var(--danger);font-size:13px;padding:12px">点评生成失败：${escHtml(e.message)}<br><button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="submitObservation()">重试</button></div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '🤖 获取Mentor点评';
   }
 }
 

@@ -1556,6 +1556,7 @@ const ATTR_EN = {
   '如：字节跳动、百度、阿里巴巴…': 'e.g., Google, Meta, OpenAI…',
   '如：AI产品经理、高级产品经理…': 'e.g., AI Product Manager, Senior Product Manager…',
   '粘贴完整的职位描述…': 'Paste the complete job description…',
+  '粘贴完整的职位描述…\n\n例如：\n岗位职责：\n1. 负责公司AI产品的规划、设计和迭代\n2. 深入理解LLM等AI技术，将技术能力转化为产品功能…\n\n任职要求：\n1. 3年以上产品经理经验…': 'Paste the complete job description…\n\nExample:\nResponsibilities:\n1. Own planning, design, and iteration for AI products\n2. Translate LLM capabilities into useful product experiences…\n\nRequirements:\n1. 3+ years of product management experience…',
   '如：字节跳动、腾讯、阿里': 'e.g., Google, Amazon, OpenAI',
   '如：商业化AI产品经理': 'e.g., Growth AI Product Manager',
   '粘贴JD内容…': 'Paste the job description…',
@@ -1572,7 +1573,8 @@ const ATTR_EN = {
   '例：准时宝的核心不是给时间承诺，而是把超时风险从用户转移给平台，用确定性溢价换取用户决策信心': 'e.g., this feature sells certainty by moving delay risk from users to the platform, improving decision confidence',
   'Q: 你最大的优势是什么？\nA: ...': 'Q: What is your biggest strength?\nA: ...',
   '例如：【RAG理解】RAG = 检索增强生成…': 'Example: [RAG Fundamentals] RAG = retrieval-augmented generation…',
-  '粘贴这段经历在简历中的描述，面试官会基于此追问…': 'Paste the resume description for this experience; the interviewer will follow up on it…'
+  '粘贴这段经历在简历中的描述，面试官会基于此追问…': 'Paste the resume description for this experience; the interviewer will follow up on it…',
+  '语音输入': 'Voice Input', '参考改写 + 标准答案': 'Rewrite + Reference Answer'
 };
 function getAppLanguage() { return LS.getStr('app_language') === 'en' ? 'en' : 'zh'; }
 function getPracticeLanguage() { return STATE.interview?.active ? (STATE.interview.language || getAppLanguage()) : getAppLanguage(); }
@@ -1602,7 +1604,11 @@ function applyLanguage(root = document.body) {
   }));
   const label = document.getElementById('language-label'), select = document.getElementById('language-select');
   if (label) label.textContent = en ? 'Language / 语言' : '语言 / Language';
-  if (select) select.value = en ? 'en' : 'zh';
+  if (select) {
+    select.value = en ? 'en' : 'zh';
+    select.options[0].textContent = en ? 'Chinese' : '中文';
+    select.options[1].textContent = en ? 'English' : '英文';
+  }
 }
 function setAppLanguage(language) {
   if (STATE.interview?.active) {

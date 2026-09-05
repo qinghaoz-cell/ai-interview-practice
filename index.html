@@ -563,8 +563,8 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
   <div class="language-control" aria-label="Language selector">
     <label id="language-label" for="language-select">语言 / Language</label>
     <select id="language-select" onchange="setAppLanguage(this.value)">
-      <option value="zh">中文</option>
-      <option value="en">English</option>
+      <option value="zh">中文 / Chinese</option>
+      <option value="en">英文 / English</option>
     </select>
   </div>
   <!-- ── Sidebar ── -->
@@ -1497,6 +1497,7 @@ const UI_EN = {
   '⚙️ 设置': '⚙️ Settings', '🔑 API 配置': '🔑 API Setup', '🎯 面试偏好': '🎯 Interview Preferences', '🗑️ 数据管理': '🗑️ Data Management',
   '▶ 开始练习': '▶ Start Practice', '🛡️ 可信型系统': '🛡️ Trustworthy System',
   'AI将扮演严格面试官，进行2-3轮追问': 'AI will act as a rigorous interviewer and ask 2–3 follow-up questions.',
+  'AI将扮演严格面试官，进行多轮追问': 'AI will act as a rigorous interviewer and ask realistic follow-up questions.',
   '第1轮': 'Round 1', '✨ 参考': '✨ Reference', '从JD生成面试题': 'Generate Questions from JD', '简历+JD联合生成题目': 'Generate Questions from Resume + JD',
   '全部': 'All', '⭐ 收藏': '⭐ Favorites', '💼 简历': '💼 Resume', '📚 知识库': '📚 Knowledge Base',
   '🤖 AI随机': '🤖 AI Random', '🔗 联合': '🔗 Combined', '🧩 产品专项': '🧩 Product Practice', '🤖 AI产品化': '🤖 AI Productization',
@@ -1554,7 +1555,8 @@ const UI_EN = {
   '暂无练习记录，完成一次练习后将在此显示': 'No practice sessions yet. Complete one to see it here.',
   '轮': ' rounds', '评分：': 'Score:', '取消收藏': 'Remove from favorites', '收藏': 'Add to favorites', '删除': 'Delete',
   '生成面试官诊断': 'Generate Interviewer Diagnosis', '生成各轮改写 & 参考答案': 'Generate Rewrites & Reference Answers',
-  '第': 'Attempt ', '次练习': ''
+  '第': 'Attempt ', '次练习': '',
+  '还没有观察记录，填完表单提交后自动保存。': 'No observation records yet. Your submission will be saved automatically.'
 };
 const ATTR_EN = {
   '将你的简历内容粘贴到这里…\n\n例如：\n姓名：张三\n工作经历：XX公司 产品经理 2021-2023\n- 负责AI推荐系统产品规划…\n\n教育背景：XX大学 计算机系\n技能：产品设计、数据分析、AI基础…': 'Paste your resume here…\n\nExample:\nName: Jane Doe\nExperience: Product Manager, Example Co. 2021–2023\n- Led product planning for an AI recommendation system…\n\nEducation: Example University\nSkills: Product design, data analysis, AI fundamentals…',
@@ -1613,8 +1615,8 @@ function applyLanguage(root = document.body) {
   if (label) label.textContent = en ? 'Language / 语言' : '语言 / Language';
   if (select) {
     select.value = en ? 'en' : 'zh';
-    select.options[0].textContent = en ? 'Chinese' : '中文';
-    select.options[1].textContent = en ? 'English' : '英文';
+    select.options[0].textContent = '中文 / Chinese';
+    select.options[1].textContent = '英文 / English';
   }
 }
 function setAppLanguage(language) {
@@ -2670,7 +2672,7 @@ function showInterviewConfig(clearChat = false) {
     // Regular config view: restore default empty state
     if (emptyEl) {
       emptyEl.style.display = '';
-      emptyEl.innerHTML = '<div class="empty-icon">🎯</div><div>点击「开始面试」开始练习</div><div style="font-size:12px;color:var(--text-dim)">AI将扮演严格面试官，进行多轮追问</div>';
+      emptyEl.innerHTML = `<div class="empty-icon">🎯</div><div>${uiText('点击「开始面试」开始练习')}</div><div style="font-size:12px;color:var(--text-dim)">${uiText('AI将扮演严格面试官，进行多轮追问')}</div>`;
     }
   }
 }
@@ -7347,7 +7349,7 @@ function renderObsHistory() {
   if (!list) return;
   const hist = getObsHistory();
   if (!hist.length) {
-    list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">还没有观察记录，填完表单提交后自动保存。</div>';
+    list.innerHTML = `<div style="color:var(--text-muted);font-size:13px">${uiText('还没有观察记录，填完表单提交后自动保存。')}</div>`;
     return;
   }
   list.innerHTML = hist.map(function(rec) {

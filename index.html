@@ -113,6 +113,7 @@ textarea,input,select{font-family:inherit;font-size:13px;color:var(--text)}
 /* ── KB file list ── */
 .kb-file-list{display:flex;flex-wrap:wrap;gap:8px;min-height:0}
 .kb-file-list:empty::before{content:'暂无文件，点击下方「上传文件」添加';font-size:12px;color:var(--text-dim);padding:6px 0}
+html[lang="en"] .kb-file-list:empty::before{content:'No files yet. Click “Upload Files” below to add one.'}
 .kb-file-chip{display:flex;align-items:center;gap:6px;background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12.5px;max-width:260px}
 .kb-file-chip .kb-chip-icon{font-size:15px;flex-shrink:0}
 .kb-file-chip .kb-chip-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)}
@@ -1425,7 +1426,7 @@ const UI_EN = {
   '上传 PDF': 'Upload PDF', '粘贴文本': 'Paste Text', '点击选择 PDF，或拖拽到此处': 'Choose a PDF or drag it here',
   '支持标准 PDF 简历，最大 20MB': 'Standard PDF resumes, up to 20MB', '已保存的简历预览': 'Saved Resume Preview',
   '粘贴你的简历，AI将根据内容生成针对性面试题': 'Add your resume and AI will generate targeted interview questions.',
-  '从简历生成面试题': 'Generate Questions from Resume', '职位信息': 'Role Details', '目标公司': 'Target Company',
+  '从简历生成面试题': 'Generate Questions from Resume', '🤖 从简历生成面试题': '🤖 Generate Questions from Resume', '职位信息': 'Role Details', '目标公司': 'Target Company',
   '职位名称': 'Job Title', '职位描述 (JD)': 'Job Description (JD)', '保存JD': 'Save JD', '从JD生成面试题': 'Generate Questions from JD',
   '已保存': 'Saved', '简历+JD联合生成题目': 'Generate Questions from Resume + JD', '模拟面试': 'Mock Interview',
   '当前题目': 'CURRENT QUESTION', '题目来源': 'Question Source', '自定义题目': 'Custom Question',
@@ -1547,7 +1548,13 @@ const UI_EN = {
   '进入「开始面试」选择题目来源，点击「开始面试」': 'Open Start Interview, choose a question source, and click Start Interview.',
   '面试结束后查看AI给出的评分和改进建议': 'After the interview, review AI-generated scores and improvement suggestions.',
   '前往': 'Visit', '获取 Key，免费额度更多，价格约为 Claude 的 1/6': 'for a key. It offers more free credits and costs roughly one-sixth of Claude.',
-  '在「设置」中填入 Anthropic API Key（': 'Enter your Anthropic API key in Settings (', '获取API Key': 'Get an API Key', '）': ')'
+  '在「设置」中填入 Anthropic API Key（': 'Enter your Anthropic API key in Settings (', '获取API Key': 'Get an API Key', '）': ')',
+  '总练习次数': 'Total Sessions', '平均评分': 'Average Score', '最高评分': 'Highest Score',
+  '还没有收藏记录': 'No favorite sessions yet', '该分类暂无面试记录': 'No interview records in this category yet',
+  '暂无练习记录，完成一次练习后将在此显示': 'No practice sessions yet. Complete one to see it here.',
+  '轮': ' rounds', '评分：': 'Score:', '取消收藏': 'Remove from favorites', '收藏': 'Add to favorites', '删除': 'Delete',
+  '生成面试官诊断': 'Generate Interviewer Diagnosis', '生成各轮改写 & 参考答案': 'Generate Rewrites & Reference Answers',
+  '第': 'Attempt ', '次练习': ''
 };
 const ATTR_EN = {
   '将你的简历内容粘贴到这里…\n\n例如：\n姓名：张三\n工作经历：XX公司 产品经理 2021-2023\n- 负责AI推荐系统产品规划…\n\n教育背景：XX大学 计算机系\n技能：产品设计、数据分析、AI基础…': 'Paste your resume here…\n\nExample:\nName: Jane Doe\nExperience: Product Manager, Example Co. 2021–2023\n- Led product planning for an AI recommendation system…\n\nEducation: Example University\nSkills: Product design, data analysis, AI fundamentals…',
@@ -6619,12 +6626,12 @@ function renderSpecHistory(source, listElId) {
 
   // Filter bar — always render so user can switch even when list is empty
   const filterBar = `<div style="display:flex;gap:6px;margin-bottom:12px">
-    <button onclick="setSpecHistFilter('${listElId}','${source}','all')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='all'?'var(--primary-dim)':'transparent'};color:${filter==='all'?'var(--primary)':'var(--text-muted)'}">全部 ${allHistory.length}</button>
-    <button onclick="setSpecHistFilter('${listElId}','${source}','fav')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='fav'?'var(--primary-dim)':'transparent'};color:${filter==='fav'?'var(--primary)':'var(--text-muted)'}">⭐ 收藏 ${favCount}</button>
+    <button onclick="setSpecHistFilter('${listElId}','${source}','all')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='all'?'var(--primary-dim)':'transparent'};color:${filter==='all'?'var(--primary)':'var(--text-muted)'}">${uiText('全部')} ${allHistory.length}</button>
+    <button onclick="setSpecHistFilter('${listElId}','${source}','fav')" style="padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:${filter==='fav'?'var(--primary-dim)':'transparent'};color:${filter==='fav'?'var(--primary)':'var(--text-muted)'}">${uiText('⭐ 收藏')} ${favCount}</button>
   </div>`;
 
   if (history.length === 0) {
-    listEl.innerHTML = filterBar + `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px">${filter === 'fav' ? '⭐ 还没有收藏记录' : '📭 暂无练习记录，完成一次练习后将在此显示'}</div>`;
+    listEl.innerHTML = filterBar + `<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px">${filter === 'fav' ? `⭐ ${uiText('还没有收藏记录')}` : `📭 ${uiText('暂无练习记录，完成一次练习后将在此显示')}`}</div>`;
     return;
   }
 
@@ -6641,7 +6648,7 @@ function renderSpecHistory(source, listElId) {
     const score = h.score?.score || 0;
     const scoreColor = score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--primary)' : score >= 4 ? 'var(--warning)' : 'var(--danger)';
     const starIcon = h.starred ? '⭐' : '☆';
-    const subLabel = h.subCategory ? (subCatLabels[h.subCategory] || h.subCategory) : '';
+    const subLabel = h.subCategory ? uiText(subCatLabels[h.subCategory] || h.subCategory) : '';
     const detailId = `${prefix}-detail-${i}`;
     const arrowId = `${prefix}-arrow-${i}`;
 
@@ -6653,20 +6660,20 @@ function renderSpecHistory(source, listElId) {
           <div class="history-info">
             <span>🕐 ${h.time}</span>
             ${subLabel ? `<span>📌 ${subLabel}</span>` : ''}
-            <span>🔄 ${h.turns}轮</span>
-            <span>⚡ ${diffLabels[h.difficulty] || h.difficulty || '-'}</span>
+            <span>🔄 ${h.turns}${uiText('轮')}</span>
+            <span>⚡ ${uiText(diffLabels[h.difficulty] || h.difficulty || '-')}</span>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${h.starred ? '取消收藏' : '收藏'}" onclick="specToggleFav('${h.id}','${source}','${listElId}')">${starIcon}</button>
-          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="删除" onclick="specDeleteHist('${h.id}','${source}','${listElId}')">🗑</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${uiText(h.starred ? '取消收藏' : '收藏')}" onclick="specToggleFav('${h.id}','${source}','${listElId}')">${starIcon}</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="${uiText('删除')}" onclick="specDeleteHist('${h.id}','${source}','${listElId}')">🗑</button>
           <span class="history-expand" id="${arrowId}" onclick="toggleSpecDetail('${detailId}','${arrowId}')">▼</span>
         </div>
       </div>
       <div class="history-detail" id="${detailId}">
         ${h.score ? `<div style="margin-bottom:10px;font-size:13px">
-          <strong>评分：</strong>${h.score.score}/10 &nbsp;
-          <strong>亮点：</strong>${(h.score.highlights || []).join('；')}
+          <strong>${uiText('评分：')}</strong>${h.score.score}/10 &nbsp;
+          <strong>${uiText('亮点：')}</strong>${(h.score.highlights || []).join('；')}
         </div>
         ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
           <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
@@ -6676,11 +6683,11 @@ function renderSpecHistory(source, listElId) {
           </div>`).join('')}
         </div>` : ''}` : ''}
         <div id="specdiag-${h.id}">${buildDiagnosisHtml(h)}</div>
-        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="specdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ 生成面试官诊断</button></div>` : ''}
+        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="specdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ ${uiText('生成面试官诊断')}</button></div>` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
-          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ 生成各轮改写 &amp; 参考答案</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ ${uiText('生成各轮改写 & 参考答案')}</button>
         </div>` : ''}
       </div>
     </div>`;
@@ -6720,10 +6727,10 @@ function renderHistory() {
   const avg = history.length > 0 ? (history.reduce((s, h) => s + (h.score?.score || 0), 0) / history.length).toFixed(1) : '-';
   const best = history.length > 0 ? Math.max(...history.map(h => h.score?.score || 0)) : '-';
   statsEl.innerHTML = [
-    { val: history.length, label: '总练习次数' },
-    { val: avg, label: '平均评分' },
-    { val: best, label: '最高评分' },
-    { val: favCount, label: '⭐ 收藏' },
+    { val: history.length, label: uiText('总练习次数') },
+    { val: avg, label: uiText('平均评分') },
+    { val: best, label: uiText('最高评分') },
+    { val: favCount, label: uiText('⭐ 收藏') },
   ].map(s => `<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
 
   if (_hfSrc === 'fav') {
@@ -6734,7 +6741,7 @@ function renderHistory() {
   }
 
   if (history.length === 0) {
-    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${_hfSrc === 'fav' ? '⭐' : '📭'}</div><p>${_hfSrc === 'fav' ? '还没有收藏记录' : '该分类暂无面试记录'}</p></div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${_hfSrc === 'fav' ? '⭐' : '📭'}</div><p>${uiText(_hfSrc === 'fav' ? '还没有收藏记录' : '该分类暂无面试记录')}</p></div>`;
     return;
   }
 
@@ -6755,10 +6762,10 @@ function renderHistory() {
     const score = h.score?.score || 0;
     const scoreColor = score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--primary)' : score >= 4 ? 'var(--warning)' : 'var(--danger)';
     const starIcon = h.starred ? '⭐' : '☆';
-    const subLabel = h.subCategory ? subCatLabels[h.subCategory] || h.subCategory : '';
+    const subLabel = h.subCategory ? uiText(subCatLabels[h.subCategory] || h.subCategory) : '';
     const srcTag = subLabel
-      ? `${srcLabels[h.source] || h.source} · ${subLabel}`
-      : (srcLabels[h.source] || h.source);
+      ? `${uiText(srcLabels[h.source] || h.source)} · ${subLabel}`
+      : uiText(srcLabels[h.source] || h.source);
     return `<div class="history-card" id="hcard-${h.id}">
       <div class="history-head" onclick="toggleHistoryDetail('h-detail-${i}')">
         <div class="history-score-circle" style="background:${scoreColor}22;color:${scoreColor}">${score}</div>
@@ -6767,14 +6774,14 @@ function renderHistory() {
           <div class="history-info">
             <span>🕐 ${h.time}</span>
             <span>📌 ${srcTag}</span>
-            <span>🔄 ${h.turns}轮</span>
-            <span>⚡ ${diffLabels[h.difficulty] || h.difficulty || '-'}</span>
-            ${h.attemptNo > 1 ? `<span style="color:var(--accent);font-weight:600">第${h.attemptNo}次练习</span>` : ''}
+            <span>🔄 ${h.turns}${uiText('轮')}</span>
+            <span>⚡ ${uiText(diffLabels[h.difficulty] || h.difficulty || '-')}</span>
+            ${h.attemptNo > 1 ? `<span style="color:var(--accent);font-weight:600">${uiText('第')}${h.attemptNo}${uiText('次练习')}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${h.starred ? '取消收藏' : '收藏'}" onclick="toggleFavorite('${h.id}')">${starIcon}</button>
-          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="删除" onclick="deleteHistory('${h.id}')">🗑</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:15px;line-height:1" title="${uiText(h.starred ? '取消收藏' : '收藏')}" onclick="toggleFavorite('${h.id}')">${starIcon}</button>
+          <button class="btn btn-ghost btn-sm" style="padding:4px 8px;font-size:13px;color:var(--danger)" title="${uiText('删除')}" onclick="deleteHistory('${h.id}')">🗑</button>
           <span class="history-expand" id="h-arrow-${i}" onclick="toggleHistoryDetail('h-detail-${i}')">▼</span>
         </div>
       </div>

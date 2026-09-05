@@ -1555,7 +1555,24 @@ const ATTR_EN = {
   '输入你想练习的面试题…': 'Enter an interview question to practice…',
   '如：字节跳动、百度、阿里巴巴…': 'e.g., Google, Meta, OpenAI…',
   '如：AI产品经理、高级产品经理…': 'e.g., AI Product Manager, Senior Product Manager…',
-  '粘贴完整的职位描述…': 'Paste the complete job description…'
+  '粘贴完整的职位描述…': 'Paste the complete job description…',
+  '如：字节跳动、腾讯、阿里': 'e.g., Google, Amazon, OpenAI',
+  '如：商业化AI产品经理': 'e.g., Growth AI Product Manager',
+  '粘贴JD内容…': 'Paste the job description…',
+  '如：3年以上AI产品经验 / 有RAG/Agent落地经验 / 熟悉ToB业务场景…': 'e.g., 3+ years in AI products / RAG or agent launch experience / B2B product experience…',
+  '如：负责xx业务线的AI能力落地，核心指标是…': 'e.g., Own AI productization for this business line; core metrics include…',
+  '例：微信「拍一拍」、饿了么「准时宝」、美团「超省卡」': 'e.g., Uber’s Reserve, Spotify Wrapped, or a feature you recently used',
+  '例：点餐频率高、对时间敏感的上班族': 'e.g., frequent delivery users who are time-sensitive office workers',
+  '例：午休时间点外卖，担心外卖迟到扣工资，但不敢选太远的商家': 'e.g., ordering lunch during a short break and worrying that a late delivery will cause problems',
+  '例：只能靠商家评价估计送达时间，不确定性高，超时了也不知道找谁': 'e.g., users rely on reviews to estimate delivery time and have no clear fallback when it is late',
+  '例：平台承诺超时赔付，把不确定性风险从用户转移给平台，用户付费换确定性': 'e.g., the platform guarantees compensation for delays, shifting uncertainty from the user to the platform',
+  '例：另一个方案是只显示更准的预计时间——但不能消除用户焦虑，用户仍然承担风险': 'e.g., a more accurate ETA still leaves users carrying the risk and anxiety of a delay',
+  '例：骑手接单意愿下降；补贴成本高；用户对赔付金额期望不断提高': 'e.g., lower courier acceptance, high subsidy cost, or rising compensation expectations',
+  '例：开通率、订单量变化、差评率、赔付率、骑手流失率': 'e.g., adoption rate, order volume, negative-review rate, compensation rate, and courier churn',
+  '例：准时宝的核心不是给时间承诺，而是把超时风险从用户转移给平台，用确定性溢价换取用户决策信心': 'e.g., this feature sells certainty by moving delay risk from users to the platform, improving decision confidence',
+  'Q: 你最大的优势是什么？\nA: ...': 'Q: What is your biggest strength?\nA: ...',
+  '例如：【RAG理解】RAG = 检索增强生成…': 'Example: [RAG Fundamentals] RAG = retrieval-augmented generation…',
+  '粘贴这段经历在简历中的描述，面试官会基于此追问…': 'Paste the resume description for this experience; the interviewer will follow up on it…'
 };
 function getAppLanguage() { return LS.getStr('app_language') === 'en' ? 'en' : 'zh'; }
 function getPracticeLanguage() { return STATE.interview?.active ? (STATE.interview.language || getAppLanguage()) : getAppLanguage(); }
@@ -4082,7 +4099,7 @@ function renderJobTarget() {
     _jtPendingFiles = (cfg.files || []).slice();
     renderJTFilesList(_jtPendingFiles);
   } else {
-    statusEl.textContent = '未配置';
+    statusEl.textContent = uiText('未配置');
     statusEl.style.background = '#fef3c7';
     statusEl.style.color = '#b45309';
     configCard.style.display = '';
@@ -7089,7 +7106,7 @@ function updateApiStatus() {
   const key = getActiveKey();
   const provider = getProvider();
   if (key) { status.textContent = `✅ ${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic'} 已配置`; status.style.color = 'var(--success)'; }
-  else { status.textContent = '未配置'; status.style.color = 'var(--text-dim)'; }
+  else { status.textContent = uiText('未配置'); status.style.color = 'var(--text-dim)'; }
 }
 
 function saveApiKey() {

@@ -10,6 +10,7 @@
 - **无构建工具**：不用 React/Vue/webpack，原生 JS + DOM
 - **数据存储**：`localStorage`，无后端
 - **AI 调用**：用户自填 API Key，支持 Anthropic Claude（默认）和 DeepSeek，通过 `callClaude()` 统一调用
+- **语言模式（V1）**：顶部 `中文 / EN` 开关同时控制界面语言和练习语言；偏好存于 `localStorage.app_language`。英文模式由 `callClaude()` 统一注入英文输出规则，评分 JSON 字段和内部诊断标记保持不变。
 - **依赖**：pdf.js（PDF解析）、mammoth.js（Word解析），从 CDN 引入
 
 ---
@@ -231,3 +232,4 @@ GitHub 仓库：`https://github.com/qinghaoz-cell/ai-interview-practice`
 - `PRODUCT_CAT_FOLLOWUP` 和 `AIPRODUCT_SYSTEM_TYPE_FOLLOWUP` 的值都是普通字符串（不是函数），直接 string interpolation 注入到系统 prompt
 - `output_quality` 字段用了 `data.output_quality != null` 的可选渲染，老记录没有这个字段也不会报错
 - localStorage key 命名：`api_key`、`resume`、`jd`、`history`、`favorites`、`pref`、`ai_provider`、`deepseek_key`、`kb_files_{section}`、`kb_text_{section}`、`kbProjectFolders`
+- 英文模式下启动的练习会在 `STATE.interview.language` 和历史记录中保存语言。新增用户可见文案时，优先补入 `UI_EN` / `ATTR_EN`；新增 AI 调用不用单独写英文 prompt，统一语言规则会自动注入。

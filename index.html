@@ -52,7 +52,8 @@ textarea,input,select{font-family:inherit;font-size:13px;color:var(--text)}
 }
 .sidebar-logo{
   display:flex;align-items:center;gap:10px;
-  padding:6px 18px 20px;
+  padding:6px 68px 20px 18px;
+  position:relative;
   font-size:16px;font-weight:700;letter-spacing:.4px;
   color:var(--text);
 }
@@ -87,6 +88,11 @@ textarea,input,select{font-family:inherit;font-size:13px;color:var(--text)}
   border-top:1px solid var(--border);
 }
 .sidebar-footer .version{color:var(--text-dim);font-size:11px}
+.language-switch{display:flex;align-items:center;gap:7px;padding:3px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--text-muted)}
+.language-switch button{margin-left:auto;border:0;border-radius:5px;padding:3px 7px;background:var(--primary-dim);color:var(--primary);font-weight:700;font-size:11px}
+.language-switch-top{position:absolute;top:7px;right:12px;margin:0}
+.language-switch-top span{display:none}
+.language-switch-top button{margin:0;padding:4px 7px}
 
 /* ── Main Content ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
@@ -560,6 +566,10 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
     <div class="sidebar-logo">
       <div class="logo-icon">🎯</div>
       <span>面试陪练</span>
+      <div class="language-switch language-switch-top" aria-label="Language">
+        <span id="language-label">中文界面</span>
+        <button id="language-toggle" type="button" onclick="toggleAppLanguage()">EN</button>
+      </div>
     </div>
     <div class="nav-section">
       <div class="nav-label">准备</div>
@@ -1399,6 +1409,94 @@ const LS = {
   getStr: k => localStorage.getItem(k) || '',
   setStr: (k, v) => localStorage.setItem(k, v),
 };
+
+// ═══════════════════════════════════════════════
+//  LANGUAGE (V1: UI language and practice language switch together)
+// ═══════════════════════════════════════════════
+const UI_EN = {
+  '面试陪练': 'Interview Practice', '准备': 'PREPARE', '练习': 'PRACTICE', '配置': 'SETTINGS',
+  '简历管理': 'Resume', '目标职位': 'Target Role', '知识库': 'Knowledge Base', '开始面试': 'Start Interview',
+  '产品思维专项': 'Product Thinking', '简历专项': 'Resume Deep Dive', '知识点专项': 'Knowledge Drill',
+  'AI能力产品化': 'AI Productization', '目标岗位专项': 'Targeted Role Practice', '产品观察训练': 'Product Observation',
+  '历史记录': 'History', '设置': 'Settings', '中文界面': 'English UI', 'AI面试陪练 v1.0': 'AI Interview Practice v1.0',
+  '保存简历': 'Save Resume', '清空': 'Clear', '简历内容': 'Resume Content', '未填写': 'Not added',
+  '📄 简历管理': '📄 Resume', '📎 上传 PDF': '📎 Upload PDF', '📝 粘贴文本': '📝 Paste Text', '💾 保存简历': '💾 Save Resume',
+  '上传 PDF': 'Upload PDF', '粘贴文本': 'Paste Text', '点击选择 PDF，或拖拽到此处': 'Choose a PDF or drag it here',
+  '支持标准 PDF 简历，最大 20MB': 'Standard PDF resumes, up to 20MB', '已保存的简历预览': 'Saved Resume Preview',
+  '粘贴你的简历，AI将根据内容生成针对性面试题': 'Add your resume and AI will generate targeted interview questions.',
+  '从简历生成面试题': 'Generate Questions from Resume', '职位信息': 'Role Details', '目标公司': 'Target Company',
+  '职位名称': 'Job Title', '职位描述 (JD)': 'Job Description (JD)', '保存JD': 'Save JD', '从JD生成面试题': 'Generate Questions from JD',
+  '已保存': 'Saved', '简历+JD联合生成题目': 'Generate Questions from Resume + JD', '模拟面试': 'Mock Interview',
+  '当前题目': 'CURRENT QUESTION', '题目来源': 'Question Source', '自定义题目': 'Custom Question',
+  '开始练习': 'Start Practice', '结束面试': 'End Interview', '换题重配': 'Change Question', '发送': 'Send',
+  '参考': 'Reference', '再来一次': 'Try Again', '换题练习': 'New Question', '重新配置': 'Reconfigure', '查看历史': 'View History',
+  '面试评分报告': 'Interview Score Report', '综合评分': 'Overall Score', '亮点': 'Strengths', '需要改进的地方': 'Areas to Improve',
+  '系统类型识别': 'System Type Recognition', '业务场景与用户任务': 'Business Scenario & User Task', 'AI能力匹配': 'AI Capability Fit',
+  '产品机制转化': 'Product Mechanism', '指标与验证': 'Metrics & Validation', 'AI输出质量评估': 'AI Output Quality',
+  '风险兜底': 'Risk Controls', '切题程度': 'Relevance', '逻辑结构': 'Structured Thinking', '产品深度': 'Product Depth',
+  'AI理解深度': 'AI Understanding', '表达说服力': 'Communication & Persuasion',
+  '为什么重要：': 'Why it matters:', '下一次怎么补：': 'How to improve:', '面试官诊断': 'Interviewer Diagnosis',
+  '产品设计': 'Product Design', '数据分析': 'Data Analysis', 'AI产品专项': 'AI Product Practice',
+  'AI产品认知': 'AI Product Knowledge', '功能价值与取舍': 'Feature Value & Trade-offs', '随机抽题': 'Random Question',
+  '练习记录': 'Practice History', '随机系统类型': 'Random System Type', '任务型系统': 'Task System',
+  '知识型系统': 'Knowledge System', '流程型系统': 'Workflow System', '交互型系统': 'Interactive System',
+  '配置API密钥和面试偏好': 'Configure API keys and interview preferences', 'API 配置': 'API Configuration',
+  'AI 服务商': 'AI Provider', '保存': 'Save', '测试连接': 'Test Connection', '面试偏好': 'Interview Preferences',
+  '面试难度': 'Interview Difficulty', '面试风格': 'Interview Style', '数据管理': 'Data Management',
+  '清空所有数据': 'Clear All Data', '导出数据': 'Export Data', '使用说明': 'How to Use',
+  '点击「开始面试」开始练习': 'Click “Start Interview” to begin', 'AI 出题中，请稍候…': 'AI is preparing your question…',
+  '面试已结束，正在评分中…': 'Interview complete. Scoring your response…', '生成中…': 'Generating…', '最终轮': 'Final round',
+  '参考改写 & 标准答案': 'Rewrite & Reference Answer', '答题思路': 'Answer Framework', '改写版本': 'Improved Version',
+  '标准答案': 'Reference Answer', '使用此版本': 'Use This Version', '关闭': 'Close'
+};
+const ATTR_EN = {
+  '将你的简历内容粘贴到这里…\n\n例如：\n姓名：张三\n工作经历：XX公司 产品经理 2021-2023\n- 负责AI推荐系统产品规划…\n\n教育背景：XX大学 计算机系\n技能：产品设计、数据分析、AI基础…': 'Paste your resume here…\n\nExample:\nName: Jane Doe\nExperience: Product Manager, Example Co. 2021–2023\n- Led product planning for an AI recommendation system…\n\nEducation: Example University\nSkills: Product design, data analysis, AI fundamentals…',
+  '输入你的回答… (Enter发送，Shift+Enter换行)': 'Type your answer… (Enter to send, Shift+Enter for a new line)',
+  '输入你想练习的面试题…': 'Enter an interview question to practice…',
+  '如：字节跳动、百度、阿里巴巴…': 'e.g., Google, Meta, OpenAI…',
+  '如：AI产品经理、高级产品经理…': 'e.g., AI Product Manager, Senior Product Manager…',
+  '粘贴完整的职位描述…': 'Paste the complete job description…'
+};
+function getAppLanguage() { return LS.getStr('app_language') === 'en' ? 'en' : 'zh'; }
+function getPracticeLanguage() { return STATE.interview?.active ? (STATE.interview.language || getAppLanguage()) : getAppLanguage(); }
+function uiText(zh) { return getAppLanguage() === 'en' ? (UI_EN[zh] || zh) : zh; }
+function applyLanguage(root = document.body) {
+  if (!root) return;
+  const en = getAppLanguage() === 'en';
+  document.documentElement.lang = en ? 'en' : 'zh-CN';
+  document.title = en ? 'AI Interview Practice' : 'AI面试陪练';
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = []; let node;
+  while ((node = walker.nextNode())) nodes.push(node);
+  nodes.forEach(n => {
+    if (n.parentElement?.closest('script,style,textarea,.msg-bubble,.rewrite-box,#history-list,#obs-history-list')) return;
+    const source = n.__zhText ?? n.nodeValue;
+    n.__zhText = source;
+    const lead = source.match(/^\s*/)?.[0] || '', trail = source.match(/\s*$/)?.[0] || '';
+    const core = source.trim();
+    const translated = en && UI_EN[core] ? lead + UI_EN[core] + trail : source;
+    if (n.nodeValue !== translated) n.nodeValue = translated;
+  });
+  root.querySelectorAll?.('[placeholder],[title]').forEach(el => ['placeholder', 'title'].forEach(attr => {
+    const source = el.__zhAttrs?.[attr] ?? el.getAttribute(attr);
+    if (!source) return;
+    el.__zhAttrs ||= {}; el.__zhAttrs[attr] = source;
+    el.setAttribute(attr, en && ATTR_EN[source] ? ATTR_EN[source] : source);
+  }));
+  const label = document.getElementById('language-label'), button = document.getElementById('language-toggle');
+  if (label) label.textContent = en ? 'English UI' : '中文界面';
+  if (button) button.textContent = en ? '中文' : 'EN';
+}
+function toggleAppLanguage() {
+  if (STATE.interview?.active) { toast(getAppLanguage() === 'en' ? 'Finish the current interview before changing language.' : '请结束当前面试后再切换语言', 'info'); return; }
+  LS.setStr('app_language', getAppLanguage() === 'en' ? 'zh' : 'en');
+  applyLanguage();
+  toast(getAppLanguage() === 'en' ? 'English practice mode is on.' : '已切换为中文练习模式', 'success');
+}
+function languageInstruction() {
+  if (getPracticeLanguage() !== 'en') return '';
+  return '\n\n[English practice mode] Write every user-facing question, follow-up, explanation, feedback, rewrite, and reference answer in natural American English. Keep any JSON property names and exact section markers explicitly required by the prompt unchanged, but write all human-readable values in English. Use US PM / AI PM interview conventions. Unless the user-provided resume or JD names a company, use globally recognizable or neutral US-market examples rather than Chinese company-specific examples.';
+}
 const getResume = () => LS.getStr('resume');
 const getJD = () => LS.get('jd') || {};
 // KB: files stored per-section as array of {name, content}, plus optional manual text
@@ -1778,7 +1876,8 @@ function robustParseJSON(raw) {
 }
 
 async function callClaude(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, skipGap = false, maxTokens = 2048) {
-  return API_QUEUE.add((signal) => _callClaudeRaw(messages, systemPrompt, onStream, _retry, jsonMode, signal, maxTokens), skipGap);
+  const localizedSystem = (systemPrompt || '') + languageInstruction();
+  return API_QUEUE.add((signal) => _callClaudeRaw(messages, localizedSystem, onStream, _retry, jsonMode, signal, maxTokens), skipGap);
 }
 
 async function _callClaudeRaw(messages, systemPrompt, onStream, _retry = 0, jsonMode = false, signal = null, maxTokens = 2048) {
@@ -2259,7 +2358,7 @@ function updateResumeStatus() {
     card.style.display = 'block';
     preview.textContent = resume.slice(0, 400) + (resume.length > 400 ? '…' : '');
   } else {
-    badge.textContent = '未填写';
+    badge.textContent = uiText('未填写');
     badge.className = 'badge badge-blue';
     card.style.display = 'none';
   }
@@ -2580,7 +2679,7 @@ async function startInterview() {
     : src === 'aiproduct'
     ? (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5)
     : (pref.difficulty === 'normal' ? 5 : pref.difficulty === 'hell' ? 5 : 4);
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: src, subCategory, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   // Reset UI
   document.getElementById('chat-empty').style.display = 'none';
@@ -2964,7 +3063,7 @@ async function startProductInterview() {
   const maxTurns = _isMetricsCat
     ? (pref.difficulty === 'hell' ? 4 : 3)
     : (pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5);
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'product', subCategory: resolvedCat, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -3615,7 +3714,7 @@ async function startAIProductInterview() {
   const pref = getPref();
   // aiproduct: normal=4 (focused), strict=5, hell=6 (deep drill)
   const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -4129,7 +4228,7 @@ async function startJobTargetInterview() {
   }
   const pref = getPref();
   const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
-  STATE.interview = { active: true, question: question, messages: [], turn: 0, maxTurns: maxTurns, source: 'job-target', subCategory: subCatForHistory, jtType: resolvedType, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question: question, messages: [], turn: 0, maxTurns: maxTurns, source: 'job-target', subCategory: subCatForHistory, jtType: resolvedType, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
   document.getElementById('start-btn').style.display = 'none';
@@ -4251,7 +4350,7 @@ ${ctx}`;
   const pref = getPref();
   // resume-spec: normal=4 (concise), strict=5, hell=6 (deep drill)
   const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'resume-spec', subCategory: folder.name, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'resume-spec', subCategory: folder.name, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -4410,7 +4509,7 @@ ${content}`;
   const pref = getPref();
   // 知识点专项：考察记忆与理解，2-3轮即可，不需要深度追问
   const maxTurns = pref.difficulty === 'hell' ? 4 : 3;
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'kb-spec', subCategory: label, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'kb-spec', subCategory: label, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -5015,7 +5114,7 @@ ${STATE.interview.source === 'resume-spec' ? `
 
 function addMessage(role, content) {
   const { messages } = STATE.interview;
-  const msg = { role, content, time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) };
+  const msg = { role, content, time: new Date().toLocaleTimeString(getPracticeLanguage() === 'en' ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' }) };
   messages.push(msg);
 
   const el = document.createElement('div');
@@ -5361,10 +5460,11 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     generateDiagnosis(data, messages, question, hId); // fire async, don't await — streams in parallel with history save
     history.unshift({
       id: hId,
-      time: new Date().toLocaleString('zh-CN'),
+      time: new Date().toLocaleString(STATE.interview.language === 'en' ? 'en-US' : 'zh-CN'),
       question: qShort,
       source: STATE.interview.source,
       subCategory: STATE.interview.subCategory || '',
+      language: STATE.interview.language || getAppLanguage(),
       turns: STATE.interview.turn,
       messages: STATE.interview.messages,
       score: data,
@@ -5415,7 +5515,7 @@ async function repeatInterview() {
   const maxTurns = source === 'kb-spec'
     ? (pref.difficulty === 'hell' ? 4 : 3)
     : (pref.difficulty === 'normal' ? 6 : pref.difficulty === 'hell' ? 7 : 5);
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source, subCategory, hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source, subCategory, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
   // Reset UI (same as specialist start)
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -5988,19 +6088,19 @@ function renderScore(data) {
   const isAIProduct = STATE.interview?.source === 'aiproduct';
   const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
   const dims = isAIProduct ? [
-    { name: '系统类型识别', val: data.system_type },
-    { name: '业务场景与用户任务', val: data.biz_scenario },
-    { name: 'AI能力匹配', val: data.ai_capability },
-    { name: '产品机制转化', val: data.product_mechanism },
-    { name: '指标与验证', val: data.metrics_validation },
-    ...(data.output_quality != null ? [{ name: 'AI输出质量评估', val: data.output_quality }] : []),
-    { name: '风险兜底', val: data.risk_control },
+    { name: uiText('系统类型识别'), val: data.system_type },
+    { name: uiText('业务场景与用户任务'), val: data.biz_scenario },
+    { name: uiText('AI能力匹配'), val: data.ai_capability },
+    { name: uiText('产品机制转化'), val: data.product_mechanism },
+    { name: uiText('指标与验证'), val: data.metrics_validation },
+    ...(data.output_quality != null ? [{ name: uiText('AI输出质量评估'), val: data.output_quality }] : []),
+    { name: uiText('风险兜底'), val: data.risk_control },
   ] : [
-    { name: '切题程度', val: data.relevance },
-    { name: '逻辑结构', val: data.logical_structure },
-    { name: '产品深度', val: data.product_depth },
-    ...(aiDepthNA ? [] : [{ name: 'AI理解深度', val: data.ai_depth }]),
-    { name: '表达说服力', val: data.persuasiveness },
+    { name: uiText('切题程度'), val: data.relevance },
+    { name: uiText('逻辑结构'), val: data.logical_structure },
+    { name: uiText('产品深度'), val: data.product_depth },
+    ...(aiDepthNA ? [] : [{ name: uiText('AI理解深度'), val: data.ai_depth }]),
+    { name: uiText('表达说服力'), val: data.persuasiveness },
   ];
   const attemptBadge = (data._attemptNo && data._attemptNo > 1)
     ? `<span style="display:inline-block;margin-left:8px;padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:20px;font-size:11px;font-weight:600">第 ${data._attemptNo} 次练习此题</span>`
@@ -6011,7 +6111,7 @@ function renderScore(data) {
         <div class="score-big-num" style="color:${color}">${data.score}</div>
       </div>
       <div>
-        <div class="score-title">综合评分 ${data.score}/10${attemptBadge}</div>
+        <div class="score-title">${uiText('综合评分')} ${data.score}/10${attemptBadge}</div>
         <div class="score-summary">${escHtml(data.summary || '')}</div>
       </div>
     </div>
@@ -6214,7 +6314,7 @@ function toggleVoice() {
   hideVoiceTip();
 
   const rec = new SpeechRecognition();
-  rec.lang = 'zh-CN';
+  rec.lang = getPracticeLanguage() === 'en' ? 'en-US' : 'zh-CN';
   rec.continuous = true;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
@@ -7011,6 +7111,11 @@ function updateBadges() {
 //  INIT
 // ═══════════════════════════════════════════════
 function init() {
+  applyLanguage();
+  new MutationObserver(records => records.forEach(record => {
+    if (record.type === 'characterData') applyLanguage(record.target.parentElement);
+    record.addedNodes.forEach(node => { if (node.nodeType === Node.ELEMENT_NODE) applyLanguage(node); });
+  })).observe(document.body, { childList: true, characterData: true, subtree: true });
   updateBadges();
   renderResumePage();
   renderSettings();

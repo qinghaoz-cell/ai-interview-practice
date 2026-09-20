@@ -5687,7 +5687,6 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     const attemptNo = history.filter(h => h.question === qShort).length + 1;
     data._attemptNo = attemptNo; // attach to score data for renderScore
     renderScore(data);
-    generateDiagnosis(data, messages, question, hId); // fire async, don't await — streams in parallel with history save
     history.unshift({
       id: hId,
       time: new Date().toLocaleString(STATE.interview.language === 'en' ? 'en-US' : 'zh-CN'),
@@ -6423,12 +6422,6 @@ function renderScore(data) {
         ${nextRoundFramework.map((step, idx) => `<span style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;font-size:12px;color:var(--text)">${idx + 1}. ${escHtml(step)}</span>`).join('')}
       </div>
     </div>` : ''}
-    <div id="score-diagnosis-section">
-      <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:16px 18px;margin-top:12px">
-        <div style="font-size:13px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">🎙️ 面试官诊断</div>
-        <div id="diagnosis-content" style="font-size:13px;color:var(--text-muted);text-align:center;padding:8px 0">⏳ 生成中…</div>
-      </div>
-    </div>
     <div id="score-ref-section"></div>`;
 }
 
@@ -6862,8 +6855,6 @@ function renderSpecHistory(source, listElId) {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
-        <div id="specdiag-${h.id}">${buildDiagnosisHtml(h)}</div>
-        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="specdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ ${uiText('生成面试官诊断')}</button></div>` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
@@ -6977,8 +6968,6 @@ function renderHistory() {
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
         </div>` : ''}` : ''}
-        <div id="hdiag-${h.id}">${buildDiagnosisHtml(h)}</div>
-        ${!h.diagnosis ? `<div style="margin-bottom:8px" id="hdiag-btn-${h.id}"><button class="btn btn-ghost btn-sm" style="font-size:12px;color:#10b981" onclick="genHistoryDiagnosis('${h.id}')">🎙️ 生成面试官诊断</button></div>` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">

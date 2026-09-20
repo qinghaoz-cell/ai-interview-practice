@@ -6776,6 +6776,35 @@ function buildHistoryDialog(h) {
   }).join('');
 }
 
+function buildHistoryQuestionFramework(score) {
+  const framework = score?.question_framework;
+  if (!framework || typeof framework !== 'object') return '';
+  const steps = Array.isArray(framework.steps) ? framework.steps.map(function(step) {
+    if (typeof step === 'string') return { label: '', detail: step };
+    return { label: step?.label || '', detail: step?.detail || '' };
+  }).filter(function(step) { return step.detail; }).slice(0, 5) : [];
+  if (!framework.core_question && !steps.length) return '';
+  return '<div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.25);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px">🧩 用产品思维理解这道题</div>' +
+    (framework.core_question ? '<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:' + (steps.length ? '8px' : '0') + '"><span style="font-weight:600">这题真正要判断：</span>' + escHtml(framework.core_question) + '</div>' : '') +
+    (steps.length ? '<div style="display:grid;gap:5px">' + steps.map(function(step, idx) {
+      return '<div style="font-size:12px;line-height:1.55;color:var(--text-muted)"><span style="display:inline-flex;width:17px;height:17px;align-items:center;justify-content:center;border-radius:50%;background:rgba(99,102,241,.18);color:var(--primary);font-size:10px;font-weight:700;margin-right:5px">' + (idx + 1) + '</span>' +
+        (step.label ? '<span style="font-weight:600;color:var(--text)">' + escHtml(step.label) + '：</span>' : '') + escHtml(step.detail) + '</div>';
+    }).join('') + '</div>' : '') +
+    '</div>';
+}
+
+function buildHistoryNextRoundFramework(score) {
+  const steps = Array.isArray(score?.next_round_framework) ? score.next_round_framework.filter(Boolean).slice(0, 5) : [];
+  if (!steps.length) return '';
+  return '<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:4px">🧭 如果面试官继续深挖</div>' +
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:7px">后续训练路线，不是本题遗漏项。</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:5px">' + steps.map(function(step, idx) {
+      return '<span style="padding:4px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;font-size:11px;color:var(--text)">' + (idx + 1) + '. ' + escHtml(step) + '</span>';
+    }).join('') + '</div></div>';
+}
+
 // ────────────────────────────────────────────────────────────
 // 专项内嵌历史记录
 // ────────────────────────────────────────────────────────────
@@ -6848,13 +6877,15 @@ function renderSpecHistory(source, listElId) {
           <strong>${uiText('评分：')}</strong>${h.score.score}/10 &nbsp;
           <strong>${uiText('亮点：')}</strong>${(h.score.highlights || []).join('；')}
         </div>
+        ${buildHistoryQuestionFramework(h.score)}
         ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
           <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
           ${h.score.improvements.map((imp, idx) => `<div style="margin-bottom:${idx < h.score.improvements.length-1?'8px':'0'}">
             <span style="font-weight:600;color:var(--text)">${idx+1}. ${escHtml(imp.dimension||'')}：</span><span style="color:var(--text-muted)">${escHtml(imp.issue||'')}</span>
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
-        </div>` : ''}` : ''}
+        </div>` : ''}
+        ${buildHistoryNextRoundFramework(h.score)}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
@@ -6961,13 +6992,15 @@ function renderHistory() {
           <strong>评分：</strong>${h.score.score}/10 &nbsp;
           <strong>亮点：</strong>${(h.score.highlights||[]).join('；')}
         </div>
+        ${buildHistoryQuestionFramework(h.score)}
         ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
           <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
           ${h.score.improvements.map((imp, idx) => `<div style="margin-bottom:${idx < h.score.improvements.length-1?'8px':'0'}">
             <span style="font-weight:600;color:var(--text)">${idx+1}. ${escHtml(imp.dimension||'')}：</span><span style="color:var(--text-muted)">${escHtml(imp.issue||'')}</span>
             ${imp.how ? `<div style="color:var(--primary);margin-top:2px;padding-left:16px">→ ${escHtml(imp.how)}</div>` : ''}
           </div>`).join('')}
-        </div>` : ''}` : ''}
+        </div>` : ''}
+        ${buildHistoryNextRoundFramework(h.score)}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
         ${!(h.refAnswers && h.refAnswers.length) ? `
         <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">

@@ -1342,6 +1342,29 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         </div>
       </div>
 
+      <!-- Behavioral interview preparation -->
+      <div class="card">
+        <div class="card-title">🗣️ 行为面试准备 <span class="badge badge-blue">真实素材</span></div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">上传自我介绍、职业动机、协作冲突、挫折复盘等准备材料；仅在「行为面试专项」中作为出题、改写和参考答案的依据。</div>
+        <div id="kb-files-behavior" class="kb-file-list"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+            📎 上传文件
+            <input type="file" accept=".pdf,.docx,.txt,.md" style="display:none" multiple onchange="uploadKBFile('behavior',this)">
+          </label>
+          <span style="font-size:12px;color:var(--text-muted)">PDF / Word / TXT，可多选</span>
+          <span id="kb-status-behavior" style="font-size:12px;margin-left:auto"></span>
+        </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="toggleKBText('behavior')">✏️ 手动补充文字</button>
+          <div id="kb-text-wrap-behavior" style="display:none;margin-top:8px">
+            <textarea class="input-field" id="kb-text-behavior" rows="5"
+              placeholder="例如：为什么做 AI PM；一次跨团队分歧；一次结果不及预期后的复盘……"
+              oninput="saveKBTextSection('behavior')"></textarea>
+          </div>
+        </div>
+      </div>
+
       <!-- Notes -->
       <div class="card">
         <div class="card-title">📖 知识点笔记 <span class="badge badge-yellow">备考</span></div>
@@ -1669,7 +1692,7 @@ function languageInstruction() {
 const getResume = () => LS.getStr('resume');
 const getJD = () => LS.get('jd') || {};
 // KB: files stored per-section as array of {name, content}, plus optional manual text
-const KB_SECTIONS = ['projects', 'qna', 'notes'];
+const KB_SECTIONS = ['projects', 'qna', 'behavior', 'notes'];
 const getKBFiles  = (sec) => LS.get(`kb_files_${sec}`) || [];
 const saveKBFiles = (sec, arr) => LS.set(`kb_files_${sec}`, arr);
 const getKBText   = (sec) => LS.getStr(`kb_text_${sec}`);
@@ -1896,6 +1919,15 @@ const getKBContext = () => {
   build('qna',   '候选人已准备的Q&A');
   build('notes', '候选人知识点笔记');
   return parts.join('\n\n');
+};
+// 行为面试材料只提供给行为专项，避免把通用动机/HR准备混入产品题上下文。
+const getBehaviorKBContext = () => {
+  const files = getKBFiles('behavior');
+  const text = getKBText('behavior');
+  const chunks = [];
+  files.forEach(f => { if (f.content?.trim()) chunks.push(`[${f.name}]\n${f.content.trim()}`); });
+  if (text?.trim()) chunks.push(text.trim());
+  return chunks.length ? `【候选人行为面试准备材料】\n${chunks.join('\n\n---\n\n')}` : '';
 };
 const getCustomQuestions = () => LS.get('custom_questions') || [];
 const getFavorites = () => LS.get('favorites') || [];
@@ -3492,7 +3524,8 @@ function buildBehaviorContext() {
   const jt = getJobTargetConfig() || {};
   const resume = getResume();
   const kb = getKBContext();
-  return `【候选人可用事实】\n${resume ? '简历：' + resume.slice(0, 3500) + '\n' : ''}${kb ? '知识库：' + kb.slice(0, 4500) + '\n' : ''}${(jt.company || jt.title || jt.jd) ? '目标岗位：' + [jt.company, jt.title].filter(Boolean).join(' · ') + (jt.jd ? '\nJD摘要：' + jt.jd.slice(0, 600) : '') : '未提供目标公司/岗位信息'}\n`;
+  const behavior = getBehaviorKBContext();
+  return `【候选人可用事实】\n${resume ? '简历：' + resume.slice(0, 3500) + '\n' : ''}${kb ? '项目/知识库：' + kb.slice(0, 3500) + '\n' : ''}${behavior ? behavior.slice(0, 4500) + '\n' : ''}${(jt.company || jt.title || jt.jd) ? '目标岗位：' + [jt.company, jt.title].filter(Boolean).join(' · ') + (jt.jd ? '\nJD摘要：' + jt.jd.slice(0, 600) : '') : '未提供目标公司/岗位信息'}\n`;
 }
 
 async function startBehaviorInterview() {
@@ -5986,8 +6019,8 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
       </div>`).join('')}`;
 
   // Include KB context to ground personal-experience answers in real data
-  const kbCtx = getKBContext();
-  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
+  const kbCtx = [getKBContext(), isBehaviorRef ? getBehaviorKBContext() : ''].filter(Boolean).join('\n\n');
+  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的真实项目、准备材料和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
   // Single API call: framework + improved rewrite + standard reference per round
   const isResumeSpecRef = STATE.interview?.source === 'resume-spec';
@@ -7458,13 +7491,21 @@ async function genHistoryRefAnswers(hId) {
   const rec = hist.find(h => h.id === hId);
   if (!rec || !rec.messages?.length) { if (sec) sec.innerHTML = '<div style="color:var(--danger);font-size:12px">无对话记录</div>'; return; }
 
-  const kbCtx = getKBContext();
-  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的项目经历、Q&A和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
+  const kbCtx = [getKBContext(), rec.source === 'behavior' ? getBehaviorKBContext() : ''].filter(Boolean).join('\n\n');
+  const kbBlock = kbCtx ? `\n\n【候选人真实背景资料】\n以下是候选人上传的真实项目、准备材料和知识点，作为改写和参考答案的事实依据：\n${kbCtx}` : '';
 
   const showFwH = rec.source !== 'kb-spec';
   const isAIProductH = rec.source === 'aiproduct';
+  const isBehaviorH = rec.source === 'behavior';
 
-  const system = isAIProductH
+  const system = isBehaviorH
+    ? `你是产品经理综合面/HR面面试教练。针对每道行为面试题，给出三部分：
+1. 答题思路：按题目选职业动机、自我介绍、协作分歧、压力挫折或自我认知的表达结构，给3-5个贴题要点。
+2. 改写版本：保留候选人真实经历，补清楚本人行动、结果或反思，第一人称口语100-180字。
+3. 参考答案：第一人称口语120-220字，只能基于候选人真实背景资料；资料不足时提示需补真实例子，不能编造。
+
+不把行为题写成产品方案，不强行加入指标、技术、产品机制或产品思维框架。题目只问动机时，不要求STAR；题目问协作或挫折时，再重点看情境、行动、结果和反思。`
+    : isAIProductH
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。针对每道面试题，给出三部分内容：
 
 1. 答题思路：识别AI系统类型，用8步落地框架点出核心答题维度（简洁条目，每条不超过35字，共5-7条；指出考察重点和候选人常见盲点）

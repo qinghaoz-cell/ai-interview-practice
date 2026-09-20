@@ -601,7 +601,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <span class="nav-icon">🧠</span>知识点专项
       </div>
       <div class="nav-item" data-page="aiproduct" onclick="navigate('aiproduct')" style="border-left:2px solid var(--accent);margin-left:6px;padding-left:16px">
-        <span class="nav-icon">🤖</span>AI能力产品化
+        <span class="nav-icon">🤖</span>AI产品场景训练
       </div>
       <div class="nav-item" data-page="job-target" onclick="navigate('job-target')" style="border-left:2px solid #10b981;margin-left:6px;padding-left:16px">
         <span class="nav-icon">🎯</span>目标岗位专项
@@ -863,52 +863,17 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       </div>
     </section>
 
-    <!-- ── Page: AI能力产品化专项 ── -->
+    <!-- ── Page: AI产品场景训练 ── -->
     <section class="page" id="page-aiproduct">
       <div class="page-header">
-        <div class="page-title">🤖 AI能力产品化专项</div>
-        <div class="page-sub">按AI系统类型练习：把AI技术能力转化为真实产品方案的核心能力</div>
+        <div class="page-title">🤖 AI产品场景训练</div>
+        <div class="page-sub">从真实业务问题出发，练习判断 AI 是否值得介入、怎样融入产品。</div>
       </div>
 
-      <!-- System Type Cards -->
-      <div class="product-cat-grid" id="apcat-grid">
-        <div class="pcat-card" data-cat="aprandom" onclick="selectAPCat(this,'aprandom')">
-          <div class="pcat-icon">🎲</div>
-          <div class="pcat-name">随机系统类型</div>
-          <div class="pcat-desc">从5类AI系统中随机抽一题，综合考察产品化能力</div>
-        </div>
-        <div class="pcat-card active" data-cat="task" onclick="selectAPCat(this,'task')" style="border-color:var(--accent);background:var(--accent-dim)">
-          <div class="pcat-icon">⚡</div>
-          <div class="pcat-name">任务型系统</div>
-          <div class="pcat-desc">单一意图、明确输出，如AI客服、智能表单、自动填写</div>
-        </div>
-        <div class="pcat-card" data-cat="knowledge" onclick="selectAPCat(this,'knowledge')" style="border-color:#60a5fa;background:#60a5fa18">
-          <div class="pcat-icon">📚</div>
-          <div class="pcat-name">知识型系统</div>
-          <div class="pcat-desc">RAG+检索，知识问答、企业内部搜索、FAQ机器人</div>
-        </div>
-        <div class="pcat-card" data-cat="workflow" onclick="selectAPCat(this,'workflow')" style="border-color:#f59e0b;background:#f59e0b18">
-          <div class="pcat-icon">🔄</div>
-          <div class="pcat-name">流程型系统</div>
-          <div class="pcat-desc">多步骤自动化，内容生产流水线、审批工作流、Agent编排</div>
-        </div>
-        <div class="pcat-card" data-cat="interactive" onclick="selectAPCat(this,'interactive')" style="border-color:#a78bfa;background:#a78bfa18">
-          <div class="pcat-icon">💬</div>
-          <div class="pcat-name">交互型系统</div>
-          <div class="pcat-desc">多轮对话、个性化记忆、AI助手，考察LUI产品设计</div>
-        </div>
-        <div class="pcat-card" data-cat="trustworthy" onclick="selectAPCat(this,'trustworthy')" style="border-color:#f87171;background:#f8717118">
-          <div class="pcat-icon">🛡️</div>
-          <div class="pcat-name">可信型系统</div>
-          <div class="pcat-desc">高风险决策、合规审计，金融/医疗/法律AI的风险治理</div>
-        </div>
-      </div>
-
-      <!-- Mode & Start -->
       <div class="card">
-        <div class="card-title" id="apcat-title">⚡ 任务型系统 — 产品落地题</div>
+        <div class="card-title">🎯 开始一轮场景练习</div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
-          🤖 AI出题：给定业务场景，要求你把AI能力转化为完整产品方案（北极星：业务目标→用户任务→AI介入→产品机制→指标→风险）
+          每次随机给出一个真实业务场景。你先判断用户问题和 AI 介入点，AI 再基于你的回答继续追问。
         </div>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
           <button class="btn btn-primary" onclick="startAIProductInterview()">▶ 开始练习</button>
@@ -1471,6 +1436,11 @@ const UI_EN = {
   '功能价值判断、方案取舍决策、产品差异化，考察PM核心决策力': 'Practice feature-value assessment, trade-offs, and product differentiation.',
   '🎨 产品设计题': '🎨 Product Design Question', '🤖 AI基于真实市场面试规律实时出题，每次不同。': '🤖 AI generates a different question each time, based on real interview patterns.',
   '📋 练习记录': '📋 Practice History', '🤖 AI能力产品化专项': '🤖 AI Productization Practice',
+  '🤖 AI产品场景训练': '🤖 AI Product Scenario Practice',
+  '从真实业务问题出发，练习判断 AI 是否值得介入、怎样融入产品。': 'Start with real business problems and practice deciding whether and how AI should enter the product.',
+  '🎯 开始一轮场景练习': '🎯 Start a Scenario Practice',
+  '每次随机给出一个真实业务场景。你先判断用户问题和 AI 介入点，AI 再基于你的回答继续追问。': 'Each round starts with a random business scenario. First identify the user problem and AI opportunity; then receive follow-up questions based on your answer.',
+  'AI场景训练': 'AI Scenario Practice',
   '按AI系统类型练习：把AI技术能力转化为真实产品方案的核心能力': 'Practice turning AI capabilities into real product solutions by system type.',
   '从5类AI系统中随机抽一题，综合考察产品化能力': 'Draw a random question from five AI system types to assess productization skill.',
   '单一意图、明确输出，如AI客服、智能表单、自动填写': 'Single intent and clear output, such as AI support, smart forms, and autofill.',
@@ -3231,6 +3201,42 @@ async function startProductInterview() {
 // AI能力产品化专项
 // ────────────────────────────────────────────────────────────
 
+// 前台按真实业务场景练习；系统类型只保留在其他专项/追问逻辑中作内部能力参考。
+const AIPRODUCT_BUSINESS_DOMAINS = [
+  { id: 'content', name: '内容、搜索与社区', contexts: '内容分发、站内搜索、创作者服务、评论与社区治理、热点信息理解' },
+  { id: 'commerce', name: '电商与本地生活', contexts: '交易服务、商家经营、售后履约、供需匹配、用户增长' },
+  { id: 'enterprise', name: '企业服务与协同', contexts: '内部知识、文档协作、审批、项目协作、员工服务、AI平台工具' },
+  { id: 'growth', name: '增长、广告与客户经营', contexts: '广告投放、营销活动、会员运营、客户洞察、销售线索、CRM' },
+  { id: 'supplychain', name: '供应链、物流与制造', contexts: '采购、库存、运输异常、质检、生产协同、售后维修' },
+  { id: 'travel', name: '出行、旅游与线下服务', contexts: '行程规划、调度、异常处理、门店服务、用户体验保障' },
+  { id: 'education', name: '教育、招聘与职业发展', contexts: '学习辅导、教学运营、招聘流程、员工培训、求职服务' },
+  { id: 'publicservice', name: '医疗健康与公共服务', contexts: '健康咨询、预约分诊、材料处理、政务咨询、服务分流' },
+  { id: 'finance', name: '金融、保险与风控', contexts: '客户服务、理赔、反欺诈、合规审核、风险提示' },
+];
+
+function buildAIProductScenarioPrompt(domain) {
+  return `你是一位真实业务导向的AI产品经理面试官。请围绕「${domain.name}」领域，出一道AI产品场景面试题。
+
+该领域可选业务：${domain.contexts}。
+
+【出题目标】
+考察候选人面对陌生业务时，能否先理解用户任务和当前问题，再判断AI是否值得介入、优先介入哪一步。不要考系统类型定义，也不要默认上AI一定正确。
+
+【题目格式】
+只输出以下三段，不加任何额外说明：
+【业务背景】用1-2句说清楚公司/业务、关键用户和他正在完成的任务。
+【当前问题】用1-2句说明现有做法的具体卡点或代价。可以自然交代必要的业务事实，但不要单列“限制”，也不要把后续追问的答案提前告诉候选人。
+【问题】以自然面试官口吻提出一个开放首问。只考察一个核心判断，例如：先要了解什么、AI是否值得介入、优先帮助用户完成哪一步、或怎样定义最小可验证的切入点。不要同时要求完整方案、技术选型、指标、风险和评测。
+
+【必须遵守】
+- 场景要像真实产品业务，不要写成“请设计一个AI助手”或“请选择任务型/知识型系统”。
+- 首题不给出完整约束清单；若候选人提出方案，再在后续对话中贴着其回答补充数据、风险、资源或替代方案等限制。
+- 约三分之一题目应把“是否需要AI”本身作为核心判断；其他题目可以先考用户任务、现有流程或优先级。
+- 不编造真实公司内部信息、精确经营数据或技术实现细节；可以使用合理但不精确的业务描述。
+- 每次更换具体用户、任务和问题，避免连续出现相似的客服、知识问答或自动化场景。
+- 总字数100-160字。`;
+}
+
 const AIPRODUCT_CAT_LABELS = {
   task:        '⚡ 任务型系统',
   knowledge:   '📚 知识型系统',
@@ -3842,23 +3848,6 @@ const NO_FABRICATION_RULE = `【通用禁止编造规则 — 适用于改写版�
 5. 诊断内容不造数：面试官诊断中不得为"显得专业"而编造数字，直接用行为描述，如"候选人缺少指标层级"，而不是"候选人没有提到转化率达到15%"。
 6. 商业测算聚焦框架：涉及成本/ROI/补贴/费率等商业计算，给出框架（成本项→收益项→关键假设→试点规模→规模化条件），不填入无来源的精确数字。`;
 
-let _apCat = 'task';   // 当前选中的AI产品化分类
-
-function selectAPCat(el, cat) {
-  _apCat = cat;
-  document.querySelectorAll('#apcat-grid .pcat-card').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  const titles = {
-    aprandom: '🎲 随机系统类型 — 产品落地题',
-    task:        '⚡ 任务型系统 — 产品落地题',
-    knowledge:   '📚 知识型系统 — 产品落地题',
-    workflow:    '🔄 流程型系统 — 产品落地题',
-    interactive: '💬 交互型系统 — 产品落地题',
-    trustworthy: '🛡️ 可信型系统 — 产品落地题',
-  };
-  document.getElementById('apcat-title').textContent = titles[cat] || cat;
-}
-
 async function startAIProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
   API_QUEUE.abort();
@@ -3866,16 +3855,13 @@ async function startAIProductInterview() {
   await new Promise(r => setTimeout(r, 80));
   showInterviewConfig(true);
 
-  // Resolve random
-  const resolvedCat = _apCat === 'aprandom'
-    ? AIPRODUCT_ALL_CATS[Math.floor(Math.random() * AIPRODUCT_ALL_CATS.length)]
-    : _apCat;
-  const catLabel = AIPRODUCT_CAT_LABELS[resolvedCat] || resolvedCat;
+  // 每轮随机换一个大业务领域；前台不暴露系统类型。
+  const domain = AIPRODUCT_BUSINESS_DOMAINS[Math.floor(Math.random() * AIPRODUCT_BUSINESS_DOMAINS.length)];
 
-  toast('AI 生成「AI能力产品化专项」落地题中…', 'info');
+  toast('AI 正在生成业务场景题…', 'info');
   let question = '';
   try {
-    const genPrompt = AIPRODUCT_CAT_PROMPTS[resolvedCat] + AIPRODUCT_REALISM_RULES + getRecentQsBlock('aiproduct', resolvedCat);
+    const genPrompt = buildAIProductScenarioPrompt(domain) + AIPRODUCT_REALISM_RULES + getRecentQsBlock('aiproduct', 'scenario');
     question = await genQuestion(genPrompt);
   } catch (e) {
     toast('生成失败：' + e.message, 'error');
@@ -3885,7 +3871,7 @@ async function startAIProductInterview() {
   const pref = getPref();
   // aiproduct: normal=4 (focused), strict=5, hell=6 (deep drill)
   const maxTurns = pref.difficulty === 'normal' ? 4 : pref.difficulty === 'hell' ? 6 : 5;
-  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: resolvedCat, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns, source: 'aiproduct', subCategory: 'scenario', language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
 
   document.getElementById('chat-empty').style.display = 'none';
   clearChatMessages();
@@ -4860,11 +4846,9 @@ ${kbCtx}` : '';
 - 还有1个与场景相关的关键盲点（如证据、质量、风险或取舍）未深挖 → 可再追最后1轮，之后必须结束`
       : `\n【⚠️ 必须结束】已完成第 ${turn} 轮，已超目标轮数。本轮必须：先输出"[INTERVIEW_END]"，再用1句话点评候选人表现。禁止再提任何问题。`;
 
-    const catName = AIPRODUCT_CAT_LABELS[STATE.interview.subCategory] || '';
-    const sysTypeFollowup = AIPRODUCT_SYSTEM_TYPE_FOLLOWUP[STATE.interview.subCategory] || '';
     const apSystem = AIPRODUCT_INTERVIEW_SYSTEM + `
 
-${sysTypeFollowup ? sysTypeFollowup + '\n' : ''}${turnNoteAP ? turnNoteAP + '\n' : ''}
+${turnNoteAP ? turnNoteAP + '\n' : ''}
 ${diffDesc[pref.difficulty] || diffDesc.strict}
 
 严格遵守：
@@ -4875,7 +4859,6 @@ ${diffDesc[pref.difficulty] || diffDesc.strict}
 - 禁止：自己回答题目、给出完整框架、多问题列举、追问技术实现细节
 ${voiceNote}
 
-- 系统类型：${catName}
 - 面试题：${question}`;
 
     const apApiMessages = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
@@ -6123,7 +6106,7 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
   const _jtTopType = STATE.interview?.jtType || '';
   const moduleCtx = '【本次练习模块信息】\n' +
     '模块来源：' + (_src === 'product' ? '产品思维专项'
-      : _src === 'aiproduct' ? 'AI能力产品化专项'
+      : _src === 'aiproduct' ? 'AI产品场景训练'
       : _src === 'resume-spec' ? '简历专项'
       : _src === 'kb-spec' ? '知识库/AI认知专项'
       : _src === 'job-target' ? '目标岗位专项（jtType=' + _jtTopType + '）'
@@ -6153,7 +6136,7 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
     '- 指标体系题：产品目标→北极星指标→核心维度拆解（用户规模/交易活跃/场景渗透/商户生态等）→体验/风险指标→指标冲突与权衡。【重要】指标体系题严禁套用产品设计框架（场景收敛→痛点→MVP单点→验证），「下次可以怎么说」必须直接给出指标层级和具体指标名称，不要建议去做MVP功能或产品方案。\n' +
     '- 需求优先级题：目标清晰度→用户价值→业务价值→成本/风险→紧急性\n' +
     '- AI产品设计+商业化题：用户是谁/使用场景→核心痛点→AI能力产品化/产品机制→商业化路径（付费触发时机/免费vs付费边界/收费方式）→验证指标（转化率/留存/LTV）。【诊断重点】若候选人没有讲商业化路径，或只说"SaaS收费"没有逻辑，「下次可以怎么说」必须给口语化示范：先说用户为什么愿意付（而不是功能好就付）→ 免费vs付费边界 → 付费触发时机 → 1-2个核心转化指标，适合60-90秒面试表达\n\n' +
-    '▌AI能力产品化专项（先判断用户任务、AI是否必要与适合的系统方式；类型仅作内部分析）\n' +
+    '▌AI产品场景训练（先判断用户任务、AI是否必要与适合的系统方式；类型仅作内部分析）\n' +
     '- 任务型：任务链路→Tool Use设计→执行边界→失败兜底→AI输出质量评估（好输出定义/完整性/可用性/bad case归因）\n' +
     '- 知识型：知识来源→RAG检索链路→引用/来源展示→幻觉控制→AI输出质量评估（相关性/真实性/来源可信度，检索vs生成归因）\n' +
     '- 流程型（Workflow拆解）：流程节点拆分（每个节点的输入/处理/输出）→AI vs 规则 vs 人工分工→质量标准/筛选逻辑→排序/入库机制→异常路径→整体评估指标。【诊断重点】候选人若只讲了"流程概念"没拆节点，或节点没说清输入输出，「下次可以怎么说」必须给出按节点逐步拆解的口语示范，而不是泛泛说"AI处理、人工审核"。\n' +
@@ -6687,7 +6670,7 @@ function renderSpecHistory(source, listElId) {
     return;
   }
 
-  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', scenario: 'AI场景训练', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
     business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
     retention: '留存与增长', priority: '优先级取舍', differentiation: '差异化定位',
     users: '用户与场景', opportunity: '产品机会', bizmodel: '商业逻辑', biz_metrics: '指标体系',
@@ -6797,8 +6780,8 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI产品化专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
-  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI场景训练', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', scenario: 'AI场景训练', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
     // job-target top-level types
     business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
     // job-target sub-types (product)
@@ -6921,7 +6904,7 @@ async function genHistoryDiagnosis(hId) {
   const _subCat = rec.subCategory || '';
   const _jtT = '';
   const moduleCtx = '【本次练习模块信息】\n模块来源：' +
-    (_src === 'product' ? '产品思维专项' : _src === 'aiproduct' ? 'AI能力产品化专项' : _src === 'resume-spec' ? '简历专项' : _src === 'kb-spec' ? '知识库/AI认知专项' : _src === 'job-target' ? '目标岗位专项' : _src) +
+    (_src === 'product' ? '产品思维专项' : _src === 'aiproduct' ? 'AI产品场景训练' : _src === 'resume-spec' ? '简历专项' : _src === 'kb-spec' ? '知识库/AI认知专项' : _src === 'job-target' ? '目标岗位专项' : _src) +
     '\n' + (_subCat ? '子分类：' + _subCat + '\n' : '') + '请结合以上信息，先判断具体题型和轮次，再选扣分点。\n';
 
   // Reuse the same system prompt as generateDiagnosis

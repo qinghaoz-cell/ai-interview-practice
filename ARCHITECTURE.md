@@ -26,7 +26,7 @@
 | 产品专项 | `product` | 产品经理题库（5类题型） |
 | 简历专项 | `resume-spec` | 针对具体项目经历深度追问 |
 | 知识库专项 | `kb-spec` | 基于上传知识库出题 |
-| **AI产品专项** | `aiproduct` | AI能力产品化专项（4类系统类型）⭐ 核心模块 |
+| **AI产品场景训练** | `aiproduct` | 从真实业务场景出发，练习AI介入判断与产品化追问 ⭐ 核心模块 |
 | **目标岗位** | `job-target` | 根据目标公司/岗位定向出题 |
 | 观察者模式 | `obs` | 复盘功能 |
 | 历史记录 | `history` | 所有练习记录 |
@@ -73,7 +73,8 @@ STATE = {
 | 变量名 | 行号 | 用途 |
 |--------|------|------|
 | `PRODUCT_CAT_PROMPTS` | ~2715 | 产品专项各子类型的出题指令，key = subCategory |
-| `AIPRODUCT_CAT_PROMPTS` | ~2999 | AI产品专项各子类型的出题指令，key = subCategory |
+| `buildAIProductScenarioPrompt()` | ~3235 | AI产品场景训练的首题 Prompt；按随机大业务领域生成开放场景题 |
+| `AIPRODUCT_CAT_PROMPTS` | ~3300 | 目标岗位专项等保留场景使用的系统类型出题指令 |
 
 **`PRODUCT_CAT_PROMPTS` 的 key：**
 - `design`：产品设计题（含AI产品设计+商业化、产品设计、产品改进、产品分析、开放收敛共5类）
@@ -82,18 +83,17 @@ STATE = {
 - `aiknowledge`：AI基础知识题
 - `aipm`：AI PM岗位理解题
 
-**`AIPRODUCT_CAT_PROMPTS` 的 key：**
-- `task`：任务型AI系统（单次请求→明确输出）
-- `knowledge`：知识型AI系统（RAG/知识库/搜索）
-- `workflow`：流程型AI系统（多节点流水线）
-- `interactive`：交互型AI系统（多轮对话）
+**AI产品场景训练的首题逻辑：**
+- 前台没有系统类型选择；每轮从内容搜索社区、电商本地生活、企业服务协同、增长广告客户经营、供应链物流制造、出行旅游线下服务、教育招聘职业发展、医疗公共服务、金融保险风控中随机选一个大领域。
+- 首题只给业务背景和当前问题，考察用户任务、AI必要性或优先介入点；不预设系统类型，也不要求一次答完整方案。
+- 后续追问根据候选人的回答补充能力选型、产品机制、验证、质量或风险，避免首题直接给出完整约束。
 
 ### 4.2 追问 Prompt（面试官逐轮追问的系统 prompt）
 
 | 变量名 | 行号 | 用途 |
 |--------|------|------|
 | `AIPRODUCT_INTERVIEW_SYSTEM` | ~3121 | AI产品专项的通用追问系统（9个触发方向） |
-| `AIPRODUCT_SYSTEM_TYPE_FOLLOWUP` | ~3197 | 按系统类型细化的追问，key = `task/knowledge/workflow/interactive/trustworthy` |
+| `AIPRODUCT_SYSTEM_TYPE_FOLLOWUP` | ~3450 | 目标岗位等保留题型的细化追问；AI产品场景训练仅使用通用追问 |
 | `PRODUCT_CAT_FOLLOWUP` | ~3297 | 产品专项各类题的追问，key = subCategory |
 | `RESUME_SPEC_FOLLOWUP` | ~3435 | 简历专项追问（针对具体项目经历） |
 | `NO_FABRICATION_RULE` | ~3548 | 通用禁止编造规则，注入所有 prompt |
@@ -205,8 +205,8 @@ jtSubRef（source=job-target）→ 根据 subCategory 路由到对应框架
 ### ⑤ 改产品专项某类题的出题逻辑
 定位 `PRODUCT_CAT_PROMPTS.{key}`（设计/分析/改进/取舍/指标），直接修改 prompt 字符串。
 
-### ⑥ 改AI产品专项某系统类型的追问
-定位 `AIPRODUCT_SYSTEM_TYPE_FOLLOWUP.{key}`（task/knowledge/workflow/interactive），直接修改字符串。`workflow` 是6个场景触发式，其他是条件列表式。
+### ⑥ 改AI产品场景训练的出题领域或首问
+定位 `AIPRODUCT_BUSINESS_DOMAINS` 增删大业务领域，或修改 `buildAIProductScenarioPrompt()` 的首题要求。首题只考察一个核心判断；能力选型、验证与风险留给后续追问。
 
 ---
 

@@ -25,6 +25,7 @@
 | 综合练习 | `interview` | 基于简历+JD 的综合面试练习 |
 | 产品专项 | `product` | 产品经理题库（产品设计与策略、数据分析与增长、价值竞争与取舍） |
 | 简历专项 | `resume-spec` | 针对具体项目经历深度追问 |
+| 行为面试专项 | `behavior` | 单题作答：职业动机、协作分歧、压力挫折与自我认知 |
 | 知识库专项 | `kb-spec` | 基于上传知识库出题 |
 | **AI产品场景训练** | `aiproduct` | 从真实业务场景出发，练习AI介入判断与产品化追问 ⭐ 核心模块 |
 | **目标岗位** | `job-target` | 根据目标公司/岗位定向出题 |
@@ -65,6 +66,7 @@ STATE = {
 | `'aiproduct'` | AI产品专项模块 |
 | `'product'` | 产品专项模块 |
 | `'resume-spec'` | 简历专项模块 |
+| `'behavior'` | 行为面试专项；单题作答后直接评分，不进入多轮追问 |
 | `'kb-spec'` | 知识库专项模块 |
 | `'job-target'` | 目标岗位模块（内部再细分 jtType） |
 | `'random'` | 综合练习模块 |
@@ -93,6 +95,7 @@ STATE = {
 **AI产品场景训练的首题逻辑：**
 - 前台没有系统类型选择；每轮从内容搜索社区、电商本地生活、企业服务协同、增长广告客户经营、供应链物流制造、出行旅游线下服务、教育招聘职业发展、医疗公共服务、金融保险风控中随机选一个大领域。
 - 首题只给业务背景和当前问题，考察用户任务、AI必要性或优先介入点；不预设系统类型，也不要求一次答完整方案。
+- 约 35% 的首题会练习 AI 助手 / Agent 判断：用“回答可用但任务未完成”“用户反复修改”等白话信号，考察应先优化输出、交互、工作流还是能力本身；不考术语定义或技术参数。
 - 后续追问根据候选人的回答补充能力选型、产品机制、验证、质量或风险，避免首题直接给出完整约束。
 
 **目标岗位专项的题型规则：** `buildJTQuestionPrompt()` 与 `buildJTFollowupSystem()` 负责四个大方向：岗位业务理解、岗位产品思维、岗位 AI 能力产品化、简历岗位迁移。每次首题只考一个子方向；资料不足时，改考“会如何验证/补充什么信息”，不编造公司内部事实。岗位 AI 能力产品化前台不再按系统类型选题，改为基于 JD/业务的三段式 case，首题只问 AI 必要性、优先切入点或最小验证之一；系统类型术语留给确实影响方案的后续追问。
@@ -107,6 +110,7 @@ STATE = {
 | `AIPRODUCT_SYSTEM_TYPE_FOLLOWUP` | ~3450 | 目标岗位等保留题型的细化追问；AI产品场景训练仅使用通用追问 |
 | `PRODUCT_CAT_FOLLOWUP` | ~3297 | 产品专项各类题的追问，key = subCategory |
 | `RESUME_SPEC_FOLLOWUP` | ~3435 | 简历专项追问（针对具体项目经历） |
+| `BEHAVIOR_CATS` | ~3400 | 行为面试的出题方向；只生成一题，不追问 |
 | `buildJTQuestionPrompt()` | ~4171 | 目标岗位专项首题：按业务/产品/AI/迁移四类和 JD 上下文出题 |
 | `buildJTFollowupSystem()` | ~4265 | 目标岗位专项追问：按实际首题范围和候选人主张只追一个点 |
 | `NO_FABRICATION_RULE` | ~3548 | 通用禁止编造规则，注入所有 prompt |
@@ -122,6 +126,7 @@ source/jtType → 评分模式
 aiproduct / jtType=aiproduct → scoreAsAIP（AI产品专项评分）
 resume-spec / jtType=migration → scoreAsRS（简历专项评分）
 product / jtType=product/business → scoreAsProd（产品专项评分）
+behavior → 行为面试评分（只按题目范围评表达、具体性与匹配）
 其他 → 通用评分
 ```
 
@@ -169,6 +174,7 @@ improvements      []
 ```
 isAIProductRef（source=aiproduct）→ AI产品专项参考答案框架
 isResumeSpecRef（source=resume-spec）→ 简历专项参考答案（结合具体项目）
+isBehaviorRef（source=behavior）→ 行为面试参考答案（真实经历 + 完整表达）
 isProductRef（source=product）→ 产品专项参考答案
 jtSubRef（source=job-target）→ 根据 subCategory 路由到对应框架
 其他 → 通用参考答案

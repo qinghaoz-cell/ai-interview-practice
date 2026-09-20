@@ -597,6 +597,9 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div class="nav-item" data-page="resume-spec" onclick="navigate('resume-spec')">
         <span class="nav-icon">💼</span>简历专项
       </div>
+      <div class="nav-item" data-page="behavior" onclick="navigate('behavior')">
+        <span class="nav-icon">🗣️</span>行为面试专项
+      </div>
       <div class="nav-item" data-page="kb-spec" onclick="navigate('kb-spec')">
         <span class="nav-icon">🧠</span>知识点专项
       </div>
@@ -874,6 +877,54 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
       <div style="margin-top:4px">
         <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
         <div id="aiproduct-spec-history"></div>
+      </div>
+    </section>
+
+    <!-- ── Page: 行为面试专项 ── -->
+    <section class="page" id="page-behavior">
+      <div class="page-header">
+        <div class="page-title">🗣️ 行为面试专项</div>
+        <div class="page-sub">练习一段完整的自我介绍、职业动机、协作冲突或成长复盘；每次单题作答后直接获得反馈。</div>
+      </div>
+
+      <div class="product-cat-grid" id="behavior-cat-grid">
+        <div class="pcat-card active" data-behavior="random" onclick="selectBehaviorCat(this,'random')">
+          <div class="pcat-icon">🎲</div>
+          <div class="pcat-name">随机抽题</div>
+          <div class="pcat-desc">从全部行为题方向中随机抽取，模拟 HR 或综合面</div>
+        </div>
+        <div class="pcat-card" data-behavior="motivation" onclick="selectBehaviorCat(this,'motivation')">
+          <div class="pcat-icon">🎯</div>
+          <div class="pcat-name">自我介绍与职业动机</div>
+          <div class="pcat-desc">为什么做产品 / AI PM、为什么选择公司与岗位、职业规划</div>
+        </div>
+        <div class="pcat-card" data-behavior="collaboration" onclick="selectBehaviorCat(this,'collaboration')">
+          <div class="pcat-icon">🤝</div>
+          <div class="pcat-name">协作与分歧处理</div>
+          <div class="pcat-desc">跨团队推动、意见不一致、沟通阻力与决策落地</div>
+        </div>
+        <div class="pcat-card" data-behavior="setback" onclick="selectBehaviorCat(this,'setback')">
+          <div class="pcat-icon">🌱</div>
+          <div class="pcat-name">压力、挫折与复盘</div>
+          <div class="pcat-desc">高压迭代、失败经历、优先级调整与成长反思</div>
+        </div>
+        <div class="pcat-card" data-behavior="self-awareness" onclick="selectBehaviorCat(this,'self-awareness')">
+          <div class="pcat-icon">🪞</div>
+          <div class="pcat-name">自我认知与学习</div>
+          <div class="pcat-desc">个人优势、待提升点、学习方法与陌生业务上手</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" id="behavior-cat-title">🎲 随机行为面试题</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+          优先基于你的简历、知识库和已保存岗位信息提问；没有事实依据时不会替你编故事。
+        </div>
+        <button class="btn btn-primary" onclick="startBehaviorInterview()">▶ 开始练习</button>
+      </div>
+      <div style="margin-top:4px">
+        <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--text)">📋 练习记录</div>
+        <div id="behavior-spec-history"></div>
       </div>
     </section>
 
@@ -1158,6 +1209,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <button class="cat-pill" onclick="setHfSrc(this,'product')">🧩 产品专项</button>
         <button class="cat-pill" onclick="setHfSrc(this,'aiproduct')">🤖 AI产品化</button>
         <button class="cat-pill" onclick="setHfSrc(this,'resume-spec')">💼 简历专项</button>
+        <button class="cat-pill" onclick="setHfSrc(this,'behavior')">🗣️ 行为面试</button>
         <button class="cat-pill" onclick="setHfSrc(this,'kb-spec')">🧠 知识点专项</button>
         <button class="cat-pill" onclick="setHfSrc(this,'job-target')">🎯 目标岗位专项</button>
       </div>
@@ -2115,6 +2167,7 @@ function navigate(page) {
   if (page === 'jd') renderJDPage();
   if (page === 'kb') renderKBPage();
   if (page === 'resume-spec') renderResumeSpec();
+  if (page === 'behavior') renderSpecHistory('behavior', 'behavior-spec-history');
   if (page === 'product') renderSpecHistory('product', 'product-spec-history');
   if (page === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
   if (page === 'kb-spec') renderKBSpec();
@@ -3233,7 +3286,14 @@ const AIPRODUCT_BUSINESS_DOMAINS = [
   { id: 'finance', name: '金融、保险与风控', contexts: '客户服务、理赔、反欺诈、合规审核、风险提示' },
 ];
 
-function buildAIProductScenarioPrompt(domain) {
+function buildAIProductScenarioPrompt(domain, track = 'business') {
+  const agentJudgment = track === 'agent-judgment' ? `
+
+【本轮额外方向：AI助手 / Agent 的产品判断】
+本轮必须围绕一个具体业务任务，考察候选人如何判断：该任务应保持普通功能/人工流程，还是需要多步协作的AI助手；或当前问题该先优化输出、交互、工作流还是能力本身。题干要给出足够白话背景，例如“回答看起来没问题但用户不继续使用”“工具调用成功但用户任务没有完成”“用户反复修改AI结果”。
+- 首问只问一个核心判断及依据，例如“你会先排查哪里”“为什么不只改一句提示语”“这件事是否需要做成可执行流程”。
+- 不要求候选人知道 Agent、RAG、Prompt 等定义或技术参数；如果提到这些概念，也只考察其对用户任务、流程稳定性和产品取舍的理解。
+- 不要把题目写成技术选型题，更不要直接问“什么是Agent”。` : '';
   return `你是一位真实业务导向的AI产品经理面试官。请围绕「${domain.name}」领域，出一道AI产品场景面试题。
 
 该领域可选业务：${domain.contexts}。
@@ -3254,7 +3314,7 @@ function buildAIProductScenarioPrompt(domain) {
 - 若涉及医疗、金融、法律、政务或工业等专业领域，必须用白话补足完成任务所需的基础背景，并说明最终专业判断由谁负责；不把行业术语、规则细节或专家经验当成候选人的前置知识。
 - 不编造真实公司内部信息、精确经营数据或技术实现细节；可以使用合理但不精确的业务描述。
 - 每次更换具体用户、任务和问题，避免连续出现相似的客服、知识问答或自动化场景。
-- 总字数100-160字。`;
+- 总字数100-160字。${agentJudgment}`;
 }
 
 const AIPRODUCT_CAT_LABELS = {
@@ -3397,6 +3457,80 @@ const AIPRODUCT_REALISM_RULES = `
 - 约30%的题目应以“业务正在考虑引入AI”为背景，首问直接考察：现有流程哪里是真正瓶颈、哪一步值得用AI、哪些步骤不该用AI，以及为什么；不要直接假设要从0设计一整套AI系统。
 - 首问只考察候选人如何判断是否值得用AI、AI放在哪个节点、用户为什么会采用；质量评估、复杂技术选型和风险细节留给追问。
 - 场景风险低时不要强行追审计、召回率或人工兜底；场景涉及资金、健康、法律、用户权益时再重点追这些边界。`;
+
+// ── 行为面试专项：一题一答，避免把 HR / 综合面练成项目深挖 ──
+const BEHAVIOR_CATS = {
+  motivation: {
+    label: '🎯 自我介绍与职业动机',
+    prompt: '自我介绍、为什么做产品经理/AI PM、为什么选择该公司或岗位、职业规划、个人差异化。若问公司/岗位，只有已保存岗位信息时才结合，不能编造公司事实。'
+  },
+  collaboration: {
+    label: '🤝 协作与分歧处理',
+    prompt: '跨团队协作、推进阻力、意见不一致、如何说服或如何在信息不足时推动决定。必须请候选人讲真实经历；不要预设他发生过冲突。'
+  },
+  setback: {
+    label: '🌱 压力、挫折与复盘',
+    prompt: '高压迭代、失败或受挫、结果不及预期、优先级调整、如何复盘。必须请候选人讲真实经历；不要把“能否加班”当作唯一考察。'
+  },
+  'self-awareness': {
+    label: '🪞 自我认知与学习',
+    prompt: '个人优势/待提升点、学习产品的方法、进入陌生业务如何上手、职业成长目标。考察真实、具体和自我反思，不要求项目指标。'
+  },
+};
+const BEHAVIOR_ALL_CATS = Object.keys(BEHAVIOR_CATS);
+let _behaviorCat = 'random';
+
+function selectBehaviorCat(el, cat) {
+  _behaviorCat = cat;
+  document.querySelectorAll('#behavior-cat-grid .pcat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const title = document.getElementById('behavior-cat-title');
+  if (title) title.textContent = cat === 'random' ? '🎲 随机行为面试题' : BEHAVIOR_CATS[cat].label;
+}
+
+function buildBehaviorContext() {
+  const jt = getJobTargetConfig() || {};
+  const resume = getResume();
+  const kb = getKBContext();
+  return `【候选人可用事实】\n${resume ? '简历：' + resume.slice(0, 3500) + '\n' : ''}${kb ? '知识库：' + kb.slice(0, 4500) + '\n' : ''}${(jt.company || jt.title || jt.jd) ? '目标岗位：' + [jt.company, jt.title].filter(Boolean).join(' · ') + (jt.jd ? '\nJD摘要：' + jt.jd.slice(0, 600) : '') : '未提供目标公司/岗位信息'}\n`;
+}
+
+async function startBehaviorInterview() {
+  if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }
+  API_QUEUE.abort();
+  const cat = _behaviorCat === 'random'
+    ? BEHAVIOR_ALL_CATS[Math.floor(Math.random() * BEHAVIOR_ALL_CATS.length)]
+    : _behaviorCat;
+  const catInfo = BEHAVIOR_CATS[cat];
+  toast('AI 正在生成行为面试题…', 'info');
+  let question = '';
+  try {
+    question = await genQuestion(`你是互联网产品经理 / AI产品经理的综合面或HR面面试官。请基于候选人资料，出一道「${catInfo.label}」题。\n\n【本轮方向】${catInfo.prompt}\n\n【出题规则】\n- 只问一个完整问题，45字以内，像真实面试官，不加题型标题或解释。\n- 优先使用候选人资料中的真实公司、项目或经历；资料不足时问通用题，不得编造候选人的经历、结果或公司业务事实。\n- 不问产品机制、指标、技术实现等与本题无关的内容。\n- 这是单题作答练习，题目本身应能让候选人完整作答，不要预告后续追问。\n\n${buildBehaviorContext()}${getRecentQsBlock('behavior', cat)}`);
+  } catch (e) {
+    toast('生成失败：' + e.message, 'error');
+    return;
+  }
+
+  navigate('interview');
+  await new Promise(r => setTimeout(r, 80));
+  showInterviewConfig(true);
+  STATE.interview = { active: true, question, messages: [], turn: 0, maxTurns: 1, source: 'behavior', subCategory: cat, language: getAppLanguage(), hasVoiceInput: false, rewrites: [] };
+  document.getElementById('chat-empty').style.display = 'none';
+  clearChatMessages();
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('end-btn').style.display = '';
+  document.getElementById('chat-input-area').style.display = '';
+  document.getElementById('turn-indicator').style.display = '';
+  document.getElementById('score-panel').style.display = 'none';
+  document.getElementById('chat-input').value = '';
+  document.getElementById('reconfig-btn').style.display = 'none';
+  hideVoiceTip();
+  document.getElementById('interview-config').style.display = 'none';
+  document.getElementById('active-q-bar').style.display = 'block';
+  document.getElementById('active-q-text').textContent = question;
+  updateTurnIndicator();
+  await askQuestion();
+}
 
 // 8步AI落地框架（用于系统提示）
 // ── AI能力产品化专项：通用追问逻辑（7类缺失项）──
@@ -3859,6 +3993,13 @@ const RESUME_SPEC_FOLLOWUP = `【简历专项追问方向】每轮只追候选�
   ▹ 迭代闭环
     示例风格："从发现bad case到迭代上线，你们有没有一个完整的闭环？"
 
+▸ 9. AI助手/工作流判断【条件触发】
+  何时用：候选人提出“做个Agent/优化Prompt/接工具”，或题干已出现“回答可用但任务没完成、用户反复修改、留存差”等信号时触发。
+  → "这个问题是输出本身不够好，还是用户完成任务的流程断了？依据是什么？"
+  → "工具调用成功不等于用户任务完成，你会先看哪一段？"
+  → "这里为什么需要多步协作，而不是一个普通功能或简单问答？"
+  注意：只考察用户任务、信息/操作闭环和取舍，不追实现架构或术语定义。
+
 【严格禁止】：
 - 不问算法细节、JSON解析、API调用、具体代码逻辑、模型训练参数
 - 不要问"Prompt的具体内容是什么"（这会暴露实现细节）
@@ -3883,11 +4024,12 @@ async function startAIProductInterview() {
 
   // 每轮随机换一个大业务领域；前台不暴露系统类型。
   const domain = AIPRODUCT_BUSINESS_DOMAINS[Math.floor(Math.random() * AIPRODUCT_BUSINESS_DOMAINS.length)];
+  const scenarioTrack = Math.random() < 0.35 ? 'agent-judgment' : 'business';
 
   toast('AI 正在生成业务场景题…', 'info');
   let question = '';
   try {
-    const genPrompt = buildAIProductScenarioPrompt(domain) + AIPRODUCT_REALISM_RULES + getRecentQsBlock('aiproduct', 'scenario');
+    const genPrompt = buildAIProductScenarioPrompt(domain, scenarioTrack) + AIPRODUCT_REALISM_RULES + getRecentQsBlock('aiproduct', 'scenario');
     question = await genQuestion(genPrompt);
   } catch (e) {
     toast('生成失败：' + e.message, 'error');
@@ -4539,16 +4681,19 @@ async function startResumeSpecInterview() {
   const ctx = buildProjFolderContext(folder, mode);
   const prompt = `你是字节/腾讯/百度的AI产品面试官，请根据以下项目/实习经历，出1道深度面试题，针对该经历进行深挖追问。
 
-从以下9个方向中随机选1个出题；优先选择最近没有练过的方向：
-1. 产品与用户任务——先确认产品面向谁、在什么场景解决什么问题，而不是只问功能
-2. 关键产品决策——为什么这样设计/取舍，而不是另一个方案
-3. 指标口径与因果——指标如何定义、如何排除高意愿用户或外部因素造成的假象
-4. 核心验证与价值——如何证明用户真的获得价值，而不只是点击、尝试或停留
-5. 挑战 / 负向结果——遇到的最大难点、数据变差或bad case，如何定位和复盘
-6. 角色边界——仅当材料或回答容易混淆职责时，追问候选人实际负责什么
-7. 替代方案与差异化——用户为什么不用现有产品、通用AI或其他方案
-8. 岗位能力迁移——这段经历体现了什么AI PM能力，和申请岗位有什么关系
-9. 项目复盘 / 如果重做——如果重新做，会优先优化哪一块、为什么、优先级是什么
+从以下12个方向中随机选1个出题；优先选择最近没有练过的方向：
+1. 开场介绍——让候选人用1-2分钟介绍这段实习/项目：背景、目标、本人负责、一个关键动作和结果。直接问“可以介绍一下你在[公司/项目]的这段经历吗？”一类问题，方便训练完整开场表达。
+2. 产品与用户任务——先确认产品面向谁、在什么场景解决什么问题，而不是只问功能
+3. 需求发现与证据——这个需求怎么发现，访谈、反馈或数据分别证明了什么，为什么判断它值得先做
+4. 关键产品决策——为什么这样设计/取舍，而不是另一个方案
+5. 指标口径与因果——指标如何定义、如何排除高意愿用户或外部因素造成的假象
+6. 核心验证与价值——如何证明用户真的获得价值，而不只是点击、尝试或停留
+7. 挑战 / 负向结果——遇到的最大难点、数据变差或bad case，如何定位和复盘
+8. 协作推动与阻力——仅当材料出现多方协作、交接或推进线索时，追问分歧/阻力、各方顾虑和本人如何推动决策；禁止编造冲突
+9. 角色边界——仅当材料或回答容易混淆职责时，追问候选人实际负责什么
+10. 替代方案与差异化——用户为什么不用现有产品、通用AI或其他方案
+11. 岗位能力迁移——这段经历体现了什么AI PM能力，和申请岗位有什么关系
+12. 项目复盘 / 如果重做——如果重新做，会优先优化哪一块、为什么、优先级是什么
 
 注意：候选人是AI产品经理，如项目使用了Claude Code、Dify或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果和角色边界，不要问代码实现和技术细节。
 要求：直接引用该经历中的项目名/公司名，让问题像真实面试追问。不要让候选人重复材料中已经写清的事实；优先追问材料中最值得验证的主张、决策或指标。只输出题目本身，不超过80字，不加任何前缀。
@@ -4821,6 +4966,16 @@ async function askQuestion() {
 3. 若候选人没有主动提到某段重要经历，可以在追问时主动引出："我看到你有过XX经历，结合这次题目，你认为……？"
 
 ${kbCtx}` : '';
+
+  // ── 行为面试专项：单题作答后直接进入评分，不做多轮追问 ──
+  if (STATE.interview.source === 'behavior') {
+    if (turn === 0) {
+      addMessage('ai', question);
+      return;
+    }
+    endInterviewFlow();
+    return;
+  }
 
   // ── 知识点专项：独立 prompt，考察记忆与理解，不追问深度 ──
   if (STATE.interview.source === 'kb-spec') {
@@ -5453,6 +5608,7 @@ async function generateScore() {
   const isAIProduct = source === 'aiproduct';
   const isResumeSpec = source === 'resume-spec';
   const isProduct = source === 'product';
+  const isBehavior = source === 'behavior';
   const isJobTarget = source === 'job-target';
   const shouldShowQuestionFramework = isProduct || isAIProduct || isJobTarget;
   // jtType = top-level type (business|product|aiproduct|migration), subCategory = resolved sub-type
@@ -5494,6 +5650,8 @@ async function generateScore() {
     ? '业务理解深度、用户场景清晰度、产品机会判断、竞品/市场认知、指标思路、表达说服力'
     : (scoreAsProd || isProduct)
     ? (_productImpDimsMap[isJobTarget ? _jtProdCat : subCategory] || _productImpDimsMap.design)
+    : isBehavior
+    ? '切题程度、表达结构、真实具体性、岗位匹配、协作行动、复盘反思、自我认知、职业动机'
     : '题型识别、用户和场景、痛点/卡点、产品机制、方案取舍、指标验证、风险/替代方案、表达结构';
   const _keyLineSpec = scoreAsAIP
     ? `\n- ai_product_key_line: 字符串，本轮最该补的一句话（面试口语，≤45字，直接给可以原话用的表达，沉淀AI产品化核心判断，比如"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP"或"AI不是替代人工判断，而是先做识别、检索和建议，高风险动作保留确认"，不要解释原因）`
@@ -5509,7 +5667,7 @@ async function generateScore() {
   强制要求：必须给 recommended_focus。它不是“先收敛场景”这类方法论，而是直接给一条可以开口回答的具体切入假设；例如题目是“京东秒送新用户首单”，可写“先假设切入晚间临时缺药、需30分钟内送达的一线城市家庭用户，再验证供给覆盖与需求规模”。当题干没有足够事实时，明确标成“先假设/待验证”，不得伪装成公司事实。steps 也必须写成贴着题干的具体内容，引用题目已经给出的业务、用户、对象、场景或决策；例如“秒送的履约资源：先判断哪些供给与商品适合承接急需场景”，不能只写“考虑业务资源”。不得编造题干未给出的公司事实。
   steps 只给3-5步，按实际题型选最小适用拆解：产品设计/改进题优先用「目标与具体场景→用户卡点→核心机制→关键取舍→必要时验证」；数据题用「口径→分层→假设→验证→动作」；AI场景题用「用户任务→现有做法→AI是否必要→优先切入点→必要时质量/边界」；目标岗位题优先结合题干明确给出的岗位业务或能力要求。题目没有要求的维度可以放在后续路线，不要塞进本题具体拆解。`
     : '';
-  const _extensionFrameworkSpec = `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
+  const _extensionFrameworkSpec = isBehavior ? '' : `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
   const _impFieldSpec = `- improvements: 改进项数组。只针对本次题目明确要求、当前追问明确考察，或候选人自己已提出但没有讲清的主张，列出1-3项真正扣分点（可选维度：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。场景、机制、指标、风险、岗位绑定等即使属于完整产品框架，只要本题未问且候选人未以此作为主张，就绝不能列为improvements或因此扣分；没有实质问题时返回[]。${_keyLineSpec}${_questionFrameworkSpec}${_extensionFrameworkSpec}`;
 
   // Extra scoring criteria injected for job-target interviews
@@ -5542,7 +5700,30 @@ async function generateScore() {
       '如回答完全没有提到任职要求中某个关键能力，improvements中加维度："要求匹配度"，issue写具体哪项要求没有覆盖，how写"用一个具体项目经历说明自己在这方面的实际经验，或坦诚说明gap并给补齐计划"。'
     : '';
 
-  const system = scoreAsAIP
+  const system = isBehavior
+    ? `你是一位公正专业的产品经理综合面/HR面评估者。请只对以下这道行为面试题及候选人的完整作答评分。${voiceScoreNote}
+
+你的回复必须是一个合法JSON对象，不包含任何其他文字或markdown代码块。字段如下：
+- score: 综合评分（1-10整数）
+- relevance: 切题程度（1-10整数）
+- logical_structure: 表达结构（1-10整数），是否有清晰起点、行动和收尾；动机题可用“经历→选择→匹配”，经历题可用STAR，但不强制背模板
+- specificity: 真实具体性（1-10整数），是否有真实细节、本人角色与行动；没有明确量化结果不扣分
+- role_fit: 岗位匹配（1-10整数），只有题目问岗位/公司/AI PM/职业方向时才评；其他题返回null
+- reflection: 协作与复盘（1-10整数），只有题目问协作、冲突、挫折、失败或成长时才评；其他题返回null
+- highlights: 亮点数组，2-3条，每条≤25字
+- summary: 50字内总评
+${_impFieldSpec}
+
+【严格评分边界】
+- 只评这道题真正问的内容。问“为什么做AI PM”时，不要求讲项目指标、产品机制或完整STAR；问“如何处理分歧”时，重点看情境、本人动作、结果/反思，不要求公司动机。
+- 不因没有说指标、技术细节、完整职业规划或公司研究而扣分，除非问题明确问到或候选人主动以此作为论据。
+- 候选人使用真实经历但结果仍在验证、没有精确数字时，只要角色和行动清楚，不得因没有数字重扣。
+- 不把“愿意高压加班”当作正面标准；压力题重点看优先级、沟通、调整与复盘。
+- 不编造候选人经历、公司事实或具体数字。
+
+示例：{"score":7,"relevance":8,"logical_structure":7,"specificity":7,"role_fit":8,"reflection":null,"highlights":["职业选择与经历衔接自然"],"summary":"动机清楚，补一个真实选择节点会更有说服力","improvements":[{"dimension":"真实具体性","issue":"只说喜欢AI，没有说明哪个经历让你做出选择","why":"具体证据让动机可信","how":"补一句真实项目或使用场景，以及它改变了什么判断"}]}
+${NO_FABRICATION_RULE}`
+    : scoreAsAIP
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
@@ -5713,6 +5894,7 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     if (src === 'product') renderSpecHistory('product', 'product-spec-history');
     if (src === 'aiproduct') renderSpecHistory('aiproduct', 'aiproduct-spec-history');
     if (src === 'resume-spec') renderSpecHistory('resume-spec', 'rspec-history');
+    if (src === 'behavior') renderSpecHistory('behavior', 'behavior-spec-history');
     if (src === 'kb-spec') renderSpecHistory('kb-spec', 'kbspec-history');
 
     // Auto-generate reference answers in background and save to history
@@ -5785,6 +5967,7 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
   // Render skeleton — 答题思路 + 改写 + 参考答案 per round
   const isAIProductRef = STATE.interview?.source === 'aiproduct';
   const isProductRef = STATE.interview?.source === 'product';
+  const isBehaviorRef = STATE.interview?.source === 'behavior';
   const showFw = STATE.interview?.source !== 'kb-spec';
   section.innerHTML = `
     <div class="score-section-title" style="color:var(--accent);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:20px 0 12px;display:flex;align-items:center;gap:6px">
@@ -5854,7 +6037,15 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
           '改用开放式表述，如"基于你目前了解的该岗位业务……""如果该业务目标是提升XX……""你会先补充了解哪些业务信息？"'
         : ''))
     : '';
-  const system = (isAIProductRef || jtSubRef === 'aiproduct')
+  const system = isBehaviorRef
+    ? `你是产品经理综合面/HR面面试教练。每道题给出三部分：
+1. 答题思路：识别问题属于职业动机、自我介绍、协作分歧、压力挫折或自我认知，给出3-5个贴题要点；动机题用“经历→选择→岗位匹配”，经历题可用“情境→任务→本人行动→结果/反思”。
+2. 改写版本：保留候选人的真实表达，补足结构和本人行动，第一人称口语100-180字。
+3. 参考答案：第一人称口语120-220字，只基于候选人真实背景；资料不足时用“我会补充一个真实例子”提示，绝不虚构故事、公司事实或数字。
+
+【评分边界】只回答问题所问内容。不要把行为题写成产品方案；不强行加入指标、技术细节、项目方法论或完整职业规划。压力题不把加班意愿作为答案重点，协作题重点写如何理解分歧、推动决定和复盘。
+${NO_FABRICATION_RULE}`
+    : (isAIProductRef || jtSubRef === 'aiproduct')
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。
 
 【第1轮 — 主问题】给出三部分：
@@ -6351,8 +6542,15 @@ function renderScore(data) {
     : (isTargetMigration ? '🧩 用岗位匹配思路理解这道题' : '🧩 用产品思维理解这道题');
   const isAIProduct = STATE.interview?.source === 'aiproduct' ||
     (STATE.interview?.source === 'job-target' && STATE.interview?.jtType === 'aiproduct');
+  const isBehavior = STATE.interview?.source === 'behavior';
   const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
-  const dims = isAIProduct ? [
+  const dims = isBehavior ? [
+    { name: uiText('切题程度'), val: data.relevance },
+    { name: uiText('表达结构'), val: data.logical_structure },
+    { name: uiText('真实具体性'), val: data.specificity },
+    ...(data.role_fit != null ? [{ name: uiText('岗位匹配'), val: data.role_fit }] : []),
+    ...(data.reflection != null ? [{ name: uiText('协作与复盘'), val: data.reflection }] : []),
+  ] : isAIProduct ? [
     { name: uiText('AI场景判断'), val: data.scenario_judgment ?? data.system_type },
     { name: uiText('业务场景与用户任务'), val: data.biz_scenario },
     { name: uiText('AI能力匹配'), val: data.ai_capability },
@@ -6685,6 +6883,13 @@ const HF_SUB_CATS = {
     { val: 'competitive', label: '🔍 竞品分析' },
     { val: 'aipm', label: '🤖 AI产品专项' },
   ],
+  behavior: [
+    { val: 'all', label: '全部' },
+    { val: 'motivation', label: '🎯 职业动机' },
+    { val: 'collaboration', label: '🤝 协作与分歧' },
+    { val: 'setback', label: '🌱 压力与挫折' },
+    { val: 'self-awareness', label: '🪞 自我认知' },
+  ],
 };
 
 function setHfSrc(btn, val) {
@@ -6938,7 +7143,7 @@ function renderSpecHistory(source, listElId) {
     return;
   }
 
-  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', scenario: 'AI场景训练', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+  const subCatLabels = { design: '产品设计', metrics: '数据分析', competitive: '竞品分析', aipm: 'AI产品专项', aiknowledge: 'AI产品认知', scenario: 'AI场景训练', motivation: '职业动机', collaboration: '协作与分歧', setback: '压力与挫折', 'self-awareness': '自我认知与学习', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
     business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
     retention: '留存与增长', priority: '优先级取舍', differentiation: '差异化定位',
     users: '用户与场景', opportunity: '产品机会', bizmodel: '商业逻辑', biz_metrics: '指标体系',
@@ -7049,8 +7254,8 @@ function renderHistory() {
     return;
   }
 
-  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI场景训练', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
-  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', scenario: 'AI场景训练', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
+  const srcLabels = { random: 'AI随机', kb: '知识库', resume: '简历生成', jd: 'JD生成', combined: '联合生成', custom: '自定义', product: '产品专项', aiproduct: 'AI场景训练', behavior: '行为面试专项', 'resume-spec': '简历专项', 'kb-spec': '知识点专项', 'job-target': '目标岗位专项' };
+  const subCatLabels = { projects: '项目经历', qna: '面试Q&A', notes: '知识点', '教育背景': '教育背景', '实习经历': '实习经历', '项目经历': '项目经历', design: '产品设计', metrics: '数据分析', strategy: '产品策略', competitive: '竞品分析', estimation: '估算题', insight: '用户洞察', aipm: 'AI产品专项', scenario: 'AI场景训练', motivation: '职业动机', collaboration: '协作与分歧', setback: '压力与挫折', 'self-awareness': '自我认知与学习', task: 'AI能力产品化专项', knowledge: 'AI能力产品化专项', workflow: 'AI能力产品化专项', interactive: 'AI能力产品化专项', trustworthy: 'AI能力产品化专项',
     // job-target top-level types
     business: '岗位业务理解', product: '岗位产品思维', aiproduct: '岗位AI产品化', migration: '简历岗位迁移',
     // job-target sub-types (product)

@@ -5502,7 +5502,8 @@ async function generateScore() {
       ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤35字，根据题目子类型选择风格——异常诊断类如"我会先确认口径，再分层定位异常集中在哪个链路"；留存增长类如"我会先找到影响留存的关键行为，再围绕激活和复访设计实验"；指标体系类如"我会先明确产品要证明的价值，再分层设计目标、行为、质量和风险指标"；因果验证类如"我会先排除高意愿用户的影响，再判断这个行为是否真的带来留存"，不要解释原因）`
       : `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，要能迁移到其他题——禁止绑定具体人名或具体商品名，应该是可以跨场景套用的判断句式，比如"我会先收敛到X类用户在Y时刻的场景，因为…"或"我会先做一个功能而不是三个，先验证核心假设"，不要解释原因）`)
     : '';
-  const _impFieldSpec = `- improvements: 改进项数组。针对本次具体回答，从以下维度中选出最明显缺失的2-4项（可选：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。只列真正有缺失的维度，不要凑数${_keyLineSpec}`;
+  const _extensionFrameworkSpec = `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
+  const _impFieldSpec = `- improvements: 改进项数组。只针对本次题目明确要求、当前追问明确考察，或候选人自己已提出但没有讲清的主张，列出1-3项真正扣分点（可选维度：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。场景、机制、指标、风险、岗位绑定等即使属于完整产品框架，只要本题未问且候选人未以此作为主张，就绝不能列为improvements或因此扣分；没有实质问题时返回[]。${_keyLineSpec}${_extensionFrameworkSpec}`;
 
   // Extra scoring criteria injected for job-target interviews
   const _jtCfgForScore = isJobTarget ? (getJobTargetConfig() || {}) : null;
@@ -5517,8 +5518,8 @@ async function generateScore() {
       (_jtScoreHasBizInfo
         ? '- JD/业务能力落地' + (_jtJdSnip ? '（JD摘要：' + _jtJdSnip + '）' : '') + '：回答是否体现了岗位要求的核心能力；能力契合度重要，但不要因为候选人没有逐条引用JD而扣分\n'
         : '- 岗位视角：用户没有提供详细业务资料，因此只评估候选人是否有意识地把回答与目标岗位的性质（而非通用产品逻辑）挂钩\n') +
-      '- 业务特异性：是否能把通用框架与目标岗位的业务场景、用户群体结合，而不是给一个对任何公司都成立的答案\n' +
-      '如候选人回答完全没有提及岗位/公司/业务的具体上下文，improvements中加一条维度："岗位业务绑定"，issue写具体缺失，how写如何把判断与目标岗位挂钩。'
+      '- 业务特异性：只有题目明确要求结合公司/部门业务，或候选人主动声称方案适用于该业务时，才评估其与岗位业务的结合；不要因为没有主动提公司名而扣分。\n' +
+      '如岗位/业务绑定并非本题要求，只可放进next_round_framework作为可选延展，不得列为improvements。'
     : '';
   const jtScoringNoteRS = (isJobTarget && jtTopType === 'migration')
     ? `\n\n【目标岗位专项·简历岗位迁移额外评分要求${_jtJobInfo ? '（岗位：' + _jtJobInfo + '）' : ''}】：\n` +
@@ -5573,7 +5574,7 @@ ${_impFieldSpec}
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
-- 第1轮（主问题/开放题）：${_productR1Framework}。第1轮如果未覆盖框架的核心步骤（用户/场景/机制/AI边界），需在对应维度扣分。
+- 第1轮（主问题/开放题）：先识别题目到底要求候选人判断、设计、分析、取舍还是验证什么。${_productR1Framework} 是用于生成 next_round_framework 的训练地图，不是本题的必答清单；只有题目明确要求，或某一项是解释候选人当前方案不可缺少的前提时，才评分或列为扣分点。
   【AI产品设计+商业化题第1轮核心考察】：若题目明确要求说商业化路径，第1轮主要看6点——①是否先说清楚产品是什么（一句话定位）②是否收敛了目标用户和使用场景 ③是否有具体产品机制（不只是功能列表）④是否说出了商业化路径（收费方式/免费vs付费边界/付费触发时机）⑤是否有付费理由（用户为什么愿意付，而不是因为"AI很好"）⑥是否有验证指标（转化率/留存/LTV选1-2个）。没有商业化路径或只说"SaaS订阅制"但没有逻辑的，在product_depth维度扣分。
   【产品设计/改进题第1轮核心考察】：产品设计题第1轮主要看4点——①是否主动收敛了用户和场景（不能太宽）②是否抓到具体痛点 ③是否设计出可落地的MVP功能 ④是否解释了为什么优先做这个。只有题目明确问验证、效果、指标或优先级依据时，才额外看验证思路；不要求失败迭代方式、交互细节、完整指标体系或风险方案——这些由题目或后续追问决定。
   【指标规则】：设计类/改进类/AI落地类题目，只有题目明确问验证、效果、指标，或候选人主动以效果作为核心主张时，才评分指标完整度。其他题目提指标可以加分，但完全不提不扣分；只有题目本身是"指标题/数据分析题"时，才严格评分指标完整度。
@@ -5584,11 +5585,11 @@ ${_impFieldSpec}
 - score: 整体综合分（整数1-10）
 - relevance: 切题程度分（整数1-10，回答是否直接回应问题核心，有无跑偏）
 - logical_structure: 逻辑结构分（整数1-10，论点是否清晰有层次）
-- product_depth: 产品深度分（整数1-10，有无清晰的用户/场景/机制/取舍，而不只是功能罗列；指标、风险等只在当前题目要求或候选人主动主张时纳入评分）
+- product_depth: 产品深度分（整数1-10，回答是否把当前题目要求的产品判断讲清并形成因果逻辑，而非按用户/场景/机制/取舍的完整清单打分；指标、风险、岗位绑定等只在当前题目要求或候选人主动主张时纳入评分）
 - ai_depth: AI理解深度分（整数1-10 或 null）——题目涉及AI能力选择、AI产品机制、AI风险等才评分，否则返回 null
 - persuasiveness: 表达说服力分（整数1-10，观点是否有说服力，论据是否支撑论点）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字；第1轮夸链路/场景/取舍，追问夸单点深度，不要泛泛说"提到了指标"）
-- summary: 总结性点评（50字内），说明第1轮链路是否收敛完整 + 追问哪些单点答得好 + 最薄弱的一点
+- summary: 总结性点评（50字内），只说明本题最关键的判断答得怎样、追问哪些单点答得好、真正最薄弱的一点；不要因没有覆盖完整框架而评价“不完整”
 ${_impFieldSpec}
 ${subCategory === 'metrics' ? `
 【metrics数据分析题额外规则】：严禁把数据分析题套入产品设计框架（"收敛场景→用户痛点→产品机制→MVP"）或AI产品化框架（"AI介入点→任务链路→风险兜底"）来评分和提改进项。
@@ -6170,6 +6171,7 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
     summary: scoreData.summary,
     highlights: scoreData.highlights,
     improvements: scoreData.improvements,
+    next_round_framework: scoreData.next_round_framework,
     key_line: scoreData.key_line || scoreData.resume_key_line || scoreData.ai_product_key_line || null,
   }, null, 2);
 
@@ -6192,8 +6194,8 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
     '【诊断第一步 — 必须先识别】在输出任何评价之前，先在内心确认：\n' +
     '1. 这道题属于哪个模块？（产品思维 / AI能力产品化 / 简历 / 目标岗位 / AI认知）\n' +
     '2. 具体是哪个子题型？（见下方各模块子题型表）\n' +
-    '3. 当前是第几轮？第1轮看主框架是否搭起来；第2轮起只看当前追问主题的单点深度，不要求重复完整框架。\n' +
-    '然后从该子题型对应的诊断维度里选最关键的1-3个问题作为扣分点。不要把所有题都套同一组维度。\n\n' +
+    '3. 当前是第几轮？第1轮只看主问题实际要求的判断；第2轮起只看当前追问主题的单点深度，不要求重复完整框架。\n' +
+    '然后从该子题型对应的诊断维度里选最关键的1-3个真正扣分点。完整产品框架只是后续训练地图；题目没问、候选人也没把它作为主张的场景/机制/指标/风险/岗位绑定，不得列为扣分点。\n\n' +
 
     '【各模块子题型 & 对应扣分维度速查】\n' +
     '▌产品思维专项\n' +
@@ -6244,12 +6246,12 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
     '【真正扣分点】\n' +
     '（先在括号里标注：[模块 → 子题型 → 第N轮]，然后列1-3条最关键的问题。\n' +
     '必须从上方该子题型的对应诊断维度里选，不要用通用维度套所有题。\n' +
-    '第1轮看主框架是否搭起来；后续追问只看当前追问主题的单点深度。\n' +
+    '第1轮只看主问题实际要求的判断；后续追问只看当前追问主题的单点深度。题目没问、候选人也未主动主张的框架维度，不得列为扣分点。\n' +
     '每条以"- "开头，直接点名具体轮次和具体缺失）\n\n' +
     '【下次可以怎么说】\n' +
     '（给一段可以直接口语复用的优化版回答，120-200字，像真实面试时候说的话，不要太书面，不要用段落标题，直接给回答内容。\n' +
     '特别规则：\n' +
-    '- 如果题目是"设计一项改进方案"，这段回答必须只围绕一个核心方案展开，结构是：目标用户/具体场景 → 核心痛点 → 一个核心机制 → 关键流程 → 验证指标。不要并列多个方案。\n' +
+    '- 只重写题目实际要求回答的范围，不要为了显得完整强行补进指标、风险、商业化、岗位绑定等未被问到的内容。若题目是"设计一项改进方案"，只围绕一个核心方案展开；用户/场景、痛点、机制、关键流程是可按题目需要选用的表达路径，验证指标只在题目要求或需要证明方案时补充。不要并列多个方案。\n' +
     '- 涉及商业测算（成本、ROI、补贴、费率、回收周期等）：禁止给出无来源的精确数字（如"设备成本约3000元""手续费0.6%"）；必须用假设框架表达，如"假设单用户补贴为X元""可以先在N家门店试点，通过转化率和复购率估算ROI是否达标"。如果需要列公式，用框架表达：CAC = 补贴 + 渠道成本 + 设备摊销，LTV = 支付频次 × 客单价 × 贡献率，不要填入具体数字。）\n\n' +
     '【对系统反馈的校准】\n' +
     '（如果系统评分偏严/偏宽、改进项不准确、参考答案过度理想化/过度技术化/与真实项目不符，直接指出；如果系统反馈基本准确，写"系统反馈基本准确，无需校准。"不要强行找茬。\n' +
@@ -6323,6 +6325,9 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
 function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
+  const nextRoundFramework = Array.isArray(data.next_round_framework)
+    ? data.next_round_framework.filter(Boolean).slice(0, 5)
+    : [];
   const isAIProduct = STATE.interview?.source === 'aiproduct' ||
     (STATE.interview?.source === 'job-target' && STATE.interview?.jtType === 'aiproduct');
   const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
@@ -6382,6 +6387,14 @@ function renderScore(data) {
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">💬 本轮最该补的一句话</div>
         <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line || data.ai_product_key_line)}"</div>
       </div>` : ''}
+    </div>` : ''}
+    ${nextRoundFramework.length ? `
+    <div class="score-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:14px 16px;margin-top:12px">
+      <div class="score-section-title" style="color:#10b981;margin-bottom:6px">🧭 如果面试官继续深挖，可按这个框架展开</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">这是后续训练路线，不是本题遗漏项。</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${nextRoundFramework.map((step, idx) => `<span style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;font-size:12px;color:var(--text)">${idx + 1}. ${escHtml(step)}</span>`).join('')}
+      </div>
     </div>` : ''}
     <div id="score-diagnosis-section">
       <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:16px 18px;margin-top:12px">
@@ -7001,6 +7014,7 @@ async function genHistoryDiagnosis(hId) {
   const scoreSummary = JSON.stringify({
     score: scoreData.score, summary: scoreData.summary,
     highlights: scoreData.highlights, improvements: scoreData.improvements,
+    next_round_framework: scoreData.next_round_framework,
     key_line: scoreData.key_line || scoreData.resume_key_line || scoreData.ai_product_key_line || null,
   }, null, 2);
   const question = (rec.question || '').slice(0, 300);
@@ -7018,8 +7032,8 @@ async function genHistoryDiagnosis(hId) {
     '输出格式严格如下，每个标记单独占一行，标记后紧接内容：\n\n' +
     '【整体表现】\n（一句话判断，具体到"哪步做对了，哪步没做到"，禁止空话）\n\n' +
     '【答得好的地方】\n（2-3条具体好点，禁止说"有思考"，每条以"- "开头）\n\n' +
-    '【真正扣分点】\n（先标注[模块→子题型→第N轮]，再列1-3条最关键问题，从该子题型对应维度里选，每条以"- "开头）\n\n' +
-    '【下次可以怎么说】\n（120-200字口语优化版，可直接复用；改进方案题聚焦一个核心机制；商业数字必须用假设框架）\n\n' +
+    '【真正扣分点】\n（先标注[模块→子题型→第N轮]，再列1-3条只与当前题目/追问直接相关的关键问题，从该子题型对应维度里选；题目没问、候选人也未主动主张的场景、机制、指标、风险等，不得列为扣分点。每条以"- "开头）\n\n' +
+    '【下次可以怎么说】\n（120-200字口语优化版，只回答题目实际要求的范围，可直接复用；改进方案题聚焦一个核心机制，不强行补全完整框架；商业数字必须用假设框架）\n\n' +
     '【对系统反馈的校准】\n（如有偏差直接指出；无问题写"系统反馈基本准确，无需校准。"）';
 
   const prompt = moduleCtx + '\n面试题目：' + question + '\n\n面试对话：\n' + dialog + '\n\n系统自动评分结果（供参考和校准）：\n' + scoreSummary;

@@ -953,7 +953,7 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <div class="pcat-card" data-jt="aiproduct" onclick="selectJTType(this,'aiproduct')" style="border-color:#f59e0b;background:#f59e0b12">
             <div class="pcat-icon">🤖</div>
             <div class="pcat-name">岗位AI能力产品化题</div>
-            <div class="pcat-desc">AI如何落地？Agent/RAG/Workflow/规则怎么选？</div>
+            <div class="pcat-desc">结合岗位业务，练AI是否值得做、先落在哪个用户任务</div>
           </div>
           <div class="pcat-card" data-jt="migration" onclick="selectJTType(this,'migration')" style="border-color:#a78bfa;background:#a78bfa12">
             <div class="pcat-icon">💼</div>
@@ -1472,7 +1472,7 @@ const UI_EN = {
   '从四类题中随机抽一类，模拟真实面试的不确定性': 'Draw a random question type from four tracks to simulate real interview uncertainty.',
   '考察你是否理解该部门业务、用户和产品机会': 'Test your understanding of the team’s business, users, and product opportunities.',
   '基于该业务出设计、指标、留存、优先级、差异化题': 'Practice design, metrics, retention, prioritization, and differentiation questions for this business.',
-  'AI如何落地？Agent/RAG/Workflow/规则怎么选？': 'How should AI be productized? When should you use agents, RAG, workflows, or rules?',
+  '结合岗位业务，练AI是否值得做、先落在哪个用户任务': 'Use the role’s business context to judge whether AI is needed and which user task to address first.',
   '你的项目/实习如何迁移到这个岗位，体现AI PM能力': 'Show how your projects and experience transfer to this role and demonstrate AI PM capability.',
   '当前：岗位业务理解题 · 随机': 'Current: Role Business Understanding · Random',
   '先去「知识库」新建项目文件夹，添加简历描述或上传文件': 'First, create a project folder in Knowledge Base and add a resume description or files.',
@@ -3933,12 +3933,7 @@ const JT_SUBTYPES = {
     { id: 'differentiation', icon: '🏆', label: '差异化定位',   desc: '和竞品的差异化策略是什么' },
   ],
   aiproduct: [
-    { id: 'random',     icon: '🎲', label: '随机',     desc: '从AI系统类型中随机抽取' },
-    { id: 'task',       icon: '⚡', label: '任务型',   desc: '单意图/明确输出，如智能表单、AI客服' },
-    { id: 'knowledge',  icon: '📚', label: '知识型',   desc: 'RAG/检索，知识问答、企业内部搜索' },
-    { id: 'workflow',   icon: '🔄', label: '流程型',   desc: '多步骤自动化、Agent编排、审批流' },
-    { id: 'interactive',icon: '💬', label: '交互型',   desc: '多轮对话、个性化记忆、AI助手' },
-    { id: 'trustworthy',icon: '🛡️', label: '可信型',   desc: '高风险决策、合规审计、风险治理' },
+    { id: 'random',     icon: '🎲', label: '随机',     desc: '基于岗位业务随机出一个AI场景' },
   ],
   migration: [
     { id: 'random',   icon: '🎲', label: '随机',         desc: '从迁移方向中随机抽取' },
@@ -3954,8 +3949,8 @@ const JT_SUBTYPES = {
 const JT_SUBTYPE_TO_PROD_CAT = {
   design: 'design', metrics: 'metrics', retention: 'metrics',
   priority: 'functradeoff', differentiation: 'design',
-  users: 'design', opportunity: 'design', competitive: 'design',
-  bizmodel: 'design', biz_metrics: 'metrics',
+  users: 'business', opportunity: 'business', competitive: 'business',
+  bizmodel: 'business', biz_metrics: 'metrics',
   decision: 'design', badcase: 'design', value: 'design', gap: 'design',
 };
 
@@ -4208,13 +4203,13 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       ? businessSubDir[subType]
       : '从以下方向随机选1个出题：\n1. 这个业务方向最核心的用户是谁、他们的核心需求是什么\n2. 如果你是这个部门的PM，你认为最大的产品机会/痛点在哪里\n3. 这个业务的核心增长驱动力是什么？有哪些制约因素？\n4. 这个产品/业务在行业里的核心差异化是什么？竞品怎么做的？\n5. 如果要为这个业务设计关键指标体系，北极星指标是什么、为什么？';
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位业务理解题」，考察候选人对该部门业务、用户和产品机会的理解。\n' +
-      openPrefix + '，' + dir + noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      openPrefix + '，' + dir + '\n首题只考一个方向，不要把用户、竞品、商业化和指标拼成一道大题。若资料没有提供业务事实，改考“你会先验证什么/怎样判断”，不要要求候选人猜公司内部情况。' + noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'product') {
     if (subType && subType !== 'random' && productSubDir[subType]) {
       const dir = productSubDir[subType];
       return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景' + dir + '。\n' +
-        openPrefix + '，题目必须与该岗位的具体业务场景强绑定，不要出通用产品题。\n' +
+        openPrefix + '，题目必须与该岗位的具体业务场景强绑定，不要出通用产品题；只问当前子题型需要的判断，不叠加完整方案、指标、风险或商业化。\n' +
         noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
     }
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景出产品设计、指标、留存或差异化题目。\n' +
@@ -4224,22 +4219,18 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       '3. 留存与增长：如何提升用户留存/活跃，设计一个增长实验\n' +
       '4. 产品优先级：有多个需求，如何做取舍决策\n' +
       '5. 差异化定位：和某竞品相比，如何做差异化，核心策略是什么\n' +
-      '要求：题目必须与该岗位的具体业务场景强绑定，不要出通用产品题。\n' +
+      '要求：题目必须与该岗位的具体业务场景强绑定，不要出通用产品题；随机时也只抽一个方向，不混合多类要求。\n' +
       noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'aiproduct') {
-    // For specific AI system types, inject the existing AIPRODUCT_CAT_PROMPTS style
-    const aiSubs = ['task','knowledge','workflow','interactive','trustworthy'];
-    if (subType && subType !== 'random' && aiSubs.includes(subType)) {
-      return (AIPRODUCT_CAT_PROMPTS[subType] || '') +
-        '\n\n【重要】题目必须结合以下目标岗位的具体业务场景出题，不要脱离该岗位的实际业务背景：' + ctxNote;
-    }
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位AI能力产品化题」，考察候选人能否把AI能力在该业务场景落地。\n' +
       openPrefix + '，要求：\n' +
-      '- 给定该业务的一个具体AI落地场景，要求候选人设计完整AI产品方案\n' +
-      '- 涵盖：用户任务→AI介入点→Agent/RAG/Workflow/规则/普通LLM怎么选→产品机制→指标→风险\n' +
+      '- 用【业务背景】【当前问题】【问题】给出一个具体业务 case；题干要说清用户正在完成什么、现有流程卡在哪里\n' +
+      '- 首题只考一个核心判断：AI是否值得介入、优先帮助用户完成哪一步、或如何定义最小可验证的切入点；不要求完整方案\n' +
+      '- 后续才根据候选人回答追问产品机制、验证或风险；不把Agent/RAG/Workflow等系统类型当成前置知识\n' +
+      '- 若是法律、医疗、金融等专业领域，说明最终专业判断由谁负责；不考行业术语、规则或专业事实\n' +
       '- 场景必须与JD/业务说明中的真实业务方向对应\n' +
-      (hasInfo ? '' : '若资料不足，用"假设该部门要用AI解决[合理推测的场景]，你会怎么设计产品方案"。\n') +
+      (hasInfo ? '' : '若资料不足，用“基于你目前了解的该岗位业务，你会先确认哪个用户任务是否适合AI辅助？”这类开放问题，不要编造业务事实。\n') +
       '直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
   }
   if (type === 'migration') {
@@ -4279,7 +4270,8 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
     : '';
   let followupDir = '';
   if (type === 'business') {
-    followupDir = '追问方向（围绕业务理解深挖，选最切中要害的1个）：\n' +
+    followupDir = '【岗位业务理解追问要求】先识别首题是用户、机会、竞品、商业逻辑还是指标题；只围绕该方向和候选人刚刚的主张追1个点。用户题不强加北极星指标，竞品题不强加MVP，资料不足时不要求背公司事实。\n' +
+      '追问方向（围绕业务理解深挖，选最切中要害的1个）：\n' +
       '- 用户深挖："你说核心用户是X，他们最高频的使用场景是什么？和其他用户群有什么不同？"\n' +
       '- 机会判断："你认为最大机会在哪里，依据是什么？有没有被低估的方向？"\n' +
       '- 竞品认知："你有没有深度研究过竞品？他们怎么解决这个问题？你的判断和他们有什么不同？"\n' +
@@ -4293,7 +4285,7 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
       : '';
     const insufficientDataNote = hasBizInfo ? '' :
       '\n【资料不足提示】用户只填写了公司/岗位名称，没有详细业务信息。追问时禁止假设或编造该公司/部门的具体业务事实；改用开放式问法，例如："你目前对这个岗位的业务方向了解多少？你会先补充哪些信息？" 或 "如果这个业务的核心目标是提升XX，你会怎么思考？"';
-    followupDir = '【岗位产品思维追问要求】追问要结合目标公司/部门的业务场景，但要自然，不要机械引用JD。\n' +
+    followupDir = '【岗位产品思维追问要求】追问要结合目标公司/部门的业务场景，但要自然，不要机械引用JD。先识别首题范围：设计题追机制或取舍，数据题追口径或验证，增长题追分层或实验，差异化题追用户替代方案；不要把所有维度补齐。\n' +
       '追问方向（选最切中候选人缺口的1个）：\n' +
       '- 业务目标绑定：你这个方向在' + companyRef + '这个业务里，和核心业务目标的关系是什么？\n' +
       jdDirectionNote +
@@ -4377,10 +4369,9 @@ async function startJobTargetInterview() {
   } else {
     resolvedSubType = _jtSubType;
   }
-  // Determine subCategory for history/scoring: use sub-type for product/aiproduct, type for others
-  const subCatForHistory = (resolvedType === 'product' || resolvedType === 'aiproduct')
-    ? resolvedSubType
-    : resolvedType;
+  // Preserve the actual selected sub-type for question-scoped history/scoring.
+  // Migration keeps its top-level key because its reference-answer route is unique.
+  const subCatForHistory = resolvedType === 'migration' ? resolvedType : resolvedSubType;
 
   navigate('interview');
   await new Promise(function(r) { setTimeout(r, 80); });
@@ -5421,6 +5412,7 @@ async function generateScore() {
   // metrics / aiknowledge / design have internal sub-types; give the model a labeled pool to pick from
   const _productImpDimsMap = {
     design:       '先判断题目子类型再选维度——若产品分析题，从[产品定位/目标用户/核心场景/核心价值/关键机制/竞争差异/指标验证]中选；若为用户洞察与机会判断题，从[信号澄清/目标用户与任务/待验证假设/调研或数据方法/最小验证/继续或停止的判断条件]中选，未要求时不扣MVP或指标细节；若设计/改进/取舍题，从[主动收敛场景/用户痛点/产品机制/MVP优先级/指标验证/风险兜底]中选；若为AI产品设计+商业化题，额外考察[商业化路径/付费触发时机/免费vs付费边界/转化与留存指标/用户付费理由]中的缺失维度。陌生行业题只评产品判断和补充信息方法，不扣专业行业知识。',
+    business:     '根据实际岗位业务题型选维度——用户与场景[目标用户/核心任务/高频时刻/用户差异]；机会判断[问题证据/现有替代方式/机会优先级/待验证假设]；竞品差异[同一用户任务/竞品机制/差异来源/用户选择理由]；商业逻辑[价值创造/增长或付费驱动/关键约束]。题目未问时，不扣MVP、指标体系、风险或完整产品方案；资料不足时，评估补充信息与验证思路，不扣未掌握公司内部事实。',
     functradeoff: '若为使用率低/价值判断题，从[链路拆解/人群区分/原因诊断/目标用户渗透率/任务完成率/二次使用率/决策依据/沟通框架]中选；其他类型从[目标清晰度/替代方案/用户价值/业务价值/成本风险/取舍理由/验证指标]中选',
     metrics:      '根据题目子类型选维度——异常诊断[口径确认/影响范围/分层拆解/原因假设/验证方法/修复动作]；留存增长[留存目标/用户分层/关键行为/激活链路/增长实验/留存验证]；指标体系[产品目标/北极星指标/行为指标/体验指标/AI质量指标/风险指标/优先级]；指标口径与因果验证[分子分母/价值信号/混杂因素/反事实或实验验证/决策动作]',
     aipm:         '业务场景、AI介入点、AI能力边界、产品机制、指标验证、风险兜底、替代方案差异',
@@ -5430,6 +5422,7 @@ async function generateScore() {
   // For multi-subtype categories the value is a full instruction the model should follow
   const _productR1FrameworkMap = {
     design:       '按实际题目类型选框架：\n· 若为AI产品设计+商业化题（要求说商业化路径/付费逻辑） →「用户是谁/使用场景 → 核心痛点 → AI能力如何产品化 → 产品机制/核心功能 → 商业化路径（免费vs付费边界/付费触发点/收费方式）→ 验证指标（转化率/留存/LTV）」；第1轮重点看：是否先说清楚产品是什么 / 是否收敛了用户和场景 / 是否有产品机制而不只是功能罗列 / 是否有商业化链路 / 是否有验证指标。若题干为陌生行业case，只评其如何理解流程、补充专家信息、选择低风险辅助节点，不评行业术语。\n· 若为用户洞察与机会判断题 →「先澄清信号 → 明确目标用户与任务 → 提出待验证假设 → 选择调研/数据方法 → 最小验证 → 继续、调整或停止的判断条件」；首答只问验证问题时，不扣未给完整功能方案或指标体系。\n· 若为产品分析题（分析某款产品的核心价值/关键决策）→「产品定位 → 目标用户 → 核心场景 → 核心价值 → 关键机制 → 竞争差异 → 指标验证 → 风险/不足」\n· 若为设计/改进/取舍题 → 先判断题目是否已给明确场景/产品/节点（如"刷掌支付首次开通拒绝录入掌纹""AI客服投诉率上升"等）：已给明确场景→直接从「用户卡点 → 产品机制 → MVP方案 → 指标/风险」评起，不扣"未收敛场景"；开放式题目→「收敛场景 → 切入理由 → 用户痛点 → 产品机制 → MVP → 指标/风险」',
+    business:     '按岗位业务题实际范围评分：用户与场景题看「目标用户 → 核心任务 → 高频时刻/差异」；机会题看「问题信号 → 现有替代方式 → 待验证假设 → 优先判断」；竞品题看「同一用户任务 → 各自机制 → 差异来源 → 用户选择理由」；商业逻辑题看「价值创造 → 增长或付费驱动 → 关键约束」。首题只问其中一项时，不扣未给MVP、完整指标体系、风险方案或行业内部事实。',
     functradeoff: '先判断题目类型：若为使用率低/渗透率低/价值判断类题，框架为「使用率低≠没价值（先区分）→ 链路拆解（曝光→点击→使用→完成→复用，哪一步断）→ 人群区分（目标用户是否用、非目标用户不用是否正常）→ 原因诊断（入口不可见/认知成本高/场景低频/体验差/价值不成立）→ 动作建议（优化入口/教育引导/改交互/聚焦目标人群/降级下线）→ 决策指标（目标用户渗透率/任务完成率/二次使用率）」；其他取舍类题框架为「目标 → 候选方案 → 用户价值 → 业务价值 → 成本/风险 → 取舍结论 → 验证指标」',
     metrics:      '按实际题目子类型选框架：\n· 数据异常诊断 →「确认口径 → 定位影响范围 → 分用户/渠道/版本/场景 → 拆核心链路 → 提出原因假设 → 验证数据 → 修复动作 → 复盘监控」\n· 留存与增长 →「定义留存目标 → 用户分层 → 找关键行为 → 拆新手/激活/复访链路 → 提出增长抓手 → 设计实验 → 观察留存与质量指标」\n· 指标体系与优先级 →「明确产品目标 → 北极星/目标指标 → 行为指标 → 体验指标 → AI质量指标（如适用）→ 风险指标 → 优先级判断」\n· 指标口径与因果验证 →「先定义分子分母 → 判断该行为是否代表用户价值 → 识别高意愿用户/渠道/版本等混杂因素 → 用分层、前后对照或实验验证因果 → 根据结果决定是否继续投入」',
     aipm:         '框架为「业务目标 → 用户场景 → AI介入点 → 产品机制 → 指标 → 风险兜底 → 替代方案差异」',
@@ -5490,7 +5483,7 @@ async function generateScore() {
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的「AI能力产品化」能力考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
 【核心规则 — 区分主问题与追问】：
-- 第1轮（主问题）：重点考察候选人能否搭出核心框架——业务目标→用户角色→任务链路→AI介入点→产品机制。第1轮只列功能点而没有链路结构，在对应维度扣分。
+- 第1轮（主问题）：先识别题目范围，再评分。若题目只问“AI是否值得做”“先帮助哪一步”或“如何最小验证”，只看用户任务、现有替代方式、AI介入判断或优先级依据，不要求完整链路。只有题目明确要求完整方案时，才看「业务目标→用户角色→任务链路→AI介入点→产品机制」。
   【指标规则】：只有题目明确问“如何验证/看什么指标/结果如何证明”，或候选人主动把效果作为核心主张时，才重点评分metrics_validation。其他第1轮题目可以提指标加分，但完全不提不扣分，更不要求完整指标体系。
   【风险规则】：只有题目明确问风险、错误处理，或题干本身属于医疗、金融、交易、合规等高风险场景时，才重点评分risk_control。其他第1轮题目不因没有主动讲风险而扣分；即使涉及高风险，也只需有基本边界意识，不要求第一题讲完整的风险分层、置信度阈值、审计日志或bad case闭环。
 - 第2轮起（追问）：不要求候选人重复完整框架。只考察当轮追问主题的单点深度，例如：追问可信度→看来源可信度、可解释性、置信度分层；追问风险兜底→看风险识别、触发条件、人工介入；追问指标→看指标是否能验证当前问题；追问MVP→看优先级判断逻辑。追问轮次不因"没覆盖完整8步"而扣分。如果某轮追问明确考察指标，才重点评分指标完整度；如果明确追问"AI判断错了怎么办""哪些必须转人工""如何审计追责"，才重点评分风险兜底完整性和可执行性。
@@ -5500,10 +5493,10 @@ async function generateScore() {
 - scenario_judgment: AI场景判断分（整数1-10，第1轮是否先理解用户任务、现有做法和核心问题，再判断AI是否必要、优先介入哪一步；不要求候选人口头说出任何系统类型标签）
 - biz_scenario: 业务场景与用户任务分（整数1-10，第1轮是否说清楚了业务目标和用户核心任务）
 - ai_capability: AI能力匹配分（整数1-10，整体对话中AI能力选型的合理性与清晰度：核心评判路径为「业务卡点→所需AI能力→为什么现有方案不足→产品边界」。只笼统说“用AI”，却说不清业务卡点、现有替代方案和不该用AI的环节，扣分；能说明能力为何适配、何处应转规则或人工的，加分。只有当具体能力选择影响方案时，才考察Agent/RAG/Workflow等细分取舍）
-- product_mechanism: 产品机制转化分（整数1-10，AI能力是否落地为具体产品功能和交互设计）
-- metrics_validation: 指标与验证分（整数1-10，整体对话中是否有可量化指标意识）
-- output_quality: AI输出质量评估分（整数1-10）——评分规则：候选人是否定义了"好输出"标准（不只说"准确率/满意度"）；是否区分相关性/真实性/完整性/可用性/风险性等评估维度；是否说清了评测方式（用户采纳率/人工复核/LLM-as-Judge/人评组合）；是否有bad case收集与归因机制；是否有迭代优化闭环。完全没有提到输出质量评估时可给4分；只说"准确率/满意度"泛指标时5-6分；能分维度定义并说清评测方式的7-8分；有完整闭环（定义→评测→bad case归因→迭代）的9-10分。
-- risk_control: 风险兜底分（整数1-10，整体对话中是否有风险识别和兜底机制）
+- product_mechanism: 产品机制转化分（整数1-10 或 null；题目或追问涉及产品机制/用户交互时评分，否则 null）
+- metrics_validation: 指标与验证分（整数1-10 或 null；题目或追问明确涉及验证、效果或指标时评分，否则 null）
+- output_quality: AI输出质量评估分（整数1-10 或 null；只有题目或追问要求评测AI输出时评分。评分看好输出定义、评测维度、评测方式、bad case归因和迭代闭环；没有考到则 null，不给低分）
+- risk_control: 风险兜底分（整数1-10 或 null；只有高风险场景或题目/追问明确涉及风险时评分，否则 null）
 - highlights: 亮点字符串数组（2-3条，每条不超过25字；区分主问题亮点和追问单点亮点，不要泛泛说"提到了指标"）
 - summary: 总结性点评（50字内），说明第1轮链路是否完整 + 哪个追问答得最好 + 最薄弱的单点
 ${_impFieldSpec}
@@ -5520,7 +5513,7 @@ ${_impFieldSpec}
 - dimension字段优先使用：完整链路/任务链路/AI介入点/产品机制/指标验证/AI输出质量评估/风险兜底/可信度判断/MVP优先级/AI能力取舍/数据质量 等对应该轮实际考察主题
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"scenario_judgment":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"output_quality":4,"risk_control":4,"highlights":["第1轮先梳理用户任务，再判断AI介入点","追问可信度时分层思路合理"],"summary":"主问题的AI切入判断清楚，追问指标和风险还需深挖","improvements":[{"dimension":"AI介入点","issue":"第1轮讲了功能点，但没有先说明AI为什么适合处理这个节点","why":"先判断AI必要性才能避免为AI而AI","how":"先说现有方式的卡点，再说明AI在该节点的独特价值"},{"dimension":"AI输出质量评估","issue":"这一轮考的是输出质量评估，你说'会提升准确率'但没有说清好输出的定义和评测方式","why":"泛指标无法指导迭代，必须先定义维度才能评测","how":"先定义好输出→拆评估维度（相关性/真实性/完整性/可用性/风险性）→说清评测方式（用户采纳率/LLM-as-Judge/人工复核组合）→bad case归因→迭代"}],"ai_product_key_line":"我会先确认用户在哪一步卡住，再判断AI能否比现有方式更好地解决它。"}`
+{"score":7,"scenario_judgment":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":null,"metrics_validation":null,"output_quality":null,"risk_control":null,"highlights":["第1轮先梳理用户任务，再判断AI介入点"],"summary":"主问题的AI切入判断清楚，下一轮可再验证优先级依据","improvements":[{"dimension":"AI介入点","issue":"第1轮讲了功能点，但没有先说明AI为什么适合处理这个节点","why":"先判断AI必要性才能避免为AI而AI","how":"先说现有方式的卡点，再说明AI在该节点的独特价值"}],"ai_product_key_line":"我会先确认用户在哪一步卡住，再判断AI能否比现有方式更好地解决它。"}`
     : scoreAsProd
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -5802,9 +5795,10 @@ async function generateReferenceAnswer(messages, initialQuestion, hId = null) {
     ? `你是资深AI产品化能力面试教练，专攻「AI能力产品化」。对话中第1轮是主问题，第2轮起是追问。请按以下规则分别处理，严格区分两类，不要把追问当完整大题处理。
 
 【第1轮 — 主问题】给出三部分：
-1. 答题思路：输出8步框架（业务目标→用户角色→任务链路→AI介入点→数据/系统→产品机制→风险兜底→关键指标），每步1句说明考察重点或常见盲点（共6-8条，每条不超过35字）；风险兜底那步注明"第1轮轻量说明风险边界即可（哪些情况必须转人工/降级）；完整风险分层、阈值、审计留给追问"；指标那步注明"轻量带到即可，给2-4个关键指标结尾"
-2. 改写版本：补全候选人回答缺失的链路环节（第一人称口语，120-200字，"我会先……然后……最后……"）；风险部分只补一句风险边界（如"高风险或低置信度场景必须转人工审核"）；指标薄弱时结尾补一句2-4个关键指标，二者都不展开
-3. 参考答案：满分级别，200-280字，第一人称口语。结构：业务目标→用户任务→任务链路→AI介入点→产品机制→风险边界（1句）→关键指标（1句）。风险部分控制在1句（例："高风险、低置信度或涉及合规的情况，必须转人工确认。"）；指标最后一句给2-4个（例："指标上，先看自助解决率、误判率和转人工率。"）。不要把风险或指标展开成多句。
+先识别题目范围：若题目只问AI是否值得做、优先切入点或最小验证，只回答这一个判断；只有题目明确要求完整方案时，才使用完整产品化链路。
+1. 答题思路：按题目范围输出3-5个关键步骤（每条不超过35字）。AI必要性题用「用户任务→现有替代方式→AI独特价值→不适合AI的边界」；优先切入题用「任务链路→高频/高价值卡点→低风险辅助节点→最小验证」；完整方案题才用「业务目标→用户角色→任务链路→AI介入点→产品机制→验证→风险边界」。
+2. 改写版本：保留候选人原意，只补当前问题需要的产品判断（第一人称口语，100-180字）。不强行补系统类型、完整指标或风险方案；高风险场景才用一句说明专业人员确认边界。
+3. 参考答案：满分级别，150-230字，第一人称口语。围绕题目问的那个判断作答；完整方案题才覆盖产品机制、验证与风险。陌生行业不编造专业事实，专业判断由相应人员负责。
 
 【第2轮起 — 追问】给出三部分（不要输出完整8步框架，只针对该轮追问主题）：
 1. 答题思路：识别该追问考察的单点主题，输出对应的单点思路链（3-5条，每条不超过30字）
@@ -5862,11 +5856,16 @@ ${NO_FABRICATION_RULE}`
 - 若题目是法律、医疗、金融、工业等陌生行业 case，题干已提供的用户任务、流程卡点和专业边界就是可用信息；不要臆造条款、诊断标准、监管规则或行业术语。
 - 回答可以明确说明需向一线专家补充什么信息、先验证哪个高频任务；专业判断仍由律师、医生、风控等人员负责。考察的是产品判断，不是行业知识竞赛。
 
+【岗位业务理解题规则】
+- 若题目在问用户、机会、竞品或商业逻辑，直接回答这一项：用户题讲任务与场景；机会题讲信号、替代方式与待验证假设；竞品题按同一任务比较机制；商业题讲价值创造与约束。
+- 不要把岗位业务理解题改写成产品方案，不强行补MVP、完整指标体系、风险方案或公司内部事实；资料不足时，说清楚会验证什么即可。
+
 1. 答题思路：先判断题目子类型，选对应框架输出每步考察重点或常见坑（共5-6条，每条不超过35字）：
    · 若为AI产品设计+商业化题：框架为「用户是谁/使用场景 → 核心痛点 → AI能力如何产品化/产品机制 → 商业化路径（免费vs付费边界/付费触发时机/收费方式）→ 验证指标（转化率/留存/LTV）」。特别注明：商业化路径要讲清"用户为什么愿意付"而不只是"SaaS收费"；参考答案必须口语自然，适合60-90秒面试表达
    · 若已给明确场景：框架从「用户卡点→产品机制→MVP单点功能→用户怎么用→关键指标」开始，不需要先收敛
    · 若题目开放：框架从「主动收敛场景→切入理由→用户痛点→MVP单点功能→关键指标」开始
    · 若为用户洞察/机会判断题：框架从「澄清信号→目标用户与任务→待验证假设→调研或数据方法→最小验证→继续/调整条件」开始；不要硬凑完整功能方案或指标体系
+   · 若为岗位业务理解题：按实际题目选「用户任务与场景」「机会信号与假设」「同一任务下的竞品机制比较」或「价值创造与约束」，不要套产品设计框架
    不要使用CIRCLES或其他海外PM框架。第1轮不要求完整风险方案；指标结尾1句给2-4个即可。
 2. 改写版本：保留候选人原意，不要过度编造细节；若为商业化题，必须补上商业化路径和付费触发逻辑；若题目已给明确场景，直接切入该场景的核心卡点和机制；若题目开放，帮他收敛场景。设计/改进/商业化题要明确MVP单点功能；用户洞察题则保留到最小验证与判断条件，不强行补产品方案。统一使用第一人称口语（120-180字，"我会先……然后……"），避免一开始给出完整经营策略或全能工具方案。
 3. 参考答案：面试口语风格，150-250字，少用宏大词，多讲清楚产品判断。若为商业化题，参考答案结构为：一句话说清产品是什么+用户和场景+核心痛点+产品机制（1-2个核心功能）+商业化路径（为什么付/付费触发/免费vs付费边界）+2-3个验证指标；普通设计题用「痛点+MVP功能+用户怎么用+关键指标」。用户洞察题用「信号+假设+验证方法+判断条件」，不假装已经知道解决方案。参考答案要自然、可以直接口语表达，适合面试60-90秒回答，不要写成商业计划书。
@@ -6269,16 +6268,17 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
 function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
-  const isAIProduct = STATE.interview?.source === 'aiproduct';
+  const isAIProduct = STATE.interview?.source === 'aiproduct' ||
+    (STATE.interview?.source === 'job-target' && STATE.interview?.jtType === 'aiproduct');
   const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
   const dims = isAIProduct ? [
     { name: uiText('AI场景判断'), val: data.scenario_judgment ?? data.system_type },
     { name: uiText('业务场景与用户任务'), val: data.biz_scenario },
     { name: uiText('AI能力匹配'), val: data.ai_capability },
-    { name: uiText('产品机制转化'), val: data.product_mechanism },
-    { name: uiText('指标与验证'), val: data.metrics_validation },
+    ...(data.product_mechanism != null ? [{ name: uiText('产品机制转化'), val: data.product_mechanism }] : []),
+    ...(data.metrics_validation != null ? [{ name: uiText('指标与验证'), val: data.metrics_validation }] : []),
     ...(data.output_quality != null ? [{ name: uiText('AI输出质量评估'), val: data.output_quality }] : []),
-    { name: uiText('风险兜底'), val: data.risk_control },
+    ...(data.risk_control != null ? [{ name: uiText('风险兜底'), val: data.risk_control }] : []),
   ] : [
     { name: uiText('切题程度'), val: data.relevance },
     { name: uiText('逻辑结构'), val: data.logical_structure },

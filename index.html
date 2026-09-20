@@ -814,38 +814,28 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
         <div class="pcat-card" data-cat="random" onclick="selectPCat(this,'random')">
           <div class="pcat-icon">🎲</div>
           <div class="pcat-name">随机抽题</div>
-          <div class="pcat-desc">从全部4个分类中随机出一题，模拟真实面试的不确定性</div>
+          <div class="pcat-desc">从全部3个产品思维方向中随机出题，模拟真实面试的不确定性</div>
         </div>
         <div class="pcat-card active" data-cat="design" onclick="selectPCat(this,'design')">
           <div class="pcat-icon">🎨</div>
-          <div class="pcat-name">产品设计</div>
-          <div class="pcat-desc">设计功能/产品，含体验与商业价值取舍，考察用户同理心与决策力</div>
+          <div class="pcat-name">产品设计与策略</div>
+          <div class="pcat-desc">设计、改进、分析与机会判断，练习从用户问题走到可验证方案</div>
         </div>
         <div class="pcat-card" data-cat="metrics" onclick="selectPCat(this,'metrics')">
           <div class="pcat-icon">📊</div>
-          <div class="pcat-name">数据分析</div>
+          <div class="pcat-name">数据分析与增长</div>
           <div class="pcat-desc">指标诊断、增长留存分析、A/B测试决策，考察数据驱动思维</div>
-        </div>
-<div class="pcat-card" data-cat="aipm" onclick="selectPCat(this,'aipm')" style="border-color:var(--accent);background:var(--accent-dim)">
-          <div class="pcat-icon">🤖</div>
-          <div class="pcat-name">AI产品专项</div>
-          <div class="pcat-desc">RAG/Agent/Prompt/模型评估，AI PM必考硬核题</div>
-        </div>
-        <div class="pcat-card" data-cat="aiknowledge" onclick="selectPCat(this,'aiknowledge')" style="border-color:#a78bfa;background:#a78bfa18">
-          <div class="pcat-icon">🧠</div>
-          <div class="pcat-name">AI产品认知</div>
-          <div class="pcat-desc">Prompt调优、幻觉处理、AI边界判断等认知理解题</div>
         </div>
         <div class="pcat-card" data-cat="functradeoff" onclick="selectPCat(this,'functradeoff')" style="border-color:#f59e0b;background:#f59e0b18">
           <div class="pcat-icon">⚖️</div>
-          <div class="pcat-name">功能价值与取舍</div>
-          <div class="pcat-desc">功能价值判断、方案取舍决策、产品差异化，考察PM核心决策力</div>
+          <div class="pcat-name">价值、竞争与取舍</div>
+          <div class="pcat-desc">功能价值、方案优先级、竞品差异化与替代方案判断</div>
         </div>
       </div>
 
       <!-- Mode & Start -->
       <div class="card">
-        <div class="card-title" id="pcat-title">🎨 产品设计题</div>
+        <div class="card-title" id="pcat-title">🎨 产品设计与策略题</div>
         <!-- AI mode hint -->
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
           🤖 AI基于真实市场面试规律实时出题，每次不同。
@@ -1428,13 +1418,14 @@ const UI_EN = {
   '✅ AI理解：': '✅ AI interpretation:', '📊 面试评分报告': '📊 Interview Score Report', '🔁 再来一次': '🔁 Try Again',
   '🔄 换题练习': '🔄 New Question', '⚙ 重新配置': '⚙ Reconfigure', '📊 查看历史': '📊 View History',
   '🧩 产品思维专项': '🧩 Product Thinking Practice', '针对PM核心考察维度，专项突破薄弱环节': 'Build depth in the core dimensions assessed in PM interviews.',
-  '从全部4个分类中随机出一题，模拟真实面试的不确定性': 'Draw a random question across all categories to simulate real interview uncertainty.',
-  '设计功能/产品，含体验与商业价值取舍，考察用户同理心与决策力': 'Design a feature or product while balancing user experience and business value.',
+  '从全部3个产品思维方向中随机出题，模拟真实面试的不确定性': 'Draw a random question across all three product-thinking tracks to simulate real interview uncertainty.',
+  '设计、改进、分析与机会判断，练习从用户问题走到可验证方案': 'Practice design, improvement, analysis, and opportunity judgment from a user problem to a testable solution.',
+  '产品设计与策略': 'Product Design & Strategy',
+  '数据分析与增长': 'Data Analysis & Growth',
+  '价值、竞争与取舍': 'Value, Competition & Trade-offs',
   '指标诊断、增长留存分析、A/B测试决策，考察数据驱动思维': 'Practice metric diagnosis, growth and retention analysis, and A/B test decisions.',
-  'RAG/Agent/Prompt/模型评估，AI PM必考硬核题': 'Practice RAG, agents, prompting, and model evaluation for AI PM roles.',
-  'Prompt调优、幻觉处理、AI边界判断等认知理解题': 'Practice prompting, hallucination handling, and AI capability boundaries.',
-  '功能价值判断、方案取舍决策、产品差异化，考察PM核心决策力': 'Practice feature-value assessment, trade-offs, and product differentiation.',
-  '🎨 产品设计题': '🎨 Product Design Question', '🤖 AI基于真实市场面试规律实时出题，每次不同。': '🤖 AI generates a different question each time, based on real interview patterns.',
+  '功能价值、方案优先级、竞品差异化与替代方案判断': 'Practice feature value, prioritization, competitive differentiation, and alternative-solution judgment.',
+  '🎨 产品设计与策略题': '🎨 Product Design & Strategy Question', '🤖 AI基于真实市场面试规律实时出题，每次不同。': '🤖 AI generates a different question each time, based on real interview patterns.',
   '📋 练习记录': '📋 Practice History', '🤖 AI能力产品化专项': '🤖 AI Productization Practice',
   '🤖 AI产品场景训练': '🤖 AI Product Scenario Practice',
   '从真实业务问题出发，练习判断 AI 是否值得介入、怎样融入产品。': 'Start with real business problems and practice deciding whether and how AI should enter the product.',
@@ -2915,17 +2906,17 @@ const PRODUCT_BANK = {
 };
 
 const PRODUCT_CAT_LABELS = {
-  design: '🎨 产品设计',
-  metrics: '📊 数据分析',
+  design: '🎨 产品设计与策略',
+  metrics: '📊 数据分析与增长',
   aipm: '🤖 AI产品专项',
   aiknowledge: '🧠 AI产品认知',
-  functradeoff: '⚖️ 功能价值与取舍',
+  functradeoff: '⚖️ 价值、竞争与取舍',
 };
 
 const PRODUCT_CAT_PROMPTS = {
   design: `你是产品经理面试官。按以下概率随机选一类题型出题：除非场景确实需要AI，否则不要为了“像AI面试”强行加入AI能力。
 
-【AI产品设计+商业化题】20%概率。考察候选人能否设计一个有商业化路径的AI产品。这是百度等公司面试高频题型，需要同时考察产品设计能力和商业化判断。出题格式二选一：
+【AI产品设计+商业化题】15%概率。考察候选人能否设计一个有商业化路径的AI产品。出题格式二选一：
   · 开放式："为[用户群体]设计一个有商业化能力的AI工具，你会怎么做？"
   · 场景式："基于[业务场景]设计一个AI功能，并说明它的商业化路径。"
 随机组合以下变量：
@@ -2943,13 +2934,19 @@ const PRODUCT_CAT_PROMPTS = {
 ▸ 目标用户：职场新人 / 内容创作者 / 中小企业主 / 海外用户 / 大学生 / 医护人员 / 销售BD / 运营人员 / 个体商家 / 中老年用户 / 设计师 / 教师
 ▸ 约束/背景：给定具体场景（"你是X产品PM，当前有Y限制，如何设计Z"），不出开放题
 
-【产品改进题】20%概率。改进一个现有真实产品（必须点名）：
+【产品改进题】15%概率。改进一个现有真实产品（必须点名）：
 从以下产品中随机选一个（每次选不同产品）：
 Kimi / 豆包 / 小红书 / 飞书 / 智谱清言 / Perplexity / Notion AI / WPS AI / 得到App / BOSS直聘 / 网易云音乐 / 美团 / 知乎 / 语雀 / 腾讯元宝 / 微信 / 高德 / 叮咚买菜 / 钉钉 / 快手
 
-【产品分析题】20%概率。分析某个真实产品的核心价值和关键决策（必须点名）：
+【产品分析题】15%概率。分析某个真实产品的核心价值和关键决策（必须点名）：
 从以下产品中随机选一个（每次选不同产品）：
 Cursor / Kimi / 豆包 / 小红书 / Dify / Coze / Notion AI / Claude Projects / Perplexity / 腾讯元宝 / 可灵AI / Suno / 即梦 / Windsurf / 通义 / Pika / 剪映AI / Copilot / Gemini Advanced / Monica
+
+【用户洞察与机会判断题】15%概率。给出一个用户反馈、行为信号或业务假设，考察候选人能否先判断问题是否成立，再决定要不要做功能。随机组合以下变量：
+▸ 产品方向：内容社区 / 本地生活 / 企业协作 / 招聘求职 / 在线教育 / 出行服务 / 支付金融 / 电商商家工具
+▸ 信号：用户说想要但实际使用率低 / 满意度不错但复用低 / 新用户进入后很快流失 / 某类用户强依赖但整体渗透低 / 竞品做了新功能但用户反馈不一致
+▸ 题目动词：你会如何验证真实需求 / 怎样判断机会是否值得做 / 先调研什么 / 先做什么最小验证
+出题要求：题目只问一个核心判断，不要求候选人在首答讲完整方案。
 
 【开放收敛题】15%概率。只给宽泛方向，不给具体场景，考察候选人主动收敛用户/场景的能力：
 随机组合：
@@ -3143,12 +3140,14 @@ function selectPCat(el, cat) {
   _pCat = cat;
   document.querySelectorAll('#pcat-grid .pcat-card').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计题', metrics:'📊 数据分析题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题', functradeoff:'⚖️ 功能价值与取舍题' };
+  const titles = { random:'🎲 随机抽题', design:'🎨 产品设计与策略题', metrics:'📊 数据分析与增长题', aipm:'🤖 AI产品专项题', aiknowledge:'🧠 AI产品认知题', functradeoff:'⚖️ 价值、竞争与取舍题' };
   document.getElementById('pcat-title').textContent = titles[cat] || cat;
 }
 
 
-const PRODUCT_ALL_CATS = ['design','metrics','aipm','aiknowledge','functradeoff'];
+// AI场景落地归入“AI产品场景训练”；RAG/Prompt/评测等知识由知识点专项承接。
+// 产品思维页只保留可直接按 PM 判断能力训练的三类题。
+const PRODUCT_ALL_CATS = ['design','metrics','functradeoff'];
 
 async function startProductInterview() {
   if (!getActiveKey()) { toast('请先在设置页填写 API Key', 'error'); navigate('settings'); return; }

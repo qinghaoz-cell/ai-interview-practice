@@ -23,7 +23,7 @@
 | JD | `jd` | 粘贴目标职位描述 |
 | 知识库 | `kb` | 上传项目文档，按 projects/qna/notes 分区 |
 | 综合练习 | `interview` | 基于简历+JD 的综合面试练习 |
-| 产品专项 | `product` | 产品经理题库（5类题型） |
+| 产品专项 | `product` | 产品经理题库（产品设计与策略、数据分析与增长、价值竞争与取舍） |
 | 简历专项 | `resume-spec` | 针对具体项目经历深度追问 |
 | 知识库专项 | `kb-spec` | 基于上传知识库出题 |
 | **AI产品场景训练** | `aiproduct` | 从真实业务场景出发，练习AI介入判断与产品化追问 ⭐ 核心模块 |
@@ -76,12 +76,12 @@ STATE = {
 | `buildAIProductScenarioPrompt()` | ~3235 | AI产品场景训练的首题 Prompt；按随机大业务领域生成开放场景题 |
 | `AIPRODUCT_CAT_PROMPTS` | ~3300 | 目标岗位专项等保留场景使用的系统类型出题指令 |
 
-**`PRODUCT_CAT_PROMPTS` 的 key：**
-- `design`：产品设计题（含AI产品设计+商业化、产品设计、产品改进、产品分析、开放收敛共5类）
-- `metrics`：数据指标题
-- `functradeoff`：功能取舍题
-- `aiknowledge`：AI基础知识题
-- `aipm`：AI PM岗位理解题
+**当前前台 `PRODUCT_CAT_PROMPTS` 的 key：**
+- `design`：产品设计与策略（含AI产品设计+商业化、产品设计、产品改进、产品分析、用户洞察与机会判断、开放收敛）
+- `metrics`：数据分析与增长
+- `functradeoff`：价值、竞争与取舍
+
+`aiknowledge` 与 `aipm` 保留为历史记录兼容的旧 key；前台不再作为产品思维专项入口。AI业务落地训练走 `aiproduct`，RAG/Prompt/评测等知识由知识点专项的用户资料承接。
 
 **AI产品场景训练的首题逻辑：**
 - 前台没有系统类型选择；每轮从内容搜索社区、电商本地生活、企业服务协同、增长广告客户经营、供应链物流制造、出行旅游线下服务、教育招聘职业发展、医疗公共服务、金融保险风控中随机选一个大领域。

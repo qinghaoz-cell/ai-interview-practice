@@ -114,7 +114,7 @@ product / jtType=product/business → scoreAsProd（产品专项评分）
 
 ### AI产品专项评分字段（JSON schema，scoreAsAIP 路径）
 ```
-system_type       系统类型识别（1-10）
+scenario_judgment AI场景判断（1-10）
 biz_scenario      业务场景与用户任务（1-10）
 ai_capability     AI能力匹配（1-10）
 product_mechanism 产品机制转化（1-10）
@@ -124,7 +124,6 @@ risk_control      风险兜底（1-10）
 overall           综合分（1-10）
 strengths         []
 improvements      []
-system_type_reveal 揭示候选人可能没想到的系统类型角度
 ```
 
 ### 产品专项评分字段（scoreAsProd 路径）

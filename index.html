@@ -5482,9 +5482,7 @@ async function generateScore() {
 
 你的回复必须是一个合法的JSON对象，不包含任何其他文字、解释或markdown代码块。JSON字段说明（7个专项维度）：
 - score: 整体综合分（整数1-10，综合第1轮链路完整度 + 各追问单点深度）
-- system_type: AI场景判断分（整数1-10，第1轮是否先说清用户任务、AI是否必要，以及所选系统方式是否适配；不要求候选人口头说出“任务型/流程型”等标签）
-- actual_system_type: 字符串，本题实际所属系统类型（任务型/知识型/流程型/交互型/可信型），必须填写
-- system_type_reveal: 字符串（100字以内），内部分析提示——说明本题适合哪种系统方式、核心判断依据及下次应关注的业务信号。候选人没有说出系统标签不扣分，重点是其判断是否合理。
+- scenario_judgment: AI场景判断分（整数1-10，第1轮是否先理解用户任务、现有做法和核心问题，再判断AI是否必要、优先介入哪一步；不要求候选人口头说出任何系统类型标签）
 - biz_scenario: 业务场景与用户任务分（整数1-10，第1轮是否说清楚了业务目标和用户核心任务）
 - ai_capability: AI能力匹配分（整数1-10，整体对话中AI能力选型的合理性与清晰度：核心评判路径为「业务卡点→所需AI能力→为什么现有方案不足→产品边界」。只笼统说“用AI”，却说不清业务卡点、现有替代方案和不该用AI的环节，扣分；能说明能力为何适配、何处应转规则或人工的，加分。只有当具体能力选择影响方案时，才考察Agent/RAG/Workflow等细分取舍）
 - product_mechanism: 产品机制转化分（整数1-10，AI能力是否落地为具体产品功能和交互设计）
@@ -5507,7 +5505,7 @@ ${_impFieldSpec}
 - dimension字段优先使用：完整链路/任务链路/AI介入点/产品机制/指标验证/AI输出质量评估/风险兜底/可信度判断/MVP优先级/AI能力取舍/数据质量 等对应该轮实际考察主题
 
 示例格式（请填入真实评分，不要照抄示例）：
-{"score":7,"system_type":8,"actual_system_type":"任务型","system_type_reveal":"内部判断：本题更接近任务型，因为业务是高重复、输入输出清晰的单次任务。候选人不需要说出这个标签；只要能先说明人工/规则的卡点、AI适合承担的节点和边界，即可得分。","biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"output_quality":4,"risk_control":4,"highlights":["第1轮任务链路清晰，AI介入节点明确","追问可信度时分层思路合理"],"summary":"主问题链路完整，追问指标和风险还需深挖","improvements":[{"dimension":"完整链路","issue":"第1轮讲了功能点，但没有说清楚从用户请求到结果产出的完整任务链路节点","why":"任务链路是AI产品化落地的核心骨架","how":"下次先拆3-5个链路节点，再逐一说AI在哪几步介入"},{"dimension":"AI输出质量评估","issue":"这一轮考的是输出质量评估，你说'会提升准确率'但没有说清好输出的定义和评测方式","why":"泛指标无法指导迭代，必须先定义维度才能评测","how":"先定义好输出→拆评估维度（相关性/真实性/完整性/可用性/风险性）→说清评测方式（用户采纳率/LLM-as-Judge/人工复核组合）→bad case归因→迭代"}],"ai_product_key_line":"我不会先全自动化，而是先找高频、低风险、可验证的节点做MVP，跑通后再扩"}`
+{"score":7,"scenario_judgment":8,"biz_scenario":7,"ai_capability":7,"product_mechanism":6,"metrics_validation":5,"output_quality":4,"risk_control":4,"highlights":["第1轮先梳理用户任务，再判断AI介入点","追问可信度时分层思路合理"],"summary":"主问题的AI切入判断清楚，追问指标和风险还需深挖","improvements":[{"dimension":"AI介入点","issue":"第1轮讲了功能点，但没有先说明AI为什么适合处理这个节点","why":"先判断AI必要性才能避免为AI而AI","how":"先说现有方式的卡点，再说明AI在该节点的独特价值"},{"dimension":"AI输出质量评估","issue":"这一轮考的是输出质量评估，你说'会提升准确率'但没有说清好输出的定义和评测方式","why":"泛指标无法指导迭代，必须先定义维度才能评测","how":"先定义好输出→拆评估维度（相关性/真实性/完整性/可用性/风险性）→说清评测方式（用户采纳率/LLM-as-Judge/人工复核组合）→bad case归因→迭代"}],"ai_product_key_line":"我会先确认用户在哪一步卡住，再判断AI能否比现有方式更好地解决它。"}`
     : scoreAsProd
     ? `你是一位公正专业的面试评估专家，专注于AI产品经理岗位的产品思维考察。请对以下面试对话进行客观评分。${voiceScoreNote}
 
@@ -6252,7 +6250,7 @@ function renderScore(data) {
   const isAIProduct = STATE.interview?.source === 'aiproduct';
   const aiDepthNA = data.ai_depth === null || data.ai_depth === 'not_applicable' || data.ai_depth === undefined;
   const dims = isAIProduct ? [
-    { name: uiText('AI场景判断'), val: data.system_type },
+    { name: uiText('AI场景判断'), val: data.scenario_judgment ?? data.system_type },
     { name: uiText('业务场景与用户任务'), val: data.biz_scenario },
     { name: uiText('AI能力匹配'), val: data.ai_capability },
     { name: uiText('产品机制转化'), val: data.product_mechanism },
@@ -6307,11 +6305,6 @@ function renderScore(data) {
         <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">💬 本轮最该补的一句话</div>
         <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic">"${escHtml(data.key_line || data.resume_key_line || data.ai_product_key_line)}"</div>
       </div>` : ''}
-    </div>` : ''}
-    ${(isAIProduct && data.system_type_reveal) ? `
-    <div class="score-section" style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:var(--radius);padding:14px 16px;margin-top:8px">
-      <div class="score-section-title" style="color:var(--primary);margin-bottom:8px">🔍 系统类型揭示</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.65">${escHtml(data.system_type_reveal)}</div>
     </div>` : ''}
     <div id="score-diagnosis-section">
       <div style="background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:16px 18px;margin-top:12px">

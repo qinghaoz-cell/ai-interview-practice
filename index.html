@@ -1404,7 +1404,7 @@ const UI_EN = {
   '风险兜底': 'Risk Controls', '切题程度': 'Relevance', '逻辑结构': 'Structured Thinking', '产品深度': 'Product Depth',
   'AI理解深度': 'AI Understanding', '表达说服力': 'Communication & Persuasion',
   '为什么重要：': 'Why it matters:', '下一次怎么补：': 'How to improve:', '面试官诊断': 'Interviewer Diagnosis',
-  '🧩 生成题目思路框架': '🧩 Generate Question Framework', '（仅基于原题，不重新评分）': '(uses the original question only; does not rescore)',
+  '🧩 生成本题具体拆解': '🧩 Generate Question Breakdown', '（展示这题真正判断什么和具体回答拆解；不重新评分）': '(shows what this question tests and a concrete answer breakdown; does not rescore)',
   '产品设计': 'Product Design', '数据分析': 'Data Analysis', 'AI产品专项': 'AI Product Practice',
   'AI产品认知': 'AI Product Knowledge', '功能价值与取舍': 'Feature Value & Trade-offs', '随机抽题': 'Random Question',
   '练习记录': 'Practice History', '随机系统类型': 'Random System Type', '任务型系统': 'Task System',
@@ -6808,8 +6808,8 @@ function buildHistoryNextRoundFramework(score) {
 }
 
 // Records created before question_framework was introduced do not contain this
-// learning aid. Let the user add it from the original question without changing
-// the score, feedback, or reference answers that were already generated.
+// question-specific breakdown. Let the user add it from the original question
+// without changing the score, feedback, or reference answers already generated.
 function needsHistoryFrameworkBackfill(h) {
   if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return false;
   const framework = h?.score?.question_framework;
@@ -6821,8 +6821,8 @@ function buildHistoryFrameworkBackfillButton(h) {
   if (!needsHistoryFrameworkBackfill(h)) return '';
   return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
     '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
-      uiText('🧩 生成题目思路框架') + '</button>' +
-    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（仅基于原题，不重新评分）') + '</span>' +
+      uiText('🧩 生成本题具体拆解') + '</button>' +
+    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（展示这题真正判断什么和具体回答拆解；不重新评分）') + '</span>' +
   '</div>';
 }
 
@@ -6837,7 +6837,7 @@ async function backfillHistoryFramework(hId) {
 
   document.querySelectorAll('[data-framework-backfill]').forEach(function(el) {
     if (el.dataset.frameworkBackfill === hId) {
-      el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">⏳ 正在生成题目思路框架…</span>';
+      el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">⏳ 正在生成本题具体拆解…</span>';
     }
   });
 
@@ -6846,7 +6846,7 @@ async function backfillHistoryFramework(hId) {
     : record.source === 'aiproduct'
       ? 'AI 产品场景训练'
       : '目标岗位专项' + (record.jtType ? '（练习方向：' + record.jtType + '）' : '');
-  const systemPrompt = `你是产品经理面试教练。请只根据原题，为一次已经完成的 ${sourceContext} 练习补充“题目思路框架”。这不是评分：不得评价候选人答案、不得提出扣分点，也不得假设题目未给出的业务事实。
+  const systemPrompt = `你是产品经理面试教练。请只根据原题，为一次已经完成的 ${sourceContext} 练习补充“本题具体拆解”：让用户看懂这道题真正要判断什么，以及回答时应具体覆盖哪些内容。这不是评分：不得评价候选人答案、不得提出扣分点，也不得假设题目未给出的业务事实。
 
 输出严格合法 JSON：
 {
@@ -6858,7 +6858,8 @@ async function backfillHistoryFramework(hId) {
 }
 
 规则：
-- question_framework 给 3-5 步，紧贴原题的提问范围；如果题目只问功能设计，就不要求用户主动补充完整指标、风险或技术选型。
+- question_framework 给 3-5 步，紧贴原题的提问范围。每一步必须带原题中的具体业务、用户、对象或决策，例如“京东秒送的履约资源”而不是泛泛写“考虑业务资源”；但不编造题目未提供的事实。
+- 如果题目只问功能设计，就不要求用户主动补充完整指标、风险或技术选型。
 - 对产品题，优先帮助用户按“场景/用户问题 → 判断 → 方案机制 → 题目实际问到的验证或取舍”组织；按题目范围裁剪。
 - 对 AI 场景题，帮助用户判断业务问题、AI 是否值得介入、用户任务和方案边界；不强行要求复杂技术细节。
 - 对目标岗位题，结合题干中明确给出的业务与岗位语境，不编造公司信息。
@@ -6886,7 +6887,7 @@ async function backfillHistoryFramework(hId) {
     };
     const embeddedId = embeddedHistoryIds[record.source];
     if (embeddedId) renderSpecHistory(record.source, embeddedId);
-    toast('已补充题目思路框架', 'success');
+    toast('已补充本题具体拆解', 'success');
   } catch (err) {
     renderHistory();
     const embeddedHistoryIds = { product: 'product-spec-history', aiproduct: 'aiproduct-spec-history', 'job-target': 'job-target-spec-history' };

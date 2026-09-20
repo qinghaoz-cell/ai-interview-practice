@@ -1404,7 +1404,7 @@ const UI_EN = {
   '风险兜底': 'Risk Controls', '切题程度': 'Relevance', '逻辑结构': 'Structured Thinking', '产品深度': 'Product Depth',
   'AI理解深度': 'AI Understanding', '表达说服力': 'Communication & Persuasion',
   '为什么重要：': 'Why it matters:', '下一次怎么补：': 'How to improve:', '面试官诊断': 'Interviewer Diagnosis',
-  '🧩 生成本题具体拆解': '🧩 Generate Question Breakdown', '（展示这题真正判断什么和具体回答拆解；不重新评分）': '(shows what this question tests and a concrete answer breakdown; does not rescore)',
+  '🧩 生成本题具体拆解': '🧩 Generate Question Breakdown', '🧩 更新本题具体拆解': '🧩 Update Question Breakdown', '（展示这题真正判断什么和具体回答拆解；不重新评分）': '(shows what this question tests and a concrete answer breakdown; does not rescore)',
   '产品设计': 'Product Design', '数据分析': 'Data Analysis', 'AI产品专项': 'AI Product Practice',
   'AI产品认知': 'AI Product Knowledge', '功能价值与取舍': 'Feature Value & Trade-offs', '随机抽题': 'Random Question',
   '练习记录': 'Practice History', '随机系统类型': 'Random System Type', '任务型系统': 'Task System',
@@ -6819,14 +6819,17 @@ function needsHistoryFrameworkBackfill(h) {
   if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return false;
   const framework = h?.score?.question_framework;
   return !(framework && typeof framework === 'object' &&
-    (framework.core_question || (Array.isArray(framework.steps) && framework.steps.length)));
+    (framework.core_question || (Array.isArray(framework.steps) && framework.steps.length)) &&
+    framework.recommended_focus);
 }
 
 function buildHistoryFrameworkBackfillButton(h) {
   if (!needsHistoryFrameworkBackfill(h)) return '';
+  const isOlderBreakdown = !!(h?.score?.question_framework?.core_question || h?.score?.question_framework?.steps?.length);
+  const buttonText = isOlderBreakdown ? '🧩 更新本题具体拆解' : '🧩 生成本题具体拆解';
   return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
     '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
-      uiText('🧩 生成本题具体拆解') + '</button>' +
+      uiText(buttonText) + '</button>' +
     '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（展示这题真正判断什么和具体回答拆解；不重新评分）') + '</span>' +
   '</div>';
 }

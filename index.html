@@ -1404,6 +1404,7 @@ const UI_EN = {
   '风险兜底': 'Risk Controls', '切题程度': 'Relevance', '逻辑结构': 'Structured Thinking', '产品深度': 'Product Depth',
   'AI理解深度': 'AI Understanding', '表达说服力': 'Communication & Persuasion',
   '为什么重要：': 'Why it matters:', '下一次怎么补：': 'How to improve:', '面试官诊断': 'Interviewer Diagnosis',
+  '🧩 生成题目思路框架': '🧩 Generate Question Framework', '（仅基于原题，不重新评分）': '(uses the original question only; does not rescore)',
   '产品设计': 'Product Design', '数据分析': 'Data Analysis', 'AI产品专项': 'AI Product Practice',
   'AI产品认知': 'AI Product Knowledge', '功能价值与取舍': 'Feature Value & Trade-offs', '随机抽题': 'Random Question',
   '练习记录': 'Practice History', '随机系统类型': 'Random System Type', '任务型系统': 'Task System',
@@ -5693,6 +5694,7 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
       question: qShort,
       source: STATE.interview.source,
       subCategory: STATE.interview.subCategory || '',
+      jtType: STATE.interview.jtType || '',
       language: STATE.interview.language || getAppLanguage(),
       turns: STATE.interview.turn,
       messages: STATE.interview.messages,
@@ -6805,6 +6807,95 @@ function buildHistoryNextRoundFramework(score) {
     }).join('') + '</div></div>';
 }
 
+// Records created before question_framework was introduced do not contain this
+// learning aid. Let the user add it from the original question without changing
+// the score, feedback, or reference answers that were already generated.
+function needsHistoryFrameworkBackfill(h) {
+  if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return false;
+  const framework = h?.score?.question_framework;
+  return !(framework && typeof framework === 'object' &&
+    (framework.core_question || (Array.isArray(framework.steps) && framework.steps.length)));
+}
+
+function buildHistoryFrameworkBackfillButton(h) {
+  if (!needsHistoryFrameworkBackfill(h)) return '';
+  return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
+    '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
+      uiText('🧩 生成题目思路框架') + '</button>' +
+    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（仅基于原题，不重新评分）') + '</span>' +
+  '</div>';
+}
+
+async function backfillHistoryFramework(hId) {
+  if (!getActiveKey()) {
+    toast('请先在设置页填写 API Key', 'error');
+    return;
+  }
+  const history = getHistory();
+  const record = history.find(function(item) { return item.id === hId; });
+  if (!record || !needsHistoryFrameworkBackfill(record)) return;
+
+  document.querySelectorAll('[data-framework-backfill]').forEach(function(el) {
+    if (el.dataset.frameworkBackfill === hId) {
+      el.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">⏳ 正在生成题目思路框架…</span>';
+    }
+  });
+
+  const sourceContext = record.source === 'product'
+    ? '产品思维专项'
+    : record.source === 'aiproduct'
+      ? 'AI 产品场景训练'
+      : '目标岗位专项' + (record.jtType ? '（练习方向：' + record.jtType + '）' : '');
+  const systemPrompt = `你是产品经理面试教练。请只根据原题，为一次已经完成的 ${sourceContext} 练习补充“题目思路框架”。这不是评分：不得评价候选人答案、不得提出扣分点，也不得假设题目未给出的业务事实。
+
+输出严格合法 JSON：
+{
+  "question_framework": {
+    "core_question": "这题真正要判断什么（一句话）",
+    "steps": [{"label":"步骤名称","detail":"该步骤在本题应考虑什么"}]
+  },
+  "next_round_framework": ["面试官可能继续深挖的一个方向", "另一个方向"]
+}
+
+规则：
+- question_framework 给 3-5 步，紧贴原题的提问范围；如果题目只问功能设计，就不要求用户主动补充完整指标、风险或技术选型。
+- 对产品题，优先帮助用户按“场景/用户问题 → 判断 → 方案机制 → 题目实际问到的验证或取舍”组织；按题目范围裁剪。
+- 对 AI 场景题，帮助用户判断业务问题、AI 是否值得介入、用户任务和方案边界；不强行要求复杂技术细节。
+- 对目标岗位题，结合题干中明确给出的业务与岗位语境，不编造公司信息。
+- next_round_framework 仅给 2-4 条后续训练方向，不能写成“本题遗漏”或扣分项。`;
+
+  try {
+    const raw = await callClaude([
+      { role: 'user', content: '原题如下：\n' + record.question }
+    ], systemPrompt, null, 0, true, false, 1200);
+    const data = robustParseJSON(raw);
+    const framework = data?.question_framework;
+    const steps = Array.isArray(framework?.steps) ? framework.steps.filter(Boolean) : [];
+    if (!framework || (!framework.core_question && !steps.length)) throw new Error('未生成有效的题目思路框架');
+    record.score = record.score || {};
+    record.score.question_framework = framework;
+    if (Array.isArray(data.next_round_framework) && data.next_round_framework.length) {
+      record.score.next_round_framework = data.next_round_framework.filter(Boolean).slice(0, 5);
+    }
+    LS.set('history', history.slice(0, 100));
+    renderHistory();
+    const embeddedHistoryIds = {
+      product: 'product-spec-history',
+      aiproduct: 'aiproduct-spec-history',
+      'job-target': 'job-target-spec-history',
+    };
+    const embeddedId = embeddedHistoryIds[record.source];
+    if (embeddedId) renderSpecHistory(record.source, embeddedId);
+    toast('已补充题目思路框架', 'success');
+  } catch (err) {
+    renderHistory();
+    const embeddedHistoryIds = { product: 'product-spec-history', aiproduct: 'aiproduct-spec-history', 'job-target': 'job-target-spec-history' };
+    const embeddedId = embeddedHistoryIds[record.source];
+    if (embeddedId) renderSpecHistory(record.source, embeddedId);
+    toast(err?.message || '生成失败，请稍后重试', 'error');
+  }
+}
+
 // ────────────────────────────────────────────────────────────
 // 专项内嵌历史记录
 // ────────────────────────────────────────────────────────────
@@ -6877,6 +6968,7 @@ function renderSpecHistory(source, listElId) {
           <strong>${uiText('评分：')}</strong>${h.score.score}/10 &nbsp;
           <strong>${uiText('亮点：')}</strong>${(h.score.highlights || []).join('；')}
         </div>
+        ${buildHistoryFrameworkBackfillButton(h)}
         ${buildHistoryQuestionFramework(h.score)}
         ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
           <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>
@@ -6992,6 +7084,7 @@ function renderHistory() {
           <strong>评分：</strong>${h.score.score}/10 &nbsp;
           <strong>亮点：</strong>${(h.score.highlights||[]).join('；')}
         </div>
+        ${buildHistoryFrameworkBackfillButton(h)}
         ${buildHistoryQuestionFramework(h.score)}
         ${(h.score.improvements && h.score.improvements.length) ? `<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;font-size:12px">
           <div style="font-weight:600;color:var(--warning);margin-bottom:8px">🔧 需要改进的地方</div>

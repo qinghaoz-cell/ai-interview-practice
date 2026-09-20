@@ -914,7 +914,15 @@ select.input-field{appearance:none;background-image:url("data:image/svg+xml,%3Cs
           <textarea class="input-field" id="jt-dept" rows="3" placeholder="如：负责xx业务线的AI能力落地，核心指标是…" style="resize:vertical"></textarea>
         </div>
         <div class="input-group" style="margin-bottom:14px">
-          <label class="input-label">上传业务资料 <span style="color:var(--text-muted);font-size:11px">（可选，支持 .docx / .pdf / .txt）</span></label>
+          <label class="input-label">上传岗位资料 <span style="color:var(--text-muted);font-size:11px">（可选，支持 .docx / .pdf / .txt）</span></label>
+          <div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px">
+            <span style="font-size:12px;color:var(--text-muted)">资料用途</span>
+            <select class="input-field" id="jt-file-kind" style="width:auto;min-width:250px;padding:7px 10px">
+              <option value="reference">面试参考资料（全攻略 / 题库 / 复盘）</option>
+              <option value="business">业务资料（公司 / 部门 / 行业事实）</option>
+            </select>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin:-2px 0 8px">参考资料用于学习考察方向和追问方式，不会照抄原题或当作公司事实。</div>
           <input type="file" id="jt-file-input" multiple accept=".docx,.pdf,.txt" style="display:none" onchange="handleJTFiles(this)">
           <button class="btn btn-secondary btn-sm" onclick="document.getElementById('jt-file-input').click()">+ 上传文档</button>
           <div id="jt-files-list" style="margin-top:8px;font-size:12px;color:var(--text-muted)"></div>
@@ -1446,7 +1454,11 @@ const UI_EN = {
   '🎯 目标岗位专项': '🎯 Targeted Role Practice', '基于目标公司/岗位/JD，定向练习面试题，迁移通用能力到具体业务': 'Practice interview questions tailored to a company, role, and JD, and connect your transferable skills to that business.',
   '📋 目标岗位配置': '📋 Target Role Setup', '未配置': 'Not configured', '公司名称': 'Company', '岗位名称': 'Role Title',
   '岗位职责 / JD文本': 'Responsibilities / Job Description', '任职要求': 'Requirements', '部门/业务说明': 'Team / Business Context',
-  '上传业务资料': 'Upload Business Materials', '+ 上传文档': '+ Upload Document', '💾 保存配置': '💾 Save Setup',
+  '上传岗位资料': 'Upload Role Materials', '资料用途': 'Material Type',
+  '面试参考资料（全攻略 / 题库 / 复盘）': 'Interview References (Guide / Question Bank / Review)',
+  '业务资料（公司 / 部门 / 行业事实）': 'Business Facts (Company / Team / Industry)',
+  '参考资料用于学习考察方向和追问方式，不会照抄原题或当作公司事实。': 'References guide question coverage and follow-up style; they are not copied or treated as company facts.',
+  '+ 上传文档': '+ Upload Document', '💾 保存配置': '💾 Save Setup',
   '📌 当前目标岗位': '📌 Current Target Role', '修改': 'Edit', '选择练习方向': 'Choose a Practice Track',
   '随机岗位面试': 'Random Role Interview', '岗位业务理解题': 'Role Business Understanding', '岗位产品思维题': 'Role Product Thinking',
   '岗位AI能力产品化题': 'Role AI Productization', '简历岗位迁移题': 'Experience Transfer Question', '具体题型': 'QUESTION TYPE',
@@ -4013,6 +4025,30 @@ function getJobTargetConfig() {
   try { return JSON.parse(localStorage.getItem('jobTargetConfig') || 'null'); } catch { return null; }
 }
 
+function getJTFileKind(file) {
+  if (file && (file.kind === 'reference' || file.kind === 'business')) return file.kind;
+  // Backward compatibility for files uploaded before material types existed.
+  // Interview guides and question banks are references by default; other files
+  // remain business materials unless the user reclassifies them on re-upload.
+  const name = (file && file.name) || '';
+  return /(面试|题库|攻略|复盘|训练|框架|interview|question|guide|playbook)/i.test(name)
+    ? 'reference'
+    : 'business';
+}
+
+function getJTFileKindLabel(file) {
+  return getJTFileKind(file) === 'reference' ? '面试参考' : '业务资料';
+}
+
+function buildJTMaterialUsageRule(cfg) {
+  const hasReferences = !!(cfg && (cfg.files || []).some(function(f) { return getJTFileKind(f) === 'reference'; }));
+  if (!hasReferences) return '';
+  return '\n【面试参考资料使用规则】\n' +
+    '- 全攻略、题库、复盘等仅用于参考高频考察方向、题目颗粒度、追问逻辑和能力覆盖；每次仍须基于岗位资料生成新的题目。\n' +
+    '- 不得照抄资料中的原题、示例答案或公司结论，也不得把其中的推测当作该公司的业务事实。\n' +
+    '- 公司事实只以JD、部门/业务说明和标记为“业务资料”的文件为准；信息不足时应改问如何验证，而不是补写事实。';
+}
+
 function buildJobTargetContext(cfg, opts) {
   // opts: { forMigration: bool } — controls which sections are emphasised
   if (!cfg) return '';
@@ -4029,7 +4065,13 @@ function buildJobTargetContext(cfg, opts) {
   }
   if (cfg.deptDesc) parts.push('【部门/业务说明】\n' + cfg.deptDesc);
   if (cfg.files && cfg.files.length) {
-    cfg.files.forEach(function(f) { parts.push('【业务资料：' + f.name + '】\n' + f.content); });
+    cfg.files.forEach(function(f) {
+      const kind = getJTFileKind(f);
+      const label = kind === 'reference'
+        ? '【面试参考资料（只参考出题方法，不可作为公司事实）：' + f.name + '】\n'
+        : '【业务资料（可作为业务事实参考）：' + f.name + '】\n';
+      parts.push(label + f.content);
+    });
   }
   return parts.join('\n\n');
 }
@@ -4044,8 +4086,13 @@ function renderJTFilesList(files) {
   if (!el) return;
   if (!files || !files.length) { el.innerHTML = ''; return; }
   el.innerHTML = files.map(function(f, i) {
+    const kind = getJTFileKind(f);
+    const badgeStyle = kind === 'reference'
+      ? 'background:#ede9fe;color:#7c3aed'
+      : 'background:#dbeafe;color:#2563eb';
     return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
       '<span>📎 ' + escHtml(f.name) + '</span>' +
+      '<span style="' + badgeStyle + ';border-radius:10px;padding:1px 6px;font-size:10px">' + getJTFileKindLabel(f) + '</span>' +
       '<span style="color:var(--success);font-size:11px">✓ 已解析</span>' +
       '<button class="btn btn-ghost btn-sm" style="padding:0 6px;font-size:11px" onclick="removeJTPendingFile(' + i + ')">删除</button>' +
       '</div>';
@@ -4060,6 +4107,8 @@ function removeJTPendingFile(idx) {
 async function handleJTFiles(input) {
   const existingCfg = getJobTargetConfig() || {};
   _jtPendingFiles = (existingCfg.files || []).slice();
+  const kindSelect = document.getElementById('jt-file-kind');
+  const kind = kindSelect && kindSelect.value === 'business' ? 'business' : 'reference';
   for (let i = 0; i < input.files.length; i++) {
     const file = input.files[i];
     const ext = file.name.split('.').pop().toLowerCase();
@@ -4098,7 +4147,7 @@ async function handleJTFiles(input) {
         content = text;
       }
       _jtPendingFiles = _jtPendingFiles.filter(function(f) { return f.name !== file.name; });
-      _jtPendingFiles.push({ name: file.name, content: content.slice(0, 8000) });
+      _jtPendingFiles.push({ name: file.name, content: content.slice(0, 8000), kind: kind });
     } catch (e) {
       toast(file.name + ' 解析失败：' + e.message, 'error');
     }
@@ -4128,7 +4177,9 @@ function renderJobTarget() {
     document.getElementById('jt-requirements').value = cfg.requirements || '';
     document.getElementById('jt-dept').value = cfg.deptDesc || '';
     // Show current summary
-    const fileNames = cfg.files && cfg.files.length ? cfg.files.map(function(f) { return f.name; }).join('、') : '';
+    const fileNames = cfg.files && cfg.files.length ? cfg.files.map(function(f) {
+      return f.name + '（' + getJTFileKindLabel(f) + '）';
+    }).join('、') : '';
     currentDisplay.innerHTML =
       '<div style="margin-bottom:6px"><strong>' + escHtml(cfg.company || '(公司未填)') + ' · ' + escHtml(cfg.title || '(岗位未填)') + '</strong></div>' +
       (cfg.jd ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">职责：' + escHtml(cfg.jd.slice(0, 80)) + (cfg.jd.length > 80 ? '…' : '') + '</div>' : '') +
@@ -4169,6 +4220,7 @@ function buildJTQuestionPrompt(type, subType, cfg) {
   const isMigType = type === 'migration';
   const ctx = buildJobTargetContext(cfg, { forMigration: isMigType });
   const ctxNote = ctx ? '\n\n【目标岗位资料】\n' + ctx : '';
+  const materialRule = buildJTMaterialUsageRule(cfg);
   const hasInfo = cfg && (cfg.company || cfg.title || cfg.jd);
   const companyStr = (cfg && cfg.company) ? '「' + cfg.company + '」' : '该公司';
   const titleStr = (cfg && cfg.title) ? '的「' + cfg.title + '」岗位' : '目标岗位';
@@ -4205,14 +4257,14 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       ? businessSubDir[subType]
       : '从以下方向随机选1个出题：\n1. 这个业务方向最核心的用户是谁、他们的核心需求是什么\n2. 如果你是这个部门的PM，你认为最大的产品机会/痛点在哪里\n3. 这个业务的核心增长驱动力是什么？有哪些制约因素？\n4. 这个产品/业务在行业里的核心差异化是什么？竞品怎么做的？\n5. 如果要为这个业务设计关键指标体系，北极星指标是什么、为什么？';
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位业务理解题」，考察候选人对该部门业务、用户和产品机会的理解。\n' +
-      openPrefix + '，' + dir + '\n首题只考一个方向，不要把用户、竞品、商业化和指标拼成一道大题。若资料没有提供业务事实，改考“你会先验证什么/怎样判断”，不要要求候选人猜公司内部情况。' + noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      openPrefix + '，' + dir + '\n首题只考一个方向，不要把用户、竞品、商业化和指标拼成一道大题。若资料没有提供业务事实，改考“你会先验证什么/怎样判断”，不要要求候选人猜公司内部情况。' + noInfoNote + materialRule + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'product') {
     if (subType && subType !== 'random' && productSubDir[subType]) {
       const dir = productSubDir[subType];
       return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景' + dir + '。\n' +
         openPrefix + '，题目必须与该岗位的具体业务场景强绑定，不要出通用产品题；只问当前子题型需要的判断，不叠加完整方案、指标、风险或商业化。\n' +
-        noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+        noInfoNote + materialRule + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
     }
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位产品思维题」，基于该业务场景出产品设计、指标、留存或差异化题目。\n' +
       openPrefix + '，从以下方向随机选1个出题：\n' +
@@ -4222,7 +4274,7 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       '4. 产品优先级：有多个需求，如何做取舍决策\n' +
       '5. 差异化定位：和某竞品相比，如何做差异化，核心策略是什么\n' +
       '要求：题目必须与该岗位的具体业务场景强绑定，不要出通用产品题；随机时也只抽一个方向，不混合多类要求。\n' +
-      noInfoNote + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
+      noInfoNote + materialRule + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote;
   }
   if (type === 'aiproduct') {
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「岗位AI能力产品化题」，考察候选人能否把AI能力在该业务场景落地。\n' +
@@ -4233,7 +4285,7 @@ function buildJTQuestionPrompt(type, subType, cfg) {
       '- 若是法律、医疗、金融等专业领域，说明最终专业判断由谁负责；不考行业术语、规则或专业事实\n' +
       '- 场景必须与JD/业务说明中的真实业务方向对应\n' +
       (hasInfo ? '' : '若资料不足，用“基于你目前了解的该岗位业务，你会先确认哪个用户任务是否适合AI辅助？”这类开放问题，不要编造业务事实。\n') +
-      '直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
+      materialRule + '\n直接输出题目本身，不超过90字，不加任何前缀。' + ctxNote;
   }
   if (type === 'migration') {
     const hasReqs = !!(cfg && cfg.requirements && cfg.requirements.trim());
@@ -4249,7 +4301,7 @@ function buildJTQuestionPrompt(type, subType, cfg) {
     return '你是字节/腾讯/阿里的AI产品面试官。请出1道「简历岗位迁移题」，考察候选人能否将项目/实习经历迁移到该岗位，体现AI PM能力。\n' +
       openPrefix + '，' + dir + reqDirection +
       (hasInfo ? '' : '\n若无候选人简历资料，用"根据你目前的项目/实习经历…"开头。') +
-      '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote + reqNote;
+      materialRule + '\n直接输出题目本身，不超过80字，不加任何前缀。' + ctxNote + reqNote;
   }
   return '';
 }
@@ -4260,6 +4312,7 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
   const hasJD = !!(cfg && cfg.jd && cfg.jd.trim());
   const hasDept = !!(cfg && cfg.deptDesc && cfg.deptDesc.trim());
   const hasReqs = !!(cfg && cfg.requirements && cfg.requirements.trim());
+  const materialRule = buildJTMaterialUsageRule(cfg);
   const hasBizInfo = hasJD || hasDept; // whether enough dept/business context exists
   const isMigration = type === 'migration';
   const ctxBlock = cfg && (cfg.company || cfg.title || cfg.jd || cfg.deptDesc || cfg.requirements)
@@ -4336,7 +4389,7 @@ function buildJTFollowupSystem(type, cfg, diffDesc, turnNote, voiceNote) {
     diffDesc + ctxBlock + '\n\n' +
     '【面试目标】考察候选人能否把通用产品思维、AI产品化能力和个人项目经历，真正迁移到这个具体岗位的业务场景中。追问要有岗位/业务特异性，不要泛泛而谈。\n\n' +
     '【追问风格】追问要短（≤45字）、直接、有压力感，像真实面试官。优先用：为什么？依据是什么？和这个岗位/业务的关联是什么？具体指标是什么？\n\n' +
-    jdCitationRule + bizFabricationRule + dynamicFollowupRule + '\n\n' +
+    jdCitationRule + bizFabricationRule + materialRule + dynamicFollowupRule + '\n\n' +
     '严格遵守：\n' +
     '- 第1轮：只把面试题原文提出来，不做任何分析\n' +
     '- 第2轮起：根据候选人回答中最明显的缺失项，只问1个追问，不超过50字\n' +

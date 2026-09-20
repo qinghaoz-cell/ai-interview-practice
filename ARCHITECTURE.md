@@ -54,6 +54,11 @@ STATE = {
 }
 ```
 
+### 语音输入（`toggleVoice()` / `startVoiceRecognition()`，约第 6450 行）
+使用浏览器 Web Speech API。`continuous = true` 仍可能因用户思考停顿而触发 `onend`，因此 `onend` **不能**直接调用 `stopVoice()`：录音按钮仍处于开启状态且非用户主动停止时，应在短暂延迟后重建识别实例。`STATE._voiceFinalText` 用于累积每段已确认的文本，避免自动续录后丢失停顿前内容。
+
+只有点击麦克风停止或发送回答时才调用 `stopVoice()`；它会设置 `voiceStopRequested` 并取消待执行的自动续录，防止停止后又重新开启麦克风。
+
 ### `source` 字段的取值（决定评分/参考答案/诊断走哪条路）
 | source | 含义 |
 |--------|------|

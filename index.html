@@ -1355,6 +1355,8 @@ const STATE = {
   },
   recognition: null,
   isRecording: false,
+  voiceStopRequested: false,
+  voiceRestartTimer: null,
   isGenerating: false,
 };
 
@@ -6444,12 +6446,20 @@ function useRewrite(type) {
 
 
 function stopVoice(autoTranscribe = false) {
-  if (STATE.recognition) {
-    STATE.recognition.onresult = null;
-    STATE.recognition.onerror = null;
-    STATE.recognition.onend = null;
-    try { STATE.recognition.stop(); } catch {}
-    STATE.recognition = null;
+  // An explicit button click or sending an answer must not trigger the
+  // automatic restart that keeps a paused recording session alive.
+  STATE.voiceStopRequested = true;
+  if (STATE.voiceRestartTimer) {
+    clearTimeout(STATE.voiceRestartTimer);
+    STATE.voiceRestartTimer = null;
+  }
+  const recognition = STATE.recognition;
+  STATE.recognition = null;
+  if (recognition) {
+    recognition.onresult = null;
+    recognition.onerror = null;
+    recognition.onend = null;
+    try { recognition.stop(); } catch {}
   }
   STATE.isRecording = false;
   const usedVoice = !!STATE._voiceSessionHadResult;
@@ -6483,6 +6493,60 @@ function hideVoiceTip() {
 
 // autoTranscribeVoice removed — understanding is now embedded in interviewer response ([理解：...])
 
+function scheduleVoiceRestart() {
+  if (!STATE.isRecording || STATE.voiceStopRequested || STATE.voiceRestartTimer) return;
+  // Chrome can end a recognition session after a short thinking pause even
+  // with continuous=true. Recreate it while the user still has recording on.
+  STATE.voiceRestartTimer = setTimeout(() => {
+    STATE.voiceRestartTimer = null;
+    if (STATE.isRecording && !STATE.voiceStopRequested) startVoiceRecognition();
+  }, 180);
+}
+
+function startVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition || !STATE.isRecording || STATE.voiceStopRequested) return;
+
+  const rec = new SpeechRecognition();
+  rec.lang = getPracticeLanguage() === 'en' ? 'en-US' : 'zh-CN';
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.maxAlternatives = 3;
+  rec.onresult = e => {
+    let newFinalText = '';
+    let interimText = '';
+    const startIndex = typeof e.resultIndex === 'number' ? e.resultIndex : 0;
+    for (let i = startIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        newFinalText += e.results[i][0].transcript;
+      } else {
+        interimText += e.results[i][0].transcript;
+      }
+    }
+    if (newFinalText) STATE._voiceFinalText = (STATE._voiceFinalText || '') + newFinalText;
+    if (newFinalText || interimText) STATE._voiceSessionHadResult = true;
+    STATE._voiceFinal = STATE._voiceFinalText || '';
+    const inp = document.getElementById('chat-input');
+    if (inp) { inp.value = (STATE._voiceFinalText || '') + interimText; autoResize(inp); }
+  };
+  rec.onerror = e => {
+    // Permission and microphone failures cannot recover by retrying. Other
+    // transient errors are followed by onend, which resumes the session.
+    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) stopVoice(false);
+  };
+  rec.onend = () => {
+    if (STATE.recognition === rec) STATE.recognition = null;
+    scheduleVoiceRestart();
+  };
+  STATE.recognition = rec;
+  try {
+    rec.start();
+  } catch (e) {
+    if (STATE.recognition === rec) STATE.recognition = null;
+    scheduleVoiceRestart();
+  }
+}
+
 function toggleVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { toast('浏览器不支持语音识别，请使用Chrome', 'error'); return; }
@@ -6493,39 +6557,12 @@ function toggleVoice() {
   const input = document.getElementById('chat-input');
   if (input) { input.value = ''; autoResize(input); }
   hideVoiceTip();
-
-  const rec = new SpeechRecognition();
-  rec.lang = getPracticeLanguage() === 'en' ? 'en-US' : 'zh-CN';
-  rec.continuous = true;
-  rec.interimResults = true;
-  rec.maxAlternatives = 3;
   STATE._voiceSessionHadResult = false;
-  rec.onresult = e => {
-    let finalText = '';
-    let interimText = '';
-    for (let i = 0; i < e.results.length; i++) {
-      // isFinal results are fully processed and more accurate
-      if (e.results[i].isFinal) {
-        finalText += e.results[i][0].transcript;
-      } else {
-        interimText += e.results[i][0].transcript;
-      }
-    }
-    if (finalText || interimText) STATE._voiceSessionHadResult = true;
-    STATE._voiceFinal = finalText;
-    const inp = document.getElementById('chat-input');
-    if (inp) { inp.value = finalText + interimText; autoResize(inp); }
-  };
-  rec.onerror = () => stopVoice(false);
-  rec.onend = () => stopVoice(false);
-  try {
-    rec.start();
-    STATE.recognition = rec;
-    STATE.isRecording = true;
-  } catch (e) {
-    stopVoice(false);
-    return;
-  }
+  STATE._voiceFinalText = '';
+  STATE._voiceFinal = '';
+  STATE.voiceStopRequested = false;
+  STATE.isRecording = true;
+  startVoiceRecognition();
   const btn = document.getElementById('voice-btn');
   if (btn) { btn.classList.add('recording'); btn.title = '点击停止录音'; }
   toast('开始语音输入…', 'info');

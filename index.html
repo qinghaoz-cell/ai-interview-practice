@@ -5696,8 +5696,9 @@ async function generateScore() {
       : `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，要能迁移到其他题——禁止绑定具体人名或具体商品名，应该是可以跨场景套用的判断句式，比如"我会先收敛到X类用户在Y时刻的场景，因为…"或"我会先做一个功能而不是三个，先验证核心假设"，不要解释原因）`)
     : '';
   const _questionFrameworkSpec = shouldShowQuestionFramework
-    ? `\n- question_framework: 对象。用于在评分前给用户一份“本题具体拆解”，不计分、不评价候选人的回答，也不能与improvements混淆。格式：{"core_question":"本题真正要判断什么，≤45字","recommended_focus":"建议直接从哪个具体人群、时刻、任务或决策切入，≤55字","steps":[{"label":"步骤名，≤10字","detail":"针对本题具体该想什么/说什么，≤35字"}]}。
-  强制要求：必须给 recommended_focus。它不是“先收敛场景”这类方法论，而是直接给一条可以开口回答的具体切入假设；例如题目是“京东秒送新用户首单”，可写“先假设切入晚间临时缺药、需30分钟内送达的一线城市家庭用户，再验证供给覆盖与需求规模”。当题干没有足够事实时，明确标成“先假设/待验证”，不得伪装成公司事实。steps 也必须写成贴着题干的具体内容，引用题目已经给出的业务、用户、对象、场景或决策；例如“秒送的履约资源：先判断哪些供给与商品适合承接急需场景”，不能只写“考虑业务资源”。不得编造题干未给出的公司事实。
+    ? `\n- question_framework: 对象。用于在评分前给用户一份“本题具体拆解”，不计分、不评价候选人的回答，也不能与improvements混淆。格式：{"core_question":"本题真正要判断什么，≤60字","recommended_focus":"建议直接从哪个具体人群、时刻、任务或决策切入，≤85字","steps":[{"label":"步骤名，≤12字","detail":"针对本题的具体判断依据 + 应回答什么，45-80字"}]}。
+  强制要求：必须给 recommended_focus。它不是“先收敛场景”这类方法论，而是直接给一条可以开口回答的具体切入假设；例如题目是“京东秒送新用户首单”，可写“先假设切入晚间临时缺药、需30分钟内送达的一线城市家庭用户；再验证该人群的需求规模、可配送商品和履约覆盖”。当题干没有足够事实时，明确标成“先假设/待验证”，不得伪装成公司事实。
+  steps 必须写得像“针对本题的答题说明”，每一步都要包含两层：①为什么要看这个具体事实/判断，②回答时该说清什么或先验证什么。例如不要只写“用户任务：用户想知道订单状态”；应写“用户任务：先区分用户是在查当前状态、理解异常原因还是催促处理，因为三类任务需要的响应不同；回答时说明先覆盖哪一类高频任务，以及为什么”。必须引用题目已经给出的业务、用户、对象、场景或决策；不得编造题干未给出的公司事实。
   steps 只给3-5步，按实际题型选最小适用拆解：产品设计/改进题优先用「目标与具体场景→用户卡点→核心机制→关键取舍→必要时验证」；数据题用「口径→分层→假设→验证→动作」；AI场景题用「用户任务→现有做法→AI是否必要→优先切入点→必要时质量/边界」；目标岗位题优先结合题干明确给出的岗位业务或能力要求。题目没有要求的维度可以放在后续路线，不要塞进本题具体拆解。`
     : '';
   const _extensionFrameworkSpec = isBehavior ? '' : `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
@@ -6627,7 +6628,7 @@ function renderScore(data) {
       ${questionFrameworkSteps.length ? `<div style="display:grid;gap:8px">${questionFrameworkSteps.map((step, idx) => `
         <div style="display:flex;gap:9px;align-items:flex-start;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm)">
           <span style="flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,.18);color:var(--primary);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">${idx + 1}</span>
-          <div style="font-size:12px;line-height:1.6;color:var(--text)">${step.label ? `<span style="font-weight:700">${escHtml(step.label)}：</span>` : ''}${escHtml(step.detail)}</div>
+          <div style="font-size:12px;line-height:1.75;color:var(--text)">${step.label ? `<span style="font-weight:700">${escHtml(step.label)}：</span>` : ''}${escHtml(step.detail)}</div>
         </div>`).join('')}</div>` : ''}
     </div>` : ''}
     <div class="score-section">
@@ -7032,9 +7033,9 @@ function buildHistoryQuestionFramework(score) {
     '<div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:6px">🧩 用产品思维理解这道题</div>' +
     (framework.core_question ? '<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:' + (steps.length ? '8px' : '0') + '"><span style="font-weight:600">这题真正要判断：</span>' + escHtml(framework.core_question) + '</div>' : '') +
     (framework.recommended_focus ? '<div style="font-size:12px;line-height:1.6;color:var(--text);background:rgba(99,102,241,.1);border-radius:6px;padding:7px 9px;margin:0 0 8px"><span style="font-weight:600;color:var(--primary)">建议先这样切入：</span>' + escHtml(framework.recommended_focus) + '</div>' : '') +
-    (steps.length ? '<div style="display:grid;gap:5px">' + steps.map(function(step, idx) {
-      return '<div style="font-size:12px;line-height:1.55;color:var(--text-muted)"><span style="display:inline-flex;width:17px;height:17px;align-items:center;justify-content:center;border-radius:50%;background:rgba(99,102,241,.18);color:var(--primary);font-size:10px;font-weight:700;margin-right:5px">' + (idx + 1) + '</span>' +
-        (step.label ? '<span style="font-weight:600;color:var(--text)">' + escHtml(step.label) + '：</span>' : '') + escHtml(step.detail) + '</div>';
+    (steps.length ? '<div style="display:grid;gap:7px">' + steps.map(function(step, idx) {
+      return '<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 8px;background:var(--surface2);border-radius:6px"><span style="display:inline-flex;flex:0 0 auto;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:rgba(99,102,241,.18);color:var(--primary);font-size:10px;font-weight:700">' + (idx + 1) + '</span>' +
+        '<div style="font-size:12px;line-height:1.7;color:var(--text)">' + (step.label ? '<span style="font-weight:600">' + escHtml(step.label) + '：</span>' : '') + escHtml(step.detail) + '</div></div>';
     }).join('') + '</div>' : '') +
     '</div>';
 }
@@ -7056,9 +7057,16 @@ function buildHistoryNextRoundFramework(score) {
 function needsHistoryFrameworkBackfill(h) {
   if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return false;
   const framework = h?.score?.question_framework;
+  const stepDetails = Array.isArray(framework?.steps) ? framework.steps.map(function(step) {
+    return typeof step === 'string' ? step : step?.detail;
+  }).filter(Boolean) : [];
+  // Older versions only generated one short label-like sentence per step. Keep
+  // those records eligible for an in-place refresh, without changing their score.
+  const hasDetailedSteps = stepDetails.length >= 3 && stepDetails.every(function(detail) {
+    return String(detail).trim().length >= 45;
+  });
   return !(framework && typeof framework === 'object' &&
-    (framework.core_question || (Array.isArray(framework.steps) && framework.steps.length)) &&
-    framework.recommended_focus);
+    (framework.core_question || stepDetails.length) && framework.recommended_focus && hasDetailedSteps);
 }
 
 function buildHistoryFrameworkBackfillButton(h) {
@@ -7099,13 +7107,13 @@ async function backfillHistoryFramework(hId) {
   "question_framework": {
     "core_question": "这题真正要判断什么（一句话）",
     "recommended_focus": "建议直接从哪个具体人群、时刻、任务或决策切入；资料不足时明确写为待验证假设",
-    "steps": [{"label":"步骤名称","detail":"该步骤在本题应考虑什么"}]
+    "steps": [{"label":"步骤名称","detail":"这一步为什么重要，以及回答时具体要判断、说明或验证什么"}]
   },
   "next_round_framework": ["面试官可能继续深挖的一个方向", "另一个方向"]
 }
 
 规则：
-- question_framework 给 3-5 步，紧贴原题的提问范围。必须提供 recommended_focus，直接给用户一个可开口回答的具体切入点，例如“先假设切入夜间临时缺药、需要30分钟内送达的一线城市家庭用户，再验证其规模与供给覆盖”；题干未提供事实时，要明确写“先假设/待验证”，不能只说“收敛具体场景”。每一步也必须带原题中的具体业务、用户、对象或决策，例如“京东秒送的履约资源”而不是泛泛写“考虑业务资源”；但不编造题目未提供的事实。
+- question_framework 给 3-5 步，紧贴原题的提问范围。必须提供 recommended_focus，直接给用户一个可开口回答的具体切入点，例如“先假设切入夜间临时缺药、需要30分钟内送达的一线城市家庭用户，再验证其规模与供给覆盖”；题干未提供事实时，要明确写“先假设/待验证”，不能只说“收敛具体场景”。每一步 detail 控制在45-80字，必须同时写清两件事：为什么这个事实或判断会影响方案，以及回答时具体要判断、说明或验证什么。例如不能只写“用户任务：用户想知道订单状态”，应写“用户任务：先区分用户是在查当前状态、理解异常原因还是催促处理，因为三类任务需要的响应不同；回答时说明先覆盖哪一类高频任务，以及为什么”。每一步也必须带原题中的具体业务、用户、对象或决策，例如“京东秒送的履约资源”而不是泛泛写“考虑业务资源”；但不编造题目未提供的事实。
 - 如果题目只问功能设计，就不要求用户主动补充完整指标、风险或技术选型。
 - 对产品题，优先帮助用户按“场景/用户问题 → 判断 → 方案机制 → 题目实际问到的验证或取舍”组织；按题目范围裁剪。
 - 对 AI 场景题，帮助用户判断业务问题、AI 是否值得介入、用户任务和方案边界；不强行要求复杂技术细节。

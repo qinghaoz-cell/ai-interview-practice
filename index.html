@@ -7053,6 +7053,19 @@ function buildHistoryNextRoundFramework(score) {
     }).join('') + '</div></div>';
 }
 
+function buildHistoryRefAnswersButton(h) {
+  if (!h?.messages?.length) return '';
+  const hasAnswers = Array.isArray(h.refAnswers) && h.refAnswers.length > 0;
+  const buttonText = hasAnswers ? '🔄 重新生成答题思路与参考答案' : '✨ 生成各轮改写 & 参考答案';
+  const helperText = hasAnswers
+    ? '（按当前规则重生成；保留原题、原回答和评分）'
+    : '（不会修改原题、原回答和评分）';
+  return '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-' + escHtml(h.id) + '">' +
+    '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers(\'' + escHtml(h.id) + '\')">' + uiText(buttonText) + '</button>' +
+    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText(helperText) + '</span>' +
+    '</div>';
+}
+
 // Records created before question_framework was introduced do not contain this
 // question-specific breakdown. Let the user add it from the original question
 // without changing the score, feedback, or reference answers already generated.
@@ -7240,10 +7253,7 @@ function renderSpecHistory(source, listElId) {
         </div>` : ''}
         ${buildHistoryNextRoundFramework(h.score)}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
-        ${!(h.refAnswers && h.refAnswers.length) ? `
-        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="specref-${h.id}">
-          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ ${uiText('生成各轮改写 & 参考答案')}</button>
-        </div>` : ''}
+        ${buildHistoryRefAnswersButton(h)}
       </div>
     </div>`;
   }).join('');
@@ -7356,10 +7366,7 @@ function renderHistory() {
         </div>` : ''}
         ${buildHistoryNextRoundFramework(h.score)}` : ''}
         <div class="history-dialog">${buildHistoryDialog(h)}</div>
-        ${!(h.refAnswers && h.refAnswers.length) ? `
-        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px" id="ref-section-${h.id}">
-          <button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="genHistoryRefAnswers('${h.id}')">✨ 生成各轮改写 &amp; 参考答案</button>
-        </div>` : ''}
+        ${buildHistoryRefAnswersButton(h)}
       </div>
     </div>`;
   }).join('');
@@ -7631,6 +7638,7 @@ ${questionsText}`;
     });
     rec.refAnswers = parsedAnswers;
     LS.set('history', hist.slice(0, 50));
+    if (sec) sec.innerHTML = buildHistoryRefAnswersButton(rec);
   } catch (e) {
     if (sec) sec.innerHTML = `<div style="color:var(--danger);font-size:12px">生成失败：${e.message}</div>`;
   }

@@ -7167,9 +7167,11 @@ function needsHistoryFrameworkBackfill(h) {
 }
 
 function buildHistoryFrameworkBackfillButton(h) {
-  if (!needsHistoryFrameworkBackfill(h)) return '';
+  if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return '';
   const hasOlderBreakdown = !!(h?.score?.question_framework?.core_question || h?.score?.question_framework?.steps?.length);
-  const buttonText = hasOlderBreakdown ? '🧩 按新规则更新题目理解' : '🧩 生成本题理解';
+  const buttonText = hasOlderBreakdown
+    ? (needsHistoryFrameworkBackfill(h) ? '🧩 按新规则更新题目理解' : '🔄 重新生成本题理解')
+    : '🧩 生成本题理解';
   return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
     '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
       uiText(buttonText) + '</button>' +
@@ -7184,7 +7186,7 @@ async function backfillHistoryFramework(hId) {
   }
   const history = getHistory();
   const record = history.find(function(item) { return item.id === hId; });
-  if (!record || !needsHistoryFrameworkBackfill(record)) return;
+  if (!record || !['product', 'aiproduct', 'job-target'].includes(record.source)) return;
 
   document.querySelectorAll('[data-framework-backfill]').forEach(function(el) {
     if (el.dataset.frameworkBackfill === hId) {

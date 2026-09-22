@@ -5709,7 +5709,7 @@ async function generateScore() {
     : '';
   // 题目理解卡由独立的“题目 + 业务/JD”请求生成，绝不随评分请求传入候选人回答。
   const _questionFrameworkSpec = '';
-  const _extensionFrameworkSpec = isBehavior ? '' : `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
+  const _extensionFrameworkSpec = isBehavior ? '' : `\n- next_round_framework: 数组（3-5项）。这是“若面试官继续深挖”的后续训练路线，不计入本题得分，也不能和improvements重复。每项格式：{"direction":"可能的追问方向，≤28字","focus":"这个追问真正想确认的判断，≤35字","points":["思考点1，≤22字","思考点2，≤22字"]}。points 给2-3个即可，是答题时应想清楚的判断维度，不写完整答案或泛泛框架。只列与本题自然相关的方向；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
   const _impFieldSpec = `- improvements: 改进项数组。只针对本次题目明确要求、当前追问明确考察，或候选人自己已提出但没有讲清的主张，列出1-3项真正扣分点（可选维度：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。场景、机制、指标、风险、岗位绑定等即使属于完整产品框架，只要本题未问且候选人未以此作为主张，就绝不能列为improvements或因此扣分；没有实质问题时返回[]。${_keyLineSpec}${_questionFrameworkSpec}${_extensionFrameworkSpec}`;
 
   // Extra scoring criteria injected for job-target interviews
@@ -6577,12 +6577,36 @@ async function generateDiagnosis(scoreData, messages, question, hId) {
   }
 }
 
+function normalizeNextRoundFramework(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter(Boolean).slice(0, 5).map(function(item) {
+    if (typeof item === 'string') return { direction: item, focus: '', points: [] };
+    return {
+      direction: item.direction || item.title || item.label || '',
+      focus: item.focus || item.why || item.goal || '',
+      points: Array.isArray(item.points) ? item.points.filter(Boolean).slice(0, 3) : [],
+    };
+  }).filter(function(item) { return item.direction; });
+}
+
+function buildDeepDiveCards(items, compact) {
+  const fontSize = compact ? '11px' : '12px';
+  const padding = compact ? '8px 9px' : '10px 11px';
+  return '<div style="display:grid;gap:' + (compact ? '7px' : '9px') + '">' + items.map(function(item, idx) {
+    return '<div style="padding:' + padding + ';background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">' +
+      '<div style="font-size:' + fontSize + ';font-weight:700;color:var(--text);line-height:1.55">' + (idx + 1) + '. ' + escHtml(item.direction) + '</div>' +
+      (item.focus ? '<div style="font-size:' + fontSize + ';color:#34d399;line-height:1.55;margin-top:4px"><span style="font-weight:600">主要想确认：</span>' + escHtml(item.focus) + '</div>' : '') +
+      (item.points.length ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">' + item.points.map(function(point) {
+        return '<span style="padding:3px 6px;border-radius:10px;background:rgba(16,185,129,.08);color:var(--text-muted);font-size:' + (compact ? '10px' : '11px') + ';line-height:1.45">' + escHtml(point) + '</span>';
+      }).join('') + '</div>' : '') +
+    '</div>';
+  }).join('') + '</div>';
+}
+
 function renderScore(data) {
   const pct = (data.score / 10 * 100).toFixed(0);
   const color = data.score >= 8 ? 'var(--success)' : data.score >= 6 ? 'var(--primary)' : data.score >= 4 ? 'var(--warning)' : 'var(--danger)';
-  const nextRoundFramework = Array.isArray(data.next_round_framework)
-    ? data.next_round_framework.filter(Boolean).slice(0, 5)
-    : [];
+  const nextRoundFramework = normalizeNextRoundFramework(data.next_round_framework);
   const questionFramework = data.question_framework && typeof data.question_framework === 'object'
     ? data.question_framework
     : null;
@@ -6678,10 +6702,8 @@ function renderScore(data) {
     ${nextRoundFramework.length ? `
     <div class="score-section" style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius);padding:14px 16px;margin-top:12px">
       <div class="score-section-title" style="color:#10b981;margin-bottom:6px">🧭 如果面试官继续深挖，可按这个框架展开</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">这是后续训练路线，不是本题遗漏项。</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${nextRoundFramework.map((step, idx) => `<span style="padding:6px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;font-size:12px;color:var(--text)">${idx + 1}. ${escHtml(step)}</span>`).join('')}
-      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">这是后续训练路线，不是本题遗漏项；每项给你一个判断重点和展开提示。</div>
+      ${buildDeepDiveCards(nextRoundFramework, false)}
     </div>` : ''}
     <div id="score-ref-section"></div>`;
 }
@@ -7066,14 +7088,12 @@ function buildHistoryQuestionFramework(score) {
 }
 
 function buildHistoryNextRoundFramework(score) {
-  const steps = Array.isArray(score?.next_round_framework) ? score.next_round_framework.filter(Boolean).slice(0, 5) : [];
+  const steps = normalizeNextRoundFramework(score?.next_round_framework);
   if (!steps.length) return '';
   return '<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.22);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px">' +
     '<div style="font-size:12px;font-weight:700;color:#10b981;margin-bottom:4px">🧭 如果面试官继续深挖</div>' +
-    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:7px">后续训练路线，不是本题遗漏项。</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:5px">' + steps.map(function(step, idx) {
-      return '<span style="padding:4px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;font-size:11px;color:var(--text)">' + (idx + 1) + '. ' + escHtml(step) + '</span>';
-    }).join('') + '</div></div>';
+    '<div style="font-size:11px;color:var(--text-muted);margin-bottom:7px">后续训练路线，不是本题遗漏项；每项附带判断重点和展开提示。</div>' +
+    buildDeepDiveCards(steps, true) + '</div>';
 }
 
 function buildHistoryRefAnswersButton(h) {
@@ -7124,14 +7144,20 @@ function questionFrameworkSystemPrompt() {
     "core_question": "本题真正要理解和判断的业务问题（一句话，≤60字）",
     "recommended_focus": "本题最值得先聚焦的具体人群、时刻、任务或决策（≤85字；事实不足时写明假设/待验证）",
     "steps": [{"label":"步骤名称（≤12字）","detail":"这一要素在本题业务中具体是什么，以及为何影响用户问题或方案边界（40-75字）"}]
-  }
+  },
+  "next_round_framework": [{
+    "direction":"可能的追问方向（≤28字）",
+    "focus":"这个追问真正想确认的判断（≤35字）",
+    "points":["思考点1（≤22字）","思考点2（≤22字）"]
+  }]
 }
 
 规则：
 - 给3-5步，紧贴题目范围。它是题目理解，不是教用户“如何回答”。禁止出现“回答时”“你应”“应说明”“应验证”等措辞，也不要写完整方案。
 - 每一步必须落到题干已有的业务、用户、对象、场景或决策。例如不要只写“用户任务：查询订单”，要说明用户是在确认什么、不同诉求会怎样影响问题判断。
 - 产品设计/改进题按需解释“具体场景→用户卡点→核心机制→关键取舍/必要验证”；数据题解释“口径→分层→假设→验证→动作”；AI场景题解释“用户任务→现有做法→AI是否必要→优先切入点→质量或边界”。只保留题目实际需要的部分。
-- 题干没有提供公司内部事实时，明确标为假设/待验证，不得编造。目标岗位题只能使用给出的岗位或业务资料。`;
+- 题干没有提供公司内部事实时，明确标为假设/待验证，不得编造。目标岗位题只能使用给出的岗位或业务资料。
+- next_round_framework 给3-5项：每项包含一个自然的后续追问方向、该追问想确认的判断，以及2-3个简短思考点。它是练习提示，不是本题遗漏项；不得评价候选人或写完整答案。`;
 }
 
 async function generateIndependentQuestionFramework(hId, renderCurrent) {
@@ -7152,6 +7178,9 @@ async function generateIndependentQuestionFramework(hId, renderCurrent) {
   framework._source = QUESTION_FRAMEWORK_SOURCE;
   record.score = record.score || {};
   record.score.question_framework = framework;
+  if (Array.isArray(data?.next_round_framework) && data.next_round_framework.length) {
+    record.score.next_round_framework = data.next_round_framework.slice(0, 5);
+  }
   LS.set('history', history.slice(0, 100));
 
   if (renderCurrent) renderScore(record.score);
@@ -7170,8 +7199,8 @@ function buildHistoryFrameworkBackfillButton(h) {
   if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return '';
   const hasOlderBreakdown = !!(h?.score?.question_framework?.core_question || h?.score?.question_framework?.steps?.length);
   const buttonText = hasOlderBreakdown
-    ? (needsHistoryFrameworkBackfill(h) ? '🧩 按新规则更新题目理解' : '🔄 重新生成本题理解')
-    : '🧩 生成本题理解';
+    ? (needsHistoryFrameworkBackfill(h) ? '🧩 更新题目理解与深挖提示' : '🔄 重新生成题目理解与深挖提示')
+    : '🧩 生成题目理解与深挖提示';
   return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
     '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
       uiText(buttonText) + '</button>' +

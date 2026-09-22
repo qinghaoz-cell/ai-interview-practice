@@ -5707,12 +5707,8 @@ async function generateScore() {
       ? `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤35字，根据题目子类型选择风格——异常诊断类如"我会先确认口径，再分层定位异常集中在哪个链路"；留存增长类如"我会先找到影响留存的关键行为，再围绕激活和复访设计实验"；指标体系类如"我会先明确产品要证明的价值，再分层设计目标、行为、质量和风险指标"；因果验证类如"我会先排除高意愿用户的影响，再判断这个行为是否真的带来留存"，不要解释原因）`
       : `\n- key_line: 字符串，本轮最该补的一句话（面试口语，≤30字，直接给可以原话用的表达，要能迁移到其他题——禁止绑定具体人名或具体商品名，应该是可以跨场景套用的判断句式，比如"我会先收敛到X类用户在Y时刻的场景，因为…"或"我会先做一个功能而不是三个，先验证核心假设"，不要解释原因）`)
     : '';
-  const _questionFrameworkSpec = shouldShowQuestionFramework
-    ? `\n- question_framework: 对象。用于在评分前给用户一份“用产品思维理解本题”的具体拆解，不计分、不评价候选人的回答，也不是答题提纲。格式：{"core_question":"本题真正要理解和判断的业务问题，≤60字","recommended_focus":"本题最值得先聚焦的具体人群、时刻、任务或决策，≤85字","steps":[{"label":"步骤名，≤12字","detail":"本题中这一部分具体是什么，以及它和问题的关系，40-75字"}]}。
-  强制要求：必须给 recommended_focus。它不是“先收敛场景”这类抽象方法论，而是直接点出一个具体的产品理解切口；例如题目是“京东秒送新用户首单”，可写“可先聚焦晚间临时缺药、需要尽快送达的一线城市家庭用户，理解其对商品、时效和履约确定性的共同需求”。当题干没有足够事实时，明确标成“假设/待验证”，不得伪装成公司事实。
-  steps 是“题目里的产品要素说明”，每一步要把概念写具体：这一步在当前业务中指什么、为什么会影响用户问题或方案边界。不要写“回答时应……”“应说明/验证……”或给用户布置答题动作，也不要替用户给出完整方案。例如不要只写“用户任务：用户想知道订单状态”；应写“大促后用户不只是确认物流到哪一站，也可能在追问延迟原因或希望平台处理；这三类诉求需要的信息与后续动作不同，不能混为同一个问题”。必须引用题目已经给出的业务、用户、对象、场景或决策；不得编造题干未给出的公司事实。
-  steps 只给3-5步，按实际题型选最小适用拆解：产品设计/改进题优先用「目标与具体场景→用户卡点→核心机制→关键取舍→必要时验证」；数据题用「口径→分层→假设→验证→动作」；AI场景题用「用户任务→现有做法→AI是否必要→优先切入点→必要时质量/边界」；目标岗位题优先结合题干明确给出的岗位业务或能力要求。题目没有要求的维度可以放在后续路线，不要塞进本题具体拆解。`
-    : '';
+  // 题目理解卡由独立的“题目 + 业务/JD”请求生成，绝不随评分请求传入候选人回答。
+  const _questionFrameworkSpec = '';
   const _extensionFrameworkSpec = isBehavior ? '' : `\n- next_round_framework: 字符串数组（3-5条，每条≤28字）。这是“若面试官继续深挖，可怎样展开”的训练路线，不计入本题得分，也不能和improvements重复。只列与本题自然相关的后续维度；例如设计/改进题可给「确认目标用户与时刻→拆当前流程卡点→说明核心机制→解释关键取舍→如被追问再说明验证」，数据题可给「确认口径→分层定位→提出假设→验证→动作」。不要把每个产品框架步骤都硬塞进去。`;
   const _impFieldSpec = `- improvements: 改进项数组。只针对本次题目明确要求、当前追问明确考察，或候选人自己已提出但没有讲清的主张，列出1-3项真正扣分点（可选维度：${_impDims}）。每项格式：{"dimension":"维度名","issue":"针对本次回答的具体问题，≤50字，不要泛化空话","why":"为什么这个维度重要，≤25字","how":"下一次具体怎么补，≤40字"}。场景、机制、指标、风险、岗位绑定等即使属于完整产品框架，只要本题未问且候选人未以此作为主张，就绝不能列为improvements或因此扣分；没有实质问题时返回[]。${_keyLineSpec}${_questionFrameworkSpec}${_extensionFrameworkSpec}`;
 
@@ -5928,6 +5924,11 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
       language: STATE.interview.language || getAppLanguage(),
       turns: STATE.interview.turn,
       messages: STATE.interview.messages,
+      // Preserve the non-candidate context used to understand this question.
+      questionFrameworkContext: isJobTarget ? (() => {
+        const cfg = getJobTargetConfig() || {};
+        return { company: cfg.company || '', title: cfg.title || '', deptDesc: cfg.deptDesc || '', jd: cfg.jd || '', requirements: cfg.requirements || '' };
+      })() : null,
       score: data,
       difficulty: pref.difficulty,
       style: pref.style,
@@ -5943,6 +5944,15 @@ AI相关题：{"score":7,"relevance":8,"logical_structure":7,"product_depth":6,"
     if (src === 'resume-spec') renderSpecHistory('resume-spec', 'rspec-history');
     if (src === 'behavior') renderSpecHistory('behavior', 'behavior-spec-history');
     if (src === 'kb-spec') renderSpecHistory('kb-spec', 'kbspec-history');
+
+    // Keep the product-thinking card independent from the candidate answer.
+    // It is generated in a separate request from only the original question
+    // and applicable business/JD context, then inserted into this score card.
+    if (shouldShowQuestionFramework) {
+      generateIndependentQuestionFramework(hId, true).catch(function(err) {
+        console.warn('[题目理解生成失败]', err.message);
+      });
+    }
 
     // Auto-generate reference answers in background and save to history
     generateReferenceAnswer(STATE.interview.messages, question, hId);
@@ -7079,35 +7089,91 @@ function buildHistoryRefAnswersButton(h) {
     '</div>';
 }
 
-// Records created before question_framework was introduced do not contain this
-// question-specific breakdown. Let the user add it from the original question
-// without changing the score, feedback, or reference answers already generated.
+// The question-understanding card is deliberately generated in a separate call.
+// It receives the question and business/JD context only — never the candidate's
+// answer, score, highlights, or follow-up dialogue.
+const QUESTION_FRAMEWORK_SOURCE = 'question_only_v2';
+
+function getQuestionFrameworkContext(record) {
+  const sourceLabel = record.source === 'product'
+    ? '产品思维专项'
+    : record.source === 'aiproduct'
+      ? 'AI 产品场景训练'
+      : '目标岗位专项';
+  const parts = ['模块：' + sourceLabel];
+  if (record.source === 'job-target') {
+    // New records preserve their own job context; older records fall back to
+    // the current saved job configuration because no historical snapshot exists.
+    const cfg = record.questionFrameworkContext || getJobTargetConfig() || {};
+    if (cfg.company || cfg.title) parts.push('目标岗位：' + [cfg.company, cfg.title].filter(Boolean).join(' · '));
+    if (cfg.deptDesc) parts.push('部门/业务说明：' + cfg.deptDesc.slice(0, 800));
+    if (cfg.jd) parts.push('岗位职责：' + cfg.jd.slice(0, 1200));
+    if (cfg.requirements) parts.push('任职要求：' + cfg.requirements.slice(0, 1000));
+  }
+  return parts.join('\n');
+}
+
+function questionFrameworkSystemPrompt() {
+  return `你是产品经理面试教练。请为一道题生成“用产品思维理解这道题”的具体拆解，帮助用户理解题目中的业务、用户任务、关键判断与范围边界。
+
+【信息边界】你只能使用用户消息中的“原题”和“模块上下文”。其中不会提供候选人的回答；不要猜测候选人说过什么，也不要根据常见回答给出评价、扣分点、答题建议或标准答案。
+
+输出严格为合法 JSON：
+{
+  "question_framework": {
+    "core_question": "本题真正要理解和判断的业务问题（一句话，≤60字）",
+    "recommended_focus": "本题最值得先聚焦的具体人群、时刻、任务或决策（≤85字；事实不足时写明假设/待验证）",
+    "steps": [{"label":"步骤名称（≤12字）","detail":"这一要素在本题业务中具体是什么，以及为何影响用户问题或方案边界（40-75字）"}]
+  }
+}
+
+规则：
+- 给3-5步，紧贴题目范围。它是题目理解，不是教用户“如何回答”。禁止出现“回答时”“你应”“应说明”“应验证”等措辞，也不要写完整方案。
+- 每一步必须落到题干已有的业务、用户、对象、场景或决策。例如不要只写“用户任务：查询订单”，要说明用户是在确认什么、不同诉求会怎样影响问题判断。
+- 产品设计/改进题按需解释“具体场景→用户卡点→核心机制→关键取舍/必要验证”；数据题解释“口径→分层→假设→验证→动作”；AI场景题解释“用户任务→现有做法→AI是否必要→优先切入点→质量或边界”。只保留题目实际需要的部分。
+- 题干没有提供公司内部事实时，明确标为假设/待验证，不得编造。目标岗位题只能使用给出的岗位或业务资料。`;
+}
+
+async function generateIndependentQuestionFramework(hId, renderCurrent) {
+  const history = getHistory();
+  const record = history.find(function(item) { return item.id === hId; });
+  if (!record) return;
+  const question = getHistoryQuestion(record);
+  if (!question) throw new Error('未找到原题');
+
+  const raw = await callClaude([
+    { role: 'user', content: '【原题】\n' + question + '\n\n【模块上下文】\n' + getQuestionFrameworkContext(record) }
+  ], questionFrameworkSystemPrompt(), null, 0, true, false, 1800);
+  const data = robustParseJSON(raw);
+  const framework = data?.question_framework;
+  const steps = Array.isArray(framework?.steps) ? framework.steps.filter(Boolean) : [];
+  if (!framework || (!framework.core_question && !steps.length)) throw new Error('未生成有效的题目理解');
+
+  framework._source = QUESTION_FRAMEWORK_SOURCE;
+  record.score = record.score || {};
+  record.score.question_framework = framework;
+  LS.set('history', history.slice(0, 100));
+
+  if (renderCurrent) renderScore(record.score);
+  return framework;
+}
+
+// Records made before the independent generator need a refresh because their
+// framework may have been influenced by the candidate answer in the score call.
 function needsHistoryFrameworkBackfill(h) {
   if (!['product', 'aiproduct', 'job-target'].includes(h?.source)) return false;
   const framework = h?.score?.question_framework;
-  const stepDetails = Array.isArray(framework?.steps) ? framework.steps.map(function(step) {
-    return typeof step === 'string' ? step : step?.detail;
-  }).filter(Boolean) : [];
-  // Older versions only generated one short label-like sentence per step. Keep
-  // those records eligible for an in-place refresh, without changing their score.
-  const hasDetailedSteps = stepDetails.length >= 3 && stepDetails.every(function(detail) {
-    return String(detail).trim().length >= 45;
-  });
-  const hasAnswerCoaching = stepDetails.some(function(detail) {
-    return /回答时|你应|应(?:说明|验证|回答|该说|先验证)/.test(String(detail));
-  });
-  return !(framework && typeof framework === 'object' &&
-    (framework.core_question || stepDetails.length) && framework.recommended_focus && hasDetailedSteps && !hasAnswerCoaching);
+  return framework?._source !== QUESTION_FRAMEWORK_SOURCE;
 }
 
 function buildHistoryFrameworkBackfillButton(h) {
   if (!needsHistoryFrameworkBackfill(h)) return '';
-  const isOlderBreakdown = !!(h?.score?.question_framework?.core_question || h?.score?.question_framework?.steps?.length);
-  const buttonText = isOlderBreakdown ? '🧩 更新本题具体拆解' : '🧩 生成本题具体拆解';
+  const hasOlderBreakdown = !!(h?.score?.question_framework?.core_question || h?.score?.question_framework?.steps?.length);
+  const buttonText = hasOlderBreakdown ? '🧩 按新规则更新题目理解' : '🧩 生成本题理解';
   return '<div data-framework-backfill="' + escHtml(h.id) + '" style="margin:0 0 10px">' +
     '<button class="btn btn-ghost btn-sm" style="font-size:12px" onclick="backfillHistoryFramework(\'' + escHtml(h.id) + '\')">' +
       uiText(buttonText) + '</button>' +
-    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（展示这题真正判断什么和具体回答拆解；不重新评分）') + '</span>' +
+    '<span style="font-size:11px;color:var(--text-muted);margin-left:7px">' + uiText('（只看题目和岗位/业务资料；不使用你的回答，也不重新评分）') + '</span>' +
   '</div>';
 }
 
@@ -7126,45 +7192,8 @@ async function backfillHistoryFramework(hId) {
     }
   });
 
-  const sourceContext = record.source === 'product'
-    ? '产品思维专项'
-    : record.source === 'aiproduct'
-      ? 'AI 产品场景训练'
-      : '目标岗位专项' + (record.jtType ? '（练习方向：' + record.jtType + '）' : '');
-  const systemPrompt = `你是产品经理面试教练。请只根据原题，为一次已经完成的 ${sourceContext} 练习补充“本题具体拆解”：让用户看懂这道题真正要判断什么，以及回答时应具体覆盖哪些内容。这不是评分：不得评价候选人答案、不得提出扣分点，也不得假设题目未给出的业务事实。
-
-输出严格合法 JSON：
-{
-  "question_framework": {
-    "core_question": "这题真正要理解和判断的业务问题（一句话）",
-    "recommended_focus": "本题最值得先聚焦的具体人群、时刻、任务或决策；资料不足时明确写为待验证假设",
-    "steps": [{"label":"步骤名称","detail":"本题中这一部分具体是什么，以及它和问题的关系"}]
-  },
-  "next_round_framework": ["面试官可能继续深挖的一个方向", "另一个方向"]
-}
-
-规则：
-- question_framework 给 3-5 步，紧贴原题的提问范围。它是带用户理解题目的产品拆解，不是答题指导或标准答案。必须提供 recommended_focus，直接点出一个具体产品理解切口，例如“可先聚焦夜间临时缺药、需要尽快送达的一线城市家庭用户，理解其对商品、时效和履约确定性的共同需求”；题干未提供事实时，要明确写“假设/待验证”，不能只说“收敛具体场景”。每一步 detail 控制在40-75字，只解释“这一步在当前业务中具体是什么、为何会影响用户问题或方案边界”。例如不能只写“用户任务：用户想知道订单状态”，应写“大促后用户不只是确认物流到哪一站，也可能在追问延迟原因或希望平台处理；这三类诉求需要的信息与后续动作不同，不能混为同一个问题”。禁止出现“回答时”“你应”“应说明”“应验证”等答题动作，也不要替用户写完整方案。每一步也必须带原题中的具体业务、用户、对象或决策，例如“京东秒送的履约资源”而不是泛泛写“考虑业务资源”；但不编造题目未提供的事实。
-- 如果题目只问功能设计，就不要求用户主动补充完整指标、风险或技术选型。
-- 对产品题，优先帮助用户按“场景/用户问题 → 判断 → 方案机制 → 题目实际问到的验证或取舍”组织；按题目范围裁剪。
-- 对 AI 场景题，帮助用户判断业务问题、AI 是否值得介入、用户任务和方案边界；不强行要求复杂技术细节。
-- 对目标岗位题，结合题干中明确给出的业务与岗位语境，不编造公司信息。
-- next_round_framework 仅给 2-4 条后续训练方向，不能写成“本题遗漏”或扣分项。`;
-
   try {
-    const raw = await callClaude([
-      { role: 'user', content: '原题如下：\n' + record.question }
-    ], systemPrompt, null, 0, true, false, 1200);
-    const data = robustParseJSON(raw);
-    const framework = data?.question_framework;
-    const steps = Array.isArray(framework?.steps) ? framework.steps.filter(Boolean) : [];
-    if (!framework || (!framework.core_question && !steps.length)) throw new Error('未生成有效的题目思路框架');
-    record.score = record.score || {};
-    record.score.question_framework = framework;
-    if (Array.isArray(data.next_round_framework) && data.next_round_framework.length) {
-      record.score.next_round_framework = data.next_round_framework.filter(Boolean).slice(0, 5);
-    }
-    LS.set('history', history.slice(0, 100));
+    await generateIndependentQuestionFramework(hId, false);
     renderHistory();
     const embeddedHistoryIds = {
       product: 'product-spec-history',

@@ -3281,7 +3281,13 @@ async function startProductInterview() {
   toast(`AI 生成「${catLabel}」题目中…`, 'info');
   let question = '';
   try {
-    const genPrompt = PRODUCT_CAT_PROMPTS[resolvedCat] + getRecentQsBlock('product', resolvedCat);
+    const genPrompt = PRODUCT_CAT_PROMPTS[resolvedCat] + `
+【补充真实工作判断方向】在题型匹配时，将以下方向与原有方向共同随机选择，不要每题必考：
+- 上线后排查：输出质量不错但使用率、留存或业务转化未提升，区分用户任务、入口、交互、价值和执行链路的问题。
+- 投入取舍：高调用量或推理成本与用户价值冲突，判断哪些任务值得投入，哪些适合规则、缓存或轻量方案。
+- 能力不足：模型达不到产品预期时，判断缩小任务范围、改变交互、用户确认、人工接手或暂缓上线。
+每题给一个具体信号，只问一个判断；不堆叠技术选型、指标、商业化和风险。AI技术认知题优先问适用场景和选择依据，不单独考术语或参数。
+` + getRecentQsBlock('product', resolvedCat);
     question = await genQuestion(genPrompt);
   } catch (e) {
     toast('生成失败：' + e.message, 'error');
@@ -3358,6 +3364,8 @@ function buildAIProductScenarioPrompt(domain, track = 'business') {
 - 若涉及医疗、金融、法律、政务或工业等专业领域，必须用白话补足完成任务所需的基础背景，并说明最终专业判断由谁负责；不把行业术语、规则细节或专家经验当成候选人的前置知识。
 - 不编造真实公司内部信息、精确经营数据或技术实现细节；可以使用合理但不精确的业务描述。
 - 每次更换具体用户、任务和问题，避免连续出现相似的客服、知识问答或自动化场景。
+- 可选问题信号还包括：用户规划旅行反复比较交通、酒店和行程；AI输出质量不错但用户不继续使用；调用成本高但价值未验证；模型无法稳定完成多步任务。与其他领域和方向交替选择，不局限旅游。
+- 从业务任务出发，首问只判断优先解决哪一步、最小验证切入点或先排查哪里；能力选型、质量与用户价值、成本收益、人工确认和失败兜底根据回答再追问。不要预设必须使用Agent、RAG或完整自动化。
 - 总字数100-160字。${agentJudgment}`;
 }
 
@@ -4408,7 +4416,10 @@ function buildJTQuestionPrompt(type, subType, cfg) {
   const isMigType = type === 'migration';
   const ctx = buildJobTargetContext(cfg, { forMigration: isMigType });
   const ctxNote = ctx ? '\n\n【目标岗位资料】\n' + ctx : '';
-  const materialRule = buildJTMaterialUsageRule(cfg);
+  const materialRule = buildJTMaterialUsageRule(cfg) + `
+【业务绑定】除经历迁移题外，问题必须落到岗位资料中的用户任务、业务流程或价值目标，不仅替换公司名。可轮换：上线后使用率/留存/转化排查；规模化调用成本与用户价值；模型能力不足时的范围和交互调整。每题只选一项。
+准确率与召回率取舍要用该业务里漏掉结果和推荐错误结果的用户代价表达，避免算法参数考试。资料不足时使用明确的假设业务场景，不编造公司内部事实。技术选型、验证与风险由回答自然触发，不能每场强制覆盖。
+`;
   const hasInfo = cfg && (cfg.company || cfg.title || cfg.jd);
   const companyStr = (cfg && cfg.company) ? '「' + cfg.company + '」' : '该公司';
   const titleStr = (cfg && cfg.title) ? '的「' + cfg.title + '」岗位' : '目标岗位';
@@ -4748,6 +4759,8 @@ async function startResumeSpecInterview() {
 11. 岗位能力迁移——这段经历体现了什么AI PM能力，和申请岗位有什么关系
 12. 项目复盘 / 如果重做——如果重新做，会优先优化哪一块、为什么、优先级是什么
 
+【AI深挖条件】只有材料或回答提到相关动作时才追：使用Agent时可问为何不用固定Workflow；声称AI质量提高时可问质量定义、评测证据与用户效果；出现幻觉或不稳定时可问具体失败与产品兜底；材料出现调用成本、使用率或转化问题时可问投入取舍与上线排查。不能预设每个项目有这些技术、问题或结果，也不要求每场问齐。
+
 注意：候选人是AI产品经理，如项目使用了Claude Code、Dify或AI工具辅助开发，候选人负责的是产品需求定义、决策和验收，不是写代码。请聚焦在产品决策、用户价值、指标结果和角色边界，不要问代码实现和技术细节。
 要求：直接引用该经历中的项目名/公司名，让问题像真实面试追问。不要让候选人重复材料中已经写清的事实；优先追问材料中最值得验证的主张、决策或指标。只输出题目本身，不超过80字，不加任何前缀。
 
@@ -4909,6 +4922,7 @@ ${content}`
 - 实际应用："如果在真实产品里用这个知识点，你会怎么落地？"
 - 边界判断："这个方案在什么情况下会失效？有没有替代方案？"
 - 数据验证："如何验证这个知识点在产品中真的起效了？"
+优先结合笔记中的知识点，给一个简短用户任务，问什么场景适合、为什么以及何时需要替代方案。例如笔记包含RAG/Agent/Workflow时，考察它们解决的任务与适用边界，而非背定义或调参。首题只问一个核心判断。
 只输出1道题，不超过70字，不加前缀。
 
 候选人知识点笔记：
